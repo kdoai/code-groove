@@ -1,0 +1,122 @@
+"""Opt-in paid deployed workflow. Credentials stay in process memory."""
+
+import argparse
+import json
+import time
+import uuid
+
+import httpx
+from code_groove.settings import ROOT
+
+from infra.gcp import STATE, cloud
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--sample", default="justified")
+    parser.add_argument("--investigate", action="store_true")
+    args = parser.parse_args()
+    state = json.loads(STATE.read_text())
+    password = cloud("secrets", "versions", "access", "latest", "--secret=reviewer-password-placeholder")
+    sign_in = httpx.post(
+        "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword",
+        params={"key": state["firebase"]["apiKey"]},
+        json={"email": "reviewer@example.invalid", "password": password, "returnSecureToken": True},
+        timeout=30,
+    )
+    if sign_in.is_error:
+        raise RuntimeError(f"Reviewer login failed ({sign_in.status_code})")
+    token = sign_in.json()["idToken"]
+    client = httpx.Client(
+        base_url=state["web_url"] + "/api/v1",
+        timeout=60,
+        headers={"Authorization": f"Bearer {token}", "Origin": state["web_url"]},
+    )
+
+    def api(path, body=None):
+        response = (
+            client.get(path)
+            if body is None
+            else client.post(path, json=body, headers={"Idempotency-Key": uuid.uuid4().hex})
+        )
+        if response.is_error:
+            raise RuntimeError(
+                f"{path}: {response.status_code} {response.json().get('error', {}).get('code')}"
+            )
+        return response.json()["data"]
+
+    def wait(run_id):
+        last = ""
+        for _ in range(300):
+            run = api(f"/runs/{run_id}")
+            if run["status"] != last:
+                print(
+                    json.dumps({"run_id": run_id, "status": run["status"], "error": run.get("error")}),
+                    flush=True,
+                )
+                last = run["status"]
+            if run["status"] in ("completed", "partial"):
+                return run
+            if run["status"] in ("failed", "cancelled"):
+                raise RuntimeError(f"Run ended: {run.get('error')}")
+            time.sleep(2)
+        raise RuntimeError("Deployed run did not finish in 10 minutes")
+
+    created = api("/projects", {"source": {"kind": "sample", "sample_id": args.sample}})
+    print(json.dumps({"reviewer_login": "PASS", **created}), flush=True)
+    completed = wait(created["run_id"])
+    bundle = api(f"/projects/{created['project_id']}/bundle")
+    events = api(f"/runs/{created['run_id']}/events")
+    report = {
+        "status": "PASS",
+        "sample": args.sample,
+        "project_id": created["project_id"],
+        "analysis_id": completed["result_id"],
+        "duration_seconds": round(completed["updated_at"] - completed["created_at"], 2),
+        "model_requests": completed["model_requests"],
+        "input_tokens": completed["input_tokens"],
+        "output_tokens": completed["output_tokens"],
+        "events": len(bundle["map"]["events"]),
+        "worker_unauthenticated_status": httpx.get(state["worker_url"] + "/readyz", timeout=30).status_code,
+        "web_unauthenticated_status": httpx.get(
+            state["web_url"] + "/api/v1/projects", timeout=30
+        ).status_code,
+    }
+    (ROOT / "artifacts/deployed-analysis-trace.json").write_text(
+        json.dumps(events, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+    if args.investigate:
+        selected = bundle["map"]["events"][0]
+        investigation = api(
+            f"/analyses/{completed['result_id']}/investigations",
+            {
+                "scene_id": bundle["score"]["scenes"][0]["scene_id"],
+                "unit_ids": [selected["unit_id"]],
+                "event_ids": [selected["event_id"]],
+                "question": "理由のある例外はありますか？関連コードとテストで確かめてください。",
+            },
+        )
+        investigated = wait(investigation["run_id"])
+        result = api(f"/investigations/{investigated['result_id']}")
+        report["investigation"] = {
+            "result_id": investigated["result_id"],
+            "model_requests": investigated["model_requests"],
+            "findings": len(result["findings"]),
+            "fresh_evidence": len(result["evidence"]),
+        }
+        (ROOT / "artifacts/deployed-investigation-trace.json").write_text(
+            json.dumps(api(f"/runs/{investigation['run_id']}/events"), ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+        (ROOT / "artifacts/deployed-investigation.json").write_text(
+            json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
+    (ROOT / "artifacts/deployed-smoke.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
+    (ROOT / ".local/deployed-bundle.json").write_text(
+        json.dumps(bundle, ensure_ascii=False), encoding="utf-8"
+    )
+    print(json.dumps(report), flush=True)
+
+
+if __name__ == "__main__":
+    main()

@@ -111,3 +111,13 @@ def test_immutable_artifact_and_event_resume(setup):
     state.artifacts.put("projects/p_test/one.json.gz", {"x": 1})
     with pytest.raises(GrooveError, match="IMMUTABLE_CONFLICT"):
         state.artifacts.put("projects/p_test/one.json.gz", {"x": 2})
+
+
+def test_chunked_request_cannot_bypass_body_limit(setup):
+    client, _state = setup
+    response = client.post(
+        "/api/v1/projects",
+        content=(b"x" * 70000 for _ in range(3)),
+        headers={"Content-Type": "application/json"},
+    )
+    assert response.status_code == 413

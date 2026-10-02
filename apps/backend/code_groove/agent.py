@@ -154,6 +154,14 @@ def execute_tool(ctx: AgentContext, name: str, args: dict, event_id: str) -> Any
     if ctx.tool_count >= (20 if ctx.investigating else 48):
         raise GrooveError("BUDGET_EXCEEDED", "ツール呼び出し上限に達しました。", 429)
     ctx.tool_count += 1
+    ctx.save_usage(
+        {
+            "model_requests": ctx.model_count,
+            "tool_calls": ctx.tool_count,
+            "input_tokens": ctx.input_tokens,
+            "output_tokens": ctx.output_tokens,
+        }
+    )
     if name in ("submit_analysis", "submit_investigation"):
         try:
             if set(args) != {"candidate"}:
@@ -311,7 +319,13 @@ async def run_agent(ctx: AgentContext) -> Any:
     try:
         while True:
             ctx.check()
-            counted = await client.aio.models.count_tokens(model=ctx.settings.gemini_model, contents=history)
+            try:
+                counted = await asyncio.wait_for(
+                    client.aio.models.count_tokens(model=ctx.settings.gemini_model, contents=history),
+                    min(30, (180 if ctx.investigating else 480) - (time.monotonic() - ctx.started)),
+                )
+            except TimeoutError as exc:
+                raise GrooveError("MODEL_TIMEOUT", "トークン計数がタイムアウトしました。", 504) from exc
             input_count = (
                 int(counted.total_tokens or 0)
                 + len(prompt) // 2
@@ -325,6 +339,11 @@ async def run_agent(ctx: AgentContext) -> Any:
                 raise GrooveError("BUDGET_EXCEEDED", "トークン予算に達しました。", 429)
             for retry in range(3):
                 ctx.check()
+                if (
+                    ctx.input_tokens + input_count > max_input
+                    or ctx.output_tokens + output_limit > max_output
+                ):
+                    raise GrooveError("BUDGET_EXCEEDED", "再試行のトークン予算に達しました。", 429)
                 if ctx.model_count >= (8 if ctx.investigating else 18):
                     raise GrooveError("BUDGET_EXCEEDED", "モデル呼び出し上限に達しました。", 429)
                 ctx.model_count += 1
@@ -350,7 +369,7 @@ async def run_agent(ctx: AgentContext) -> Any:
                     break
                 except errors.APIError as exc:
                     if exc.code not in (429, 503, 504) or retry == 2:
-                        ctx.emit("model_error", {"code": exc.code, "diagnostic": str(exc.message)[:500]})
+                        ctx.emit("model_error", {"code": exc.code, "error_type": type(exc).__name__})
                         code = "MODEL_UNAVAILABLE" if exc.code in (401, 403, 404) else "MODEL_ERROR"
                         raise GrooveError(
                             code, "モデルの接続・権限・利用可能性を確認してください。", 503

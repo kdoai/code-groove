@@ -7,13 +7,15 @@ import {
   signOut,
   type User,
 } from 'firebase/auth';
-import type { SemanticMap, ScoreBundle } from '../../../packages/contracts';
+import type { SemanticMap, ScoreBundle, InvestigationResult } from '../../../packages/contracts';
 
 export type Bundle = {
   map: SemanticMap;
   score: ScoreBundle;
   sources: Record<string, string>;
   sample_id?: string;
+  investigation?: InvestigationResult;
+  trace?: { seq: number; type: string; timestamp: string; payload: Record<string, any> }[];
 };
 export type PublicConfig = {
   live_enabled: boolean;

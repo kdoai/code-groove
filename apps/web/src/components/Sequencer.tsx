@@ -35,6 +35,8 @@ export function Sequencer({
   const select = (unitId?: string | null, eventId = '') =>
     workspace.set({ unitId: unitId ?? '', eventId, codeSpan: null });
   const inspect = () => workspace.set({ screen: 'inspect' });
+  const unresolved = (unitId?: string | null) =>
+    map.units.find((unit) => unit.unit_id === unitId)?.review_state === 'unresolved';
   return (
     <div className={`sequencer ${compact ? 'compact' : ''}`} data-testid="sequencer">
       <div className="track-rail" style={{ paddingTop: top }}>
@@ -111,6 +113,9 @@ export function Sequencer({
           aria-label={`${plan.mode === 'repo' ? '実装の配置' : '責務ごと'}の譜面`}
         >
           <defs>
+            <pattern id="unknown-hatch" width="8" height="8" patternUnits="userSpaceOnUse">
+              <path d="M0 8L8 0" stroke="#c9ceca" strokeWidth="1" />
+            </pattern>
             <pattern
               id="finegrid"
               width={w / plan.total_bars / 16}
@@ -158,7 +163,13 @@ export function Sequencer({
                 y={compact ? 22 : 40}
                 width={(phrase.bar_count / plan.total_bars) * w}
                 height={height - (compact ? 22 : 40)}
-                fill={workspace.unitId && workspace.unitId === phrase.unit_id ? '#e8e0f2' : 'transparent'}
+                fill={
+                  unresolved(phrase.unit_id)
+                    ? 'url(#unknown-hatch)'
+                    : workspace.unitId && workspace.unitId === phrase.unit_id
+                      ? '#e8e0f2'
+                      : 'transparent'
+                }
                 fillOpacity={0.6}
               />
               <rect

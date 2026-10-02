@@ -119,6 +119,7 @@ def bootstrap():
                 "identitytoolkit",
                 "cloudbilling",
                 "billingbudgets",
+                "apikeys",
             )
         ],
     )
@@ -242,7 +243,8 @@ def bootstrap():
         f"--member=serviceAccount:{accounts['web']}",
         "--role=roles/iam.serviceAccountUser",
     )
-    bucket_role(ARTIFACTS, accounts["web"], "roles/storage.objectUser")
+    bucket_role(ARTIFACTS, accounts["web"], "roles/storage.objectViewer")
+    bucket_role(ARTIFACTS, accounts["web"], "roles/storage.objectCreator")
     bucket_role(ARTIFACTS, accounts["worker"], "roles/storage.objectUser")
     bucket_role(BUILD_BUCKET, accounts["build"], "roles/storage.objectViewer")
     bucket_role(BUILD_BUCKET, accounts["deploy"], "roles/storage.objectUser")
@@ -257,7 +259,6 @@ def bootstrap():
     )
     project_role(accounts["build"], "roles/logging.logWriter")
     project_role(accounts["deploy"], "roles/cloudbuild.builds.editor")
-    project_role(accounts["deploy"], "roles/run.developer")
     for name in ("web", "worker", "build"):
         cloud(
             "iam",
@@ -283,11 +284,40 @@ def configure_firebase(state):
     auth_base = f"https://identitytoolkit.googleapis.com/admin/v2/projects/{PROJECT}/config"
     api(
         "PATCH",
-        f"{auth_base}?updateMask=signIn.email.enabled,signIn.email.passwordRequired",
-        {"signIn": {"email": {"enabled": True, "passwordRequired": True}}},
+        f"{auth_base}?updateMask=signIn.email.enabled,signIn.email.passwordRequired,client.permissions.disabledUserSignup,client.permissions.disabledUserDeletion",
+        {
+            "signIn": {"email": {"enabled": True, "passwordRequired": True}},
+            "client": {"permissions": {"disabledUserSignup": True, "disabledUserDeletion": True}},
+        },
     )
+    configure_browser_key(state)
     save(state)
     print("Bootstrap finished", flush=True)
+
+
+def configure_browser_key(state):
+    base = "https://apikeys.googleapis.com/v2"
+    parent = f"projects/{state['number']}/locations/global"
+    keys = api("GET", f"{base}/{parent}/keys").get("keys", [])
+    key = next((value for value in keys if value.get("displayName") == "Code Groove browser auth"), None)
+    if not key:
+        key = wait_operation(
+            api(
+                "POST",
+                f"{base}/{parent}/keys?keyId=code-groove-browser",
+                {
+                    "displayName": "Code Groove browser auth",
+                    "restrictions": {
+                        "apiTargets": [
+                            {"service": "identitytoolkit.googleapis.com"},
+                            {"service": "securetoken.googleapis.com"},
+                        ]
+                    },
+                },
+            ),
+            base,
+        )
+    state["firebase"]["apiKey"] = api("GET", f"{base}/{key['name']}/keyString")["keyString"]
 
 
 def deploy(image):
@@ -324,6 +354,8 @@ def deploy(image):
             f"--concurrency={concurrency}",
             "--min=0",
             f"--max={max_instances}",
+            f"--max-instances={max_instances}",
+            "--startup-probe=httpGet.path=/health,periodSeconds=10,timeoutSeconds=5,failureThreshold=12",
             "--cpu-throttling",
             f"--service-account={accounts['worker' if name.endswith('worker') else 'web']}",
             f"--env-vars-file={environment_file}",
@@ -376,6 +408,17 @@ def deploy(image):
         config = api("GET", config_url)
         domains = list(dict.fromkeys(config.get("authorizedDomains", []) + [web.split("://")[1]]))
         api("PATCH", f"{config_url}?updateMask=authorizedDomains", {"authorizedDomains": domains})
+    if not os.environ.get("CG_DEPLOY_SKIP_IAM"):
+        for service in ("code-groove-web", "code-groove-worker"):
+            cloud(
+                "run",
+                "services",
+                "add-iam-policy-binding",
+                service,
+                f"--region={REGION}",
+                f"--member=serviceAccount:{accounts['deploy']}",
+                "--role=roles/run.developer",
+            )
     state.update(worker_url=worker, web_url=web, image=image)
     save(state)
     (ROOT / "artifacts/deployment.json").write_text(

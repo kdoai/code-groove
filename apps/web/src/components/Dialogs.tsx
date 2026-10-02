@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { X, ArrowRight, Check, FolderGit2, Music2, MousePointer2 } from 'lucide-react';
-import { login } from '../api';
+import { api, currentUser, login } from '../api';
+import { useQuery } from '@tanstack/react-query';
 
 export function Dialog({
   title,
@@ -104,6 +105,16 @@ export function AuthDialog({ close, done }: { close: () => void; done: () => voi
   );
 }
 export const sampleLabels = [
+  {
+    id: 'recorded-scattered',
+    label: '実解析を再生 · 分散',
+    detail: 'Geminiの解釈と実ツール記録 · AI費用なし',
+  },
+  {
+    id: 'recorded-justified',
+    label: '実解析を再生 · 例外',
+    detail: '関連テストを読んだ保存結果 · AI費用なし',
+  },
   { id: 'cohesive', label: 'まとまり', detail: '責務ごとに独立した実装' },
   { id: 'scattered', label: '分散', detail: '同じ判断が別の場所にある' },
   { id: 'mixed', label: '混在', detail: '一つの実装に複数の判断' },
@@ -114,13 +125,29 @@ export function OpenDialog({
   close,
   openSample,
   openRepo,
+  openProject,
   pending,
 }: {
   close: () => void;
   openSample: (id: string) => void;
   openRepo: (url: string) => void;
+  openProject: (id: string) => void;
   pending: boolean;
 }) {
+  const projects = useQuery({
+    queryKey: ['saved-projects'],
+    queryFn: () =>
+      api<
+        {
+          project_id: string;
+          latest_analysis_id?: string;
+          source: { url?: string; sample_id?: string };
+          status: string;
+        }[]
+      >('/projects'),
+    enabled: !!currentUser,
+    staleTime: 10000,
+  });
   return (
     <Dialog title="Repositoryを開く" close={close}>
       <p className="dialog-intro">公開コードを読み込み、設計をGrooveにします。</p>
@@ -142,8 +169,28 @@ export function OpenDialog({
           <ArrowRight size={16} />
         </button>
       </form>
+      {!!projects.data?.length && (
+        <>
+          <div className="section-label">YOUR SAVED WORK</div>
+          <div className="sample-list">
+            {projects.data.slice(0, 8).map((project) => (
+              <button key={project.project_id} onClick={() => openProject(project.project_id)}>
+                <span>
+                  <strong>
+                    {project.source.sample_id ?? project.source.url?.split('/').at(-1) ?? 'Repository'}
+                  </strong>
+                  <small>
+                    {project.latest_analysis_id ? '保存済み実解析 · 再生はAI費用なし' : '処理の状態を確認'}
+                  </small>
+                </span>
+                <ArrowRight size={15} />
+              </button>
+            ))}
+          </div>
+        </>
+      )}
       <div className="section-label">
-        BUILT-IN SAMPLES <span>模擬データ · AI費用なし</span>
+        BUILT-IN SAMPLES <span>保存済み実解析 / 模擬サンプル · AI費用なし</span>
       </div>
       <div className="sample-list">
         {sampleLabels.map((sample, i) => (

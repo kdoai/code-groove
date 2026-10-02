@@ -71,6 +71,20 @@ def main():
         "--input",
         "infra/github-environment.json",
     )
+    policies = json.loads(
+        github("api", f"repos/{REPOSITORY}/environments/production/deployment-branch-policies")
+    )
+    if not any(policy["name"] == "main" for policy in policies["branch_policies"]):
+        github(
+            "api",
+            f"repos/{REPOSITORY}/environments/production/deployment-branch-policies",
+            "--method",
+            "POST",
+            "-f",
+            "name=main",
+            "-f",
+            "type=branch",
+        )
     print(
         json.dumps(
             {

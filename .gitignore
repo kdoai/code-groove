@@ -19,3 +19,5 @@ artifacts/*.log
 
 gha-creds-*.json
 artifacts/*.wav
+artifacts/*.mp4
+artifacts/*.webm

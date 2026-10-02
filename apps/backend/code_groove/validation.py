@@ -67,6 +67,8 @@ def validate_candidate(candidate: AnalysisCandidate, index: dict, evidence: list
                 allowed = allowed or contains(Span(**known_units[member]["primary_span"]), event.span)
         if not allowed:
             errors.append("Event outside its owner")
+        if event.state == "grounded" and owner_unit.review_state != "inspected":
+            errors.append("Grounded event requires an inspected owner")
         if event.state == "grounded" and not any(
             e in proofs and proofs[e].source_kind == "code" and contains(proofs[e].span, event.span)
             for e in event.evidence_ids

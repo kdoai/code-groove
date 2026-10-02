@@ -6,9 +6,9 @@
 
 ## 試す
 
-公開サンプル５種類はログイン不要・モデル呼び出しなしです。実解析は審査・招待アカウントのみ。メール受信は不要です。初回ガイドの「今後このメッセージを表示しない」は端末内に保存され、右上のヘルプから再表示できます。
+公開模擬サンプル５種類と保存済み実解析２種類はログイン不要・モデル呼び出しなしです。実解析は審査・招待アカウントのみ。メール受信は不要です。初回ガイドの「今後このメッセージを表示しない」は端末内に保存され、右上のヘルプから再表示できます。
 
-公開先・配備イメージは [artifacts/deployment.json](artifacts/deployment.json) に記録します。審査用メールは `reviewer@example.invalid`。パスワードは `reviewer-password-placeholder` という Secret Manager の secret に保存し、リポジトリには置きません。
+[アプリを開く](https://code-groove-web-a5ygiois2a-an.a.run.app)。配備イメージは [artifacts/deployment.json](artifacts/deployment.json) に記録します。審査用メールは `reviewer@example.invalid`。パスワードは `reviewer-password-placeholder` という Secret Manager の secret に保存し、リポジトリには置きません。
 
 管理者が PowerShell でパスワードをクリップボードへ取得する手順：
 
@@ -71,4 +71,4 @@ uv run python scripts/release.py --revision <40桁のGitコミットSHA>
 
 保存期限は７日。APIは期限切れを410で拒否し、Firestore TTL と GCS 14日 lifecycle で物理削除します。削除要求後は直ちに閲覧不能になり、worker が保存物を消します。サンプル音源は本リポジトリで合成した PCM 素材です。
 
-仕様の詳細と採用した差分は [統合仕様](docs/SPEC.md) / [設計判断](docs/implementation-decisions.md)。技術検証と、人による聴きやすさの評価・YouTube公開は別々に記録します。
+仕様の詳細と採用した差分は [統合仕様](docs/SPEC.md) / [設計判断](docs/implementation-decisions.md)。[検証記録](docs/acceptance.md) と [構成図](artifacts/architecture.png)、[提出用説明・３分台本](docs/submission.md) も用意しています。技術検証と、人による聴きやすさの評価・YouTube公開は別々に記録します。

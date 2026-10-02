@@ -21,7 +21,8 @@ import { api, currentUser, logout, setupAuth, type Bundle, type PublicConfig } f
 import { useWorkspace } from './state';
 import { Transport } from './components/Transport';
 import { Sequencer } from './components/Sequencer';
-import { AgentPanel, type TraceEvent } from './components/AgentPanel';
+import { AgentPanel } from './components/AgentPanel';
+import { useRunEvents } from './hooks/useRunEvents';
 import { AuthDialog, OpenDialog, Onboarding } from './components/Dialogs';
 import type { InvestigationResult } from '../../../packages/contracts';
 
@@ -67,6 +68,11 @@ export default function App() {
         projectId: match[1],
         sampleId: match[1].startsWith('sample-') ? match[1].slice(7) : '',
         screen: match[2] as 'arrange' | 'inspect',
+        analysisId: new URLSearchParams(location.search).get('analysis') ?? '',
+        unitId: new URLSearchParams(location.search).get('unit') ?? '',
+        eventId: new URLSearchParams(location.search).get('event') ?? '',
+        scene: Math.max(0, Math.min(7, Number(new URLSearchParams(location.search).get('scene') ?? 1) - 1)),
+        codeSpan: null,
       });
   }, []);
   useEffect(() => {
@@ -107,12 +113,7 @@ export default function App() {
     refetchInterval: (query) =>
       active.includes(query.state.data?.status ?? 'queued') ? (document.hidden ? 5000 : 1000) : false,
   });
-  const runEvents = useQuery({
-    queryKey: ['events', runId],
-    queryFn: () => api<TraceEvent[]>(`/runs/${runId}/events`),
-    enabled: !!runId && !!user,
-    refetchInterval: run.data && active.includes(run.data.status) ? 1000 : false,
-  });
+  const runEvents = useRunEvents(runId, !!user, active.includes(run.data?.status ?? 'queued'));
   useEffect(() => {
     if (!run.data || active.includes(run.data.status)) return;
     if (['completed', 'partial'].includes(run.data.status)) {
@@ -128,12 +129,11 @@ export default function App() {
     enabled: !!investigationRunId && !!user,
     refetchInterval: (query) => (active.includes(query.state.data?.status ?? 'queued') ? 1000 : false),
   });
-  const investigationEvents = useQuery({
-    queryKey: ['events', investigationRunId],
-    queryFn: () => api<TraceEvent[]>(`/runs/${investigationRunId}/events`),
-    enabled: !!investigationRunId && !!user,
-    refetchInterval: investigationRun.data && active.includes(investigationRun.data.status) ? 1000 : false,
-  });
+  const investigationEvents = useRunEvents(
+    investigationRunId,
+    !!user,
+    active.includes(investigationRun.data?.status ?? 'queued'),
+  );
   useEffect(() => {
     const run = investigationRun.data;
     if (!run || active.includes(run.status)) return;
@@ -163,6 +163,33 @@ export default function App() {
     setResult(undefined);
     setError('');
   }
+  async function openSaved(id: string) {
+    setStarting(true);
+    setModal('');
+    setError('');
+    setResult(undefined);
+    setInvestigationRunId('');
+    try {
+      const saved = await api<{ latest_analysis_id?: string; run_id: string }>(`/projects/${id}`);
+      ws.set({
+        projectId: id,
+        sampleId: '',
+        analysisId: saved.latest_analysis_id ?? '',
+        unitId: '',
+        eventId: '',
+        codeSpan: null,
+        scene: 0,
+        screen: 'arrange',
+        muted: [],
+        solo: [],
+      });
+      setRunId(saved.latest_analysis_id ? '' : saved.run_id);
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setStarting(false);
+    }
+  }
   async function openRepo(url?: string) {
     if (!currentUser) {
       setModal('auth');
@@ -172,7 +199,9 @@ export default function App() {
     setError('');
     try {
       const project = await api<{ project_id: string; run_id: string }>('/projects', {
-        source: url ? { kind: 'github_public', url } : { kind: 'sample', sample_id: ws.sampleId || 'mixed' },
+        source: url
+          ? { kind: 'github_public', url }
+          : { kind: 'sample', sample_id: ws.sampleId.replace(/^recorded-/, '') || 'mixed' },
       });
       ws.set({
         projectId: project.project_id,
@@ -193,7 +222,7 @@ export default function App() {
     }
   }
   async function investigate(question: string) {
-    if (!bundle.data || bundle.data.map.origin === 'fixture') return;
+    if (!bundle.data || ws.sampleId || bundle.data.map.origin === 'fixture') return;
     setInvestigationError('');
     setResult(undefined);
     try {
@@ -212,6 +241,7 @@ export default function App() {
     const key = `${ws.analysisId}:${ws.unitId}:${ws.eventId}`;
     if (
       ws.screen === 'inspect' &&
+      !ws.sampleId &&
       bundle.data?.map.origin !== 'fixture' &&
       bundle.data &&
       (ws.unitId || ws.eventId) &&
@@ -306,7 +336,15 @@ export default function App() {
             onClick={async () => {
               await logout();
               cache.clear();
-              ws.set({ projectId: '', sampleId: '', analysisId: '', unitId: '', eventId: '' });
+              ws.set({
+                projectId: '',
+                sampleId: '',
+                analysisId: '',
+                unitId: '',
+                eventId: '',
+                codeSpan: null,
+              });
+              history.replaceState(null, '', '/');
               setRunId('');
             }}
           >
@@ -426,6 +464,15 @@ export default function App() {
               >
                 処理を停止
               </button>
+              {run.data?.status === 'enqueue_pending' && (
+                <button
+                  onClick={() =>
+                    void api(`/projects/${ws.projectId}/retry-enqueue`, {}).catch((e) => setError(e.message))
+                  }
+                >
+                  キューへ再投入
+                </button>
+              )}
             </div>
           ) : data && plan ? (
             <>
@@ -578,6 +625,7 @@ export default function App() {
           close={() => setModal('')}
           openSample={openSample}
           openRepo={(url) => void openRepo(url)}
+          openProject={(id) => void openSaved(id)}
           pending={starting}
         />
       )}

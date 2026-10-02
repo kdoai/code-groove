@@ -12,6 +12,7 @@ export function Transport({ score, onError }: { score?: ScoreBundle; onError: (m
   const plan = score?.scenes[ws.scene]?.[ws.mode];
   useEffect(() => {
     if (plan) engine.configure(plan);
+    else engine.stop();
   }, [plan]);
   useEffect(() => {
     engine.setVolume(ws.volume);

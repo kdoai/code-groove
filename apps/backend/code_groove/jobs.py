@@ -165,8 +165,13 @@ class JobService:
             return run
 
         run = self.store.atomic(operation)
-        self.enqueue(run)
-        return {"project_id": run["project_id"], "run_id": run["run_id"], "status": run["status"]}
+        try:
+            self.enqueue(run)
+        except GrooveError as exc:
+            if exc.code != "ENQUEUE_PENDING":
+                raise
+        current = self.store.get("runs", run["run_id"]) or run
+        return {"project_id": run["project_id"], "run_id": run["run_id"], "status": current["status"]}
 
     def enqueue(self, run: dict) -> None:
         if run["status"] != "enqueue_pending":
@@ -285,6 +290,21 @@ class JobService:
             tx.put("runs", run_id, {**run, "quota_released": True, "updated_at": time.time()})
 
         self.store.atomic(operation)
+
+    def cancel(self, run_id: str) -> bool:
+        def operation(tx):
+            run = tx.get("runs", run_id)
+            if not run or run["status"] in TERMINAL:
+                return False
+            run["cancel_requested"] = True
+            if run.get("lease_expires_at", 0) <= time.time():
+                run["status"] = "cancelled"
+            tx.put("runs", run_id, {**run, "updated_at": time.time()})
+            return run["status"] == "cancelled"
+
+        if self.store.atomic(operation):
+            self.settle_quota(run_id)
+        return bool((self.store.get("runs", run_id) or {}).get("cancel_requested"))
 
     async def handle(self, run_id: str) -> None:
         attempt = uuid.uuid4().hex

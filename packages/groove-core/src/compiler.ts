@@ -43,7 +43,7 @@ export async function compileGroove(map: SemanticMap, kitHash: string): Promise<
   if (new Set(map.responsibilities.map((r) => r.motif_id)).size !== map.responsibilities.length)
     throw new Error('DUPLICATE_MOTIF');
   const units = map.units
-    .filter((u) => events.some((e) => e.unit_id === u.unit_id))
+    .filter((u) => u.review_state !== 'excluded')
     .sort(
       (a, b) =>
         a.primary_span.path.localeCompare(b.primary_span.path, 'en') ||
@@ -161,16 +161,48 @@ export async function compileGroove(map: SemanticMap, kitHash: string): Promise<
     }
     return { scene_id: sceneId, unit_ids: unitIds, theme, repo };
   });
+  const normalizedEvidence = (ids: string[]) =>
+    ids
+      .map((id) => {
+        const evidence = map.evidence.find((item) => item.evidence_id === id);
+        if (!evidence) throw new Error('UNKNOWN_EVIDENCE');
+        return { span: evidence.span, projection_sha256: evidence.projection_sha256 };
+      })
+      .sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b)));
   const semanticContent = {
     profile: map.profile,
-    responsibilities: map.responsibilities,
-    units: map.units,
-    events: map.events,
+    responsibilities: map.responsibilities.map((value) => ({
+      ...value,
+      evidence_ids: normalizedEvidence(value.evidence_ids),
+    })),
+    units: map.units.map((value) => ({ ...value, evidence_ids: normalizedEvidence(value.evidence_ids) })),
+    events: map.events.map((value) => ({ ...value, evidence_ids: normalizedEvidence(value.evidence_ids) })),
     evidence: map.evidence.map((e) => ({ span: e.span, projection_sha256: e.projection_sha256 })),
   };
   return {
     analysis_id: map.analysis_id,
-    score_hash: await sha256({ semanticContent, grammar: 'groove-v1', kitHash, scenes }),
+    score_hash: await sha256({
+      semanticContent,
+      grammar: 'groove-v1',
+      kitHash,
+      scenes: scenes.map((scene) => ({
+        ...scene,
+        theme: {
+          ...scene.theme,
+          notes: scene.theme.notes.map((note) => ({
+            ...note,
+            evidence_ids: normalizedEvidence(note.evidence_ids),
+          })),
+        },
+        repo: {
+          ...scene.repo,
+          notes: scene.repo.notes.map((note) => ({
+            ...note,
+            evidence_ids: normalizedEvidence(note.evidence_ids),
+          })),
+        },
+      })),
+    }),
     scenes,
   };
 }

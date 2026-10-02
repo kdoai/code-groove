@@ -49,4 +49,33 @@ describe('groove-v1 invariants', () => {
     map.events[1].semantic_order = map.events[0].semantic_order;
     await expect(compileGroove(map, 'kit')).rejects.toThrow('DUPLICATE_ORDER');
   });
+  it('keeps read event UUIDs out of the deterministic content hash', async () => {
+    const map = load('mixed');
+    const changed = structuredClone(map);
+    const aliases = new Map(changed.evidence.map((proof, i) => [proof.evidence_id, `new_read_${i}`]));
+    changed.evidence.forEach((proof) => {
+      proof.evidence_id = aliases.get(proof.evidence_id)!;
+      proof.created_by_tool_event_id = 'new_tool';
+    });
+    [...changed.units, ...changed.responsibilities, ...changed.events].forEach((value) => {
+      value.evidence_ids = value.evidence_ids.map((id) => aliases.get(id)!);
+    });
+    expect((await compileGroove(map, 'kit')).score_hash).toBe(
+      (await compileGroove(changed, 'kit')).score_hash,
+    );
+  });
+  it('shows an unresolved unit as silent space without making a data note', async () => {
+    const map = load('mixed');
+    map.units.push({
+      ...map.units[0],
+      unit_id: 'unresolved_unit',
+      review_state: 'unresolved',
+      evidence_ids: [],
+    });
+    const score = await compileGroove(map, 'kit');
+    expect(score.scenes.some((scene) => scene.unit_ids.includes('unresolved_unit'))).toBe(true);
+    expect(
+      score.scenes.flatMap((scene) => scene.repo.notes).some((note) => note.unit_id === 'unresolved_unit'),
+    ).toBe(false);
+  });
 });

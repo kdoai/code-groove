@@ -114,9 +114,11 @@ async def main():
                 json.dumps(events, ensure_ascii=False, indent=2), encoding="utf-8"
             )
         print(json.dumps(reports[-1], ensure_ascii=False))
-    (ROOT / "artifacts/live-agent-cases.json").write_text(
-        json.dumps(reports, ensure_ascii=False, indent=2), encoding="utf-8"
-    )
+    previous_path = ROOT / "artifacts/live-agent-cases.json"
+    previous = json.loads(previous_path.read_text(encoding="utf-8")) if previous_path.exists() else []
+    samples = {report["sample"] for report in reports}
+    combined = [report for report in previous if report["sample"] not in samples] + reports
+    previous_path.write_text(json.dumps(combined, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
 asyncio.run(main())

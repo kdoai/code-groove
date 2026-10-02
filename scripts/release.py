@@ -38,7 +38,7 @@ def main():
         raise RuntimeError("Build polling deadline exceeded")
     deploy(image)
     saved = json.loads((ROOT / ".local/deploy-settings.json").read_text())
-    response = httpx.get(f"{saved['web_url']}/healthz", timeout=30)
+    response = httpx.get(f"{saved['web_url']}/health", timeout=30)
     response.raise_for_status()
     if response.json().get("status") != "ok":
         raise RuntimeError("Health response invalid")

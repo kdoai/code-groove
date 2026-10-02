@@ -15,10 +15,13 @@
     "projectId": "artful-bonsai-491601-p3",
     "appId": "1:125372198330:web:79ae190458cef583b9c183",
     "storageBucket": "artful-bonsai-491601-p3.firebasestorage.app",
-    "apiKey": "removed-retired-browser-key",
+    "apiKey": "AIzaSyALcKVhjwHoKGMHKSKU2KhWEUITpbjROCA",
     "authDomain": "artful-bonsai-491601-p3.firebaseapp.com",
     "messagingSenderId": "125372198330",
     "projectNumber": "125372198330",
     "version": "2"
-  }
+  },
+  "worker_url": "https://code-groove-worker-a5ygiois2a-an.a.run.app",
+  "web_url": "https://code-groove-web-a5ygiois2a-an.a.run.app",
+  "image": "asia-northeast1-docker.pkg.dev/artful-bonsai-491601-p3/code-groove/runtime:31c12ff00688eedfb93f173594c15a1943286387"
 }

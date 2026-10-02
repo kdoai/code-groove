@@ -15,14 +15,23 @@ from starlette.middleware.gzip import GZipMiddleware
 
 from code_groove.auth import FirebaseVerifier
 from code_groove.errors import GrooveError
-from code_groove.jobs import TERMINAL, JobService
+from code_groove.http_limits import BodyLimitMiddleware
+from code_groove.jobs import JobService
 from code_groove.schemas import Contract, Evidence, Id, SemanticMap
 from code_groove.settings import ROOT, Settings
 from code_groove.source import parse_github_url, run_node
 from code_groove.storage import ArtifactStore, MetadataStore, Transaction
 from code_groove.validation import validate_candidate
 
-SAMPLES = ("cohesive", "scattered", "mixed", "justified", "orchestrator")
+SAMPLES = (
+    "cohesive",
+    "scattered",
+    "mixed",
+    "justified",
+    "orchestrator",
+    "recorded-scattered",
+    "recorded-justified",
+)
 
 
 class Source(Contract):
@@ -56,6 +65,7 @@ def create_app(settings: Settings | None = None, verifier: Callable[[str], str] 
     jobs, verify = JobService(settings, store, artifacts), verifier or FirebaseVerifier(settings)
     app = FastAPI(title="Code Groove", docs_url=None, redoc_url=None, openapi_url=None)
     app.add_middleware(GZipMiddleware, minimum_size=1000)
+    app.add_middleware(BodyLimitMiddleware)
     app.state.store, app.state.artifacts, app.state.jobs = store, artifacts, jobs
 
     @app.exception_handler(GrooveError)
@@ -138,6 +148,7 @@ def create_app(settings: Settings | None = None, verifier: Callable[[str], str] 
     User = Annotated[str, Depends(uid)]
     Key = Annotated[str, Depends(idem)]
 
+    @app.get("/health")
     @app.get("/healthz")
     def health() -> dict:
         return {"status": "ok"}
@@ -187,7 +198,16 @@ def create_app(settings: Settings | None = None, verifier: Callable[[str], str] 
     def sample_bundle(sample_id: str) -> dict:
         if sample_id not in SAMPLES:
             raise GrooveError("NOT_FOUND", "サンプルが見つかりません。", 404)
-        return {"data": json.loads((ROOT / "fixtures" / f"{sample_id}.json").read_text(encoding="utf-8"))}
+        file = (
+            ROOT
+            / "fixtures"
+            / (
+                f"recorded-live/{sample_id.removeprefix('recorded-')}.json"
+                if sample_id.startswith("recorded-")
+                else f"{sample_id}.json"
+            )
+        )
+        return {"data": json.loads(file.read_text(encoding="utf-8"))}
 
     @app.post("/api/v1/projects", status_code=202)
     def create_project(body: CreateProject, user: User, key: Key) -> dict:
@@ -391,15 +411,8 @@ def create_app(settings: Settings | None = None, verifier: Callable[[str], str] 
 
     @app.post("/api/v1/runs/{run_id}/cancel")
     def cancel(run_id: str, user: User) -> dict:
-        run = own("runs", run_id, user)
-        if run["status"] not in TERMINAL:
-            changes: dict = {"cancel_requested": True}
-            if not run.get("lease_expires_at", 0) > time.time():
-                changes["status"] = "cancelled"
-            store.update("runs", run_id, changes)
-            if changes.get("status") == "cancelled":
-                jobs.settle_quota(run_id)
-        return {"data": {"run_id": run_id, "cancel_requested": True}}
+        own("runs", run_id, user)
+        return {"data": {"run_id": run_id, "cancel_requested": jobs.cancel(run_id)}}
 
     @app.post("/api/v1/projects/{project_id}/retry-enqueue", status_code=202)
     def retry_enqueue(project_id: str, user: User) -> dict:
