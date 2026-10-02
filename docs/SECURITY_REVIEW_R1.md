@@ -36,3 +36,10 @@ vulnerabilities (`artifacts/npm-audit-r3.json`, `artifacts/python-audit-r3.json`
 Dependency advisories and deployed permission probes detect known issues and
 tested boundary failures; this review does not claim that every possible attack
 or vulnerability has been eliminated. Private GitHub OAuth is outside scope.
+
+Provider recovery preserves the conservative charge for responses whose usage is
+unknown. Every retry fits inside the remaining output allowance; no token budget
+is enlarged. After bounded exploration, the server permits only final submission
+with validated existing evidence. Unsupported claims must stay unknown. A single
+administrative analysis-count credit used for release verification is audited in
+artifacts/r3-verification-credit.json; consumed tokens and global ceilings remain.
