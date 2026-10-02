@@ -71,11 +71,12 @@ try {
   });
   await at(125, 'Recorded investigation: justified difference', async () => {
     await page.goto(`${url}/projects/sample-recorded-justified/arrange?scene=1`);
-    await inspect();
-    await page.locator('.finding').first().scrollIntoViewIfNeeded();
+    await page.getByRole('button', { name: 'enterprise-policy.ts', exact: true }).click();
+    await expect(page.locator('.monaco-editor')).toBeVisible({ timeout: 20000 });
+    await page.locator('.finding .finding-label').first().scrollIntoViewIfNeeded();
   });
   await at(150, 'Follow the proof to source', async () => {
-    await page.locator('.finding .evidence-link').first().click();
+    await page.locator('.finding .evidence-link').last().click();
   });
   await at(165, 'Return to the workspace', async () => {
     await page.getByRole('button', { name: 'Arrangeへ', exact: true }).click();

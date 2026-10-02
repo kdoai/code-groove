@@ -10,9 +10,18 @@ Google Cloud Runでwebと非公開workerを実行し、Vertex経由のGemini API
 
 GitHub: https://github.com/kdoai/code-groove （非公開。ダッシュボードからGitHub Appで連携）
 
-URLは `artifacts/deployment.json`。審査メールは `reviewer@example.invalid`。パスワードは管理者がSecret Managerから取得して、非公開の「動作確認の方法」欄へ記入してください。メール受信やソーシャルログインは不要です。
+URL: https://code-groove-web-a5ygiois2a-an.a.run.app 。審査メールは `reviewer@example.invalid`。パスワードは管理者がSecret Managerから取得して、非公開の「動作確認の方法」欄へ記入してください。メール受信やソーシャルログインは不要です。
 
-動作確認：初回ガイドで混在サンプルを開く → Play → ThemeとRepoを比較 → 打点を選ぶ → Inspectでコードを確認。実解析はログインして「このサンプルを実解析」。保存済み実解析の閲覧でもAI費用は発生しません。
+動作確認：初回ガイドで混在サンプルを開く → Play → ThemeとRepoを比較 → 打点を選ぶ → Inspectでコードを確認。Openの「実解析を再生」で実際のGeminiツール記録と例外の追加調査を閲覧できます。実解析はログインして「このサンプルを実解析」。審査アカウントのOpenには保存済みの作業も表示されます。保存結果の閲覧でもAI費用は発生しません。
+
+構成図: `artifacts/architecture.png`（編集元 `docs/architecture.svg`）。３分デモ: `artifacts/code-groove-demo.mp4`。字幕付きの実画面録画で、音声は同じPCM音源・楽譜から収録タイミングに合わせて再構成しています。ナレーションはありません。配信用MP4と再生成スクリプトをGit管理し、収録元の生動画・音声は除外しています。
+
+```powershell
+node scripts/capture-demo.mjs
+uv run --with imageio-ffmpeg python scripts/assemble-demo.py
+```
+
+収録は公開サンプルだけを使い、新規AI呼び出しは0件です。再生成にはPlaywright Chromiumが必要です。
 
 ## ３分デモ台本
 

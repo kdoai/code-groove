@@ -14,6 +14,8 @@ Cloud Logging は run_id / attempt_id / event_type / model_id / error_code を�
 
 ## ロールバック
 
+配備ジョブだけ失敗した場合は `gh run rerun <run-id> --failed --repo kdoai/code-groove` で再試行します。成功済みの検証ジョブは実行しません。同じSHAのイメージが存在すれば再ビルドせず再利用します。基盤のIAMを変更する権限は配備アカウントに与えません。
+
 直前の成功したイメージを `artifacts/deployment.json` と GitHub Actions の履歴から確認し、同じ配備スクリプトで指定します。Artifact Registryは最新２バージョンを保持します。
 
 ```powershell

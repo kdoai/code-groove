@@ -50,6 +50,24 @@ def main():
         output.setsampwidth(2)
         output.setframerate(RATE)
         output.writeframes((pcm * 32767).astype("<i2").tobytes())
+    captions = [
+        "[Script Info]",
+        "ScriptType: v4.00+",
+        "PlayResX: 1280",
+        "PlayResY: 816",
+        "[V4+ Styles]",
+        "Format: Name,Fontname,Fontsize,PrimaryColour,SecondaryColour,OutlineColour,BackColour,Bold,Italic,Underline,StrikeOut,ScaleX,ScaleY,Spacing,Angle,BorderStyle,Outline,Shadow,Alignment,MarginL,MarginR,MarginV,Encoding",
+        "Style: Default,Yu Gothic,22,&H00FFFFFF,&H000000FF,&H00202636,&H00202636,0,0,0,0,100,100,0,0,1,0,0,2,24,24,18,1",
+        "[Events]",
+        "Format: Layer,Start,End,Style,Name,MarginL,MarginR,MarginV,Effect,Text",
+    ]
+    for block in (ROOT / "docs/demo-subtitles.srt").read_text(encoding="utf-8").strip().split("\n\n"):
+        lines = block.splitlines()
+        start_time, end_time = lines[1].split(" --> ")
+        start_time, end_time = (value[1:].replace(",", ".")[:-1] for value in (start_time, end_time))
+        caption = r"\N".join(lines[2:])
+        captions.append(f"Dialogue: 0,{start_time},{end_time},Default,,0,0,0,,{caption}")
+    (ROOT / "artifacts/demo-captions.ass").write_text("\n".join(captions), encoding="utf-8")
     command = [
         imageio_ffmpeg.get_ffmpeg_exe(),
         "-y",
@@ -58,7 +76,7 @@ def main():
         "-i",
         "artifacts/demo-audio.wav",
         "-vf",
-        "pad=1280:816:0:0:color=0x202636,subtitles=docs/demo-subtitles.srt:force_style='FontName=Yu Gothic,FontSize=17,MarginV=12,Outline=0'",
+        "pad=1280:816:0:0:color=0x202636,subtitles=artifacts/demo-captions.ass",
         "-c:v",
         "libx264",
         "-preset",

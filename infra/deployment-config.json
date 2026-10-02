@@ -23,5 +23,5 @@
   },
   "worker_url": "https://code-groove-worker-a5ygiois2a-an.a.run.app",
   "web_url": "https://code-groove-web-a5ygiois2a-an.a.run.app",
-  "image": "asia-northeast1-docker.pkg.dev/artful-bonsai-491601-p3/code-groove/runtime:31c12ff00688eedfb93f173594c15a1943286387"
+  "image": "asia-northeast1-docker.pkg.dev/artful-bonsai-491601-p3/code-groove/runtime:e75d749e9002c388b8ac0ed9989e2b4cb770a842"
 }

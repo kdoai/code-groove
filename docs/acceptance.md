@@ -14,6 +14,10 @@
 | UI | 初回ガイド、Arrange、Theme/Repo、コード選択、サンプル、保存済み実解析、実ログ、ログイン/追加調査、音声開始 | Playwright + in-app browser / deployed-live-*.png |
 | 配備 | lock固定、静的検査、選択的CI、鍵なしWIF、Cloud Build、SHA固定コンテナ | GitHub Actions / deployment.json |
 
+最終リリース: [GitHub Actions SUCCESS](https://github.com/kdoai/code-groove/actions/runs/36998211760)。Python 30件、JS 12件、E2E 2件成功。有料E2Eは通常CIでスキップし、GCP上のログイン・実解析・追加調査は別途実行して成功を記録しました。
+
+最新配備版の混在ケースは96.45秒・モデル8回・意味イベント6点で成功。保存済み作業のOpen、再読み込み、Play、ログアウト後の消去も確認し、この操作による新規モデル呼び出しは0件でした。本番依存監査はnpm/Pythonとも既知の問題0件です。
+
 有料実測は３ケースとGCP上の解析・追加調査に限定しました。通常のCI/E2Eは模擬または保存済み結果で検証します。リリース時のみ全体テスト、日常変更は影響する領域だけを実行します。
 
 音として責務を理解しやすいかは人による聴取評価が必要です。画像・PCMの技術確認を人の評価として扱いません。YouTube公開と審査ダッシュボードへの提出も未実施です。
