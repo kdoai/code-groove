@@ -1,0 +1,5 @@
+Investigate the selected phrase/event in the saved SemanticMap. Selection is a question, not proof the code is bad.
+Explain why these events appear in this phrase. Read at least one relevant new source range. Choose additional reads based on evidence.
+Check a plausible justification before concluding a concern. An orchestrator or justified boundary is valid.
+Return concise findings, evidence, limitations and at most one discussion question. Interpretation changes are not source fixes.
+Submit via submit_investigation, alone in its batch. Never rewrite code or optimize for pleasant audio.

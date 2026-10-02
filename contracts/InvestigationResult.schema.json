@@ -1,0 +1,411 @@
+{
+  "$defs": {
+    "Evidence": {
+      "additionalProperties": false,
+      "properties": {
+        "evidence_id": {
+          "pattern": "^[a-zA-Z0-9_-]{1,80}$",
+          "title": "Evidence Id",
+          "type": "string"
+        },
+        "snapshot_id": {
+          "pattern": "^[a-zA-Z0-9_-]{1,80}$",
+          "title": "Snapshot Id",
+          "type": "string"
+        },
+        "span": {
+          "$ref": "#/$defs/Span"
+        },
+        "projection_sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Projection Sha256",
+          "type": "string"
+        },
+        "source_kind": {
+          "enum": [
+            "code",
+            "test",
+            "document"
+          ],
+          "title": "Source Kind",
+          "type": "string"
+        },
+        "observation": {
+          "maxLength": 160,
+          "minLength": 1,
+          "title": "Observation",
+          "type": "string"
+        },
+        "created_by_tool_event_id": {
+          "pattern": "^[a-zA-Z0-9_-]{1,80}$",
+          "title": "Created By Tool Event Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "evidence_id",
+        "snapshot_id",
+        "span",
+        "projection_sha256",
+        "source_kind",
+        "observation",
+        "created_by_tool_event_id"
+      ],
+      "title": "Evidence",
+      "type": "object"
+    },
+    "Finding": {
+      "additionalProperties": false,
+      "properties": {
+        "finding_id": {
+          "pattern": "^[a-zA-Z0-9_-]{1,80}$",
+          "title": "Finding Id",
+          "type": "string"
+        },
+        "verdict": {
+          "enum": [
+            "concern",
+            "justified_difference",
+            "inconclusive",
+            "no_specific_concern"
+          ],
+          "title": "Verdict",
+          "type": "string"
+        },
+        "summary": {
+          "maxLength": 180,
+          "minLength": 1,
+          "title": "Summary",
+          "type": "string"
+        },
+        "evidence_ids": {
+          "items": {
+            "pattern": "^[a-zA-Z0-9_-]{1,80}$",
+            "type": "string"
+          },
+          "maxItems": 96,
+          "title": "Evidence Ids",
+          "type": "array"
+        },
+        "justification": {
+          "maxLength": 160,
+          "minLength": 1,
+          "title": "Justification",
+          "type": "string"
+        },
+        "limitation": {
+          "anyOf": [
+            {
+              "maxLength": 160,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Limitation"
+        },
+        "discussion_question": {
+          "anyOf": [
+            {
+              "maxLength": 160,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Discussion Question"
+        }
+      },
+      "required": [
+        "finding_id",
+        "verdict",
+        "summary",
+        "evidence_ids",
+        "justification"
+      ],
+      "title": "Finding",
+      "type": "object"
+    },
+    "Hypothesis": {
+      "additionalProperties": false,
+      "properties": {
+        "hypothesis_id": {
+          "pattern": "^[a-zA-Z0-9_-]{1,80}$",
+          "title": "Hypothesis Id",
+          "type": "string"
+        },
+        "statement": {
+          "maxLength": 160,
+          "minLength": 1,
+          "title": "Statement",
+          "type": "string"
+        },
+        "counter_question": {
+          "maxLength": 160,
+          "minLength": 1,
+          "title": "Counter Question",
+          "type": "string"
+        },
+        "evidence_ids": {
+          "items": {
+            "pattern": "^[a-zA-Z0-9_-]{1,80}$",
+            "type": "string"
+          },
+          "maxItems": 96,
+          "title": "Evidence Ids",
+          "type": "array"
+        },
+        "status": {
+          "enum": [
+            "open",
+            "supported",
+            "rejected",
+            "undetermined"
+          ],
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "hypothesis_id",
+        "statement",
+        "counter_question",
+        "evidence_ids",
+        "status"
+      ],
+      "title": "Hypothesis",
+      "type": "object"
+    },
+    "Reclassification": {
+      "additionalProperties": false,
+      "properties": {
+        "event_id": {
+          "pattern": "^[a-zA-Z0-9_-]{1,80}$",
+          "title": "Event Id",
+          "type": "string"
+        },
+        "from_responsibility_id": {
+          "pattern": "^[a-zA-Z0-9_-]{1,80}$",
+          "title": "From Responsibility Id",
+          "type": "string"
+        },
+        "to_responsibility_id": {
+          "pattern": "^[a-zA-Z0-9_-]{1,80}$",
+          "title": "To Responsibility Id",
+          "type": "string"
+        },
+        "evidence_ids": {
+          "items": {
+            "pattern": "^[a-zA-Z0-9_-]{1,80}$",
+            "type": "string"
+          },
+          "maxItems": 96,
+          "title": "Evidence Ids",
+          "type": "array"
+        },
+        "reason": {
+          "maxLength": 160,
+          "minLength": 1,
+          "title": "Reason",
+          "type": "string"
+        }
+      },
+      "required": [
+        "event_id",
+        "from_responsibility_id",
+        "to_responsibility_id",
+        "evidence_ids",
+        "reason"
+      ],
+      "title": "Reclassification",
+      "type": "object"
+    },
+    "Responsibility": {
+      "additionalProperties": false,
+      "properties": {
+        "responsibility_id": {
+          "pattern": "^[a-zA-Z0-9_-]{1,80}$",
+          "title": "Responsibility Id",
+          "type": "string"
+        },
+        "label": {
+          "maxLength": 24,
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "definition": {
+          "maxLength": 160,
+          "minLength": 1,
+          "title": "Definition",
+          "type": "string"
+        },
+        "change_reason": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Change Reason",
+          "type": "string"
+        },
+        "evidence_ids": {
+          "items": {
+            "pattern": "^[a-zA-Z0-9_-]{1,80}$",
+            "type": "string"
+          },
+          "maxItems": 96,
+          "title": "Evidence Ids",
+          "type": "array"
+        },
+        "motif_id": {
+          "enum": [
+            "M0",
+            "M1",
+            "M2",
+            "M3",
+            "M4",
+            "M5"
+          ],
+          "title": "Motif Id",
+          "type": "string"
+        },
+        "display_order": {
+          "minimum": 0,
+          "title": "Display Order",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "responsibility_id",
+        "label",
+        "definition",
+        "change_reason",
+        "evidence_ids",
+        "motif_id",
+        "display_order"
+      ],
+      "title": "Responsibility",
+      "type": "object"
+    },
+    "Span": {
+      "additionalProperties": false,
+      "properties": {
+        "file_id": {
+          "pattern": "^[a-zA-Z0-9_-]{1,80}$",
+          "title": "File Id",
+          "type": "string"
+        },
+        "path": {
+          "maxLength": 240,
+          "minLength": 1,
+          "title": "Path",
+          "type": "string"
+        },
+        "start_line": {
+          "minimum": 1,
+          "title": "Start Line",
+          "type": "integer"
+        },
+        "end_line": {
+          "minimum": 1,
+          "title": "End Line",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "file_id",
+        "path",
+        "start_line",
+        "end_line"
+      ],
+      "title": "Span",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "findings": {
+      "items": {
+        "$ref": "#/$defs/Finding"
+      },
+      "maxItems": 3,
+      "minItems": 1,
+      "title": "Findings",
+      "type": "array"
+    },
+    "hypotheses": {
+      "items": {
+        "$ref": "#/$defs/Hypothesis"
+      },
+      "maxItems": 16,
+      "title": "Hypotheses",
+      "type": "array"
+    },
+    "suggested_reclassification": {
+      "items": {
+        "$ref": "#/$defs/Reclassification"
+      },
+      "maxItems": 96,
+      "title": "Suggested Reclassification",
+      "type": "array"
+    },
+    "new_responsibilities": {
+      "items": {
+        "$ref": "#/$defs/Responsibility"
+      },
+      "maxItems": 6,
+      "title": "New Responsibilities",
+      "type": "array"
+    },
+    "investigation_id": {
+      "pattern": "^[a-zA-Z0-9_-]{1,80}$",
+      "title": "Investigation Id",
+      "type": "string"
+    },
+    "base_analysis_id": {
+      "pattern": "^[a-zA-Z0-9_-]{1,80}$",
+      "title": "Base Analysis Id",
+      "type": "string"
+    },
+    "selected_unit_ids": {
+      "items": {
+        "pattern": "^[a-zA-Z0-9_-]{1,80}$",
+        "type": "string"
+      },
+      "maxItems": 96,
+      "title": "Selected Unit Ids",
+      "type": "array"
+    },
+    "selected_event_ids": {
+      "items": {
+        "pattern": "^[a-zA-Z0-9_-]{1,80}$",
+        "type": "string"
+      },
+      "maxItems": 96,
+      "title": "Selected Event Ids",
+      "type": "array"
+    },
+    "evidence": {
+      "items": {
+        "$ref": "#/$defs/Evidence"
+      },
+      "title": "Evidence",
+      "type": "array"
+    }
+  },
+  "required": [
+    "findings",
+    "hypotheses",
+    "investigation_id",
+    "base_analysis_id",
+    "selected_unit_ids",
+    "selected_event_ids",
+    "evidence"
+  ],
+  "title": "InvestigationResult",
+  "type": "object"
+}

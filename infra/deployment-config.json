@@ -1,0 +1,24 @@
+{
+  "project": "artful-bonsai-491601-p3",
+  "number": "125372198330",
+  "region": "asia-northeast1",
+  "accounts": {
+    "web": "cg-web@artful-bonsai-491601-p3.iam.gserviceaccount.com",
+    "worker": "cg-worker@artful-bonsai-491601-p3.iam.gserviceaccount.com",
+    "tasks-invoker": "cg-tasks-invoker@artful-bonsai-491601-p3.iam.gserviceaccount.com",
+    "build": "cg-build@artful-bonsai-491601-p3.iam.gserviceaccount.com",
+    "deploy": "cg-deploy@artful-bonsai-491601-p3.iam.gserviceaccount.com"
+  },
+  "artifact_bucket": "artful-bonsai-491601-p3-cg-artifacts",
+  "build_bucket": "artful-bonsai-491601-p3-cg-build",
+  "firebase": {
+    "projectId": "artful-bonsai-491601-p3",
+    "appId": "1:125372198330:web:79ae190458cef583b9c183",
+    "storageBucket": "artful-bonsai-491601-p3.firebasestorage.app",
+    "apiKey": "removed-retired-browser-key",
+    "authDomain": "artful-bonsai-491601-p3.firebaseapp.com",
+    "messagingSenderId": "125372198330",
+    "projectNumber": "125372198330",
+    "version": "2"
+  }
+}

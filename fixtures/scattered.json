@@ -1,0 +1,1050 @@
+{
+  "map": {
+    "schema_version": "1.0",
+    "analysis_id": "analysis_scattered",
+    "project_id": "sample-scattered",
+    "snapshot_id": "snapshot_scattered",
+    "origin": "fixture",
+    "profile": {
+      "title": "散らばった返金条件",
+      "purpose": "同じ条件が、別の所有単位で演奏される。",
+      "assumptions": [
+        "返金ルールを比較するための小さな手作業サンプル"
+      ],
+      "unknowns": [
+        "実モデルによる調査は未実施"
+      ]
+    },
+    "responsibilities": [
+      {
+        "responsibility_id": "r0",
+        "label": "返金条件",
+        "definition": "返金条件を決める独立した判断",
+        "change_reason": "返金可能な契約条件が変わるとき",
+        "evidence_ids": [
+          "evidence_0"
+        ],
+        "motif_id": "M0",
+        "display_order": 0
+      },
+      {
+        "responsibility_id": "r1",
+        "label": "返金額",
+        "definition": "返金額を決める独立した判断",
+        "change_reason": "手数料・返金額の計算規則が変わるとき",
+        "evidence_ids": [
+          "evidence_2"
+        ],
+        "motif_id": "M1",
+        "display_order": 1
+      },
+      {
+        "responsibility_id": "r2",
+        "label": "通知内容",
+        "definition": "通知内容を決める独立した判断",
+        "change_reason": "顧客への伝え方が変わるとき",
+        "evidence_ids": [
+          "evidence_3"
+        ],
+        "motif_id": "M2",
+        "display_order": 2
+      }
+    ],
+    "units": [
+      {
+        "unit_id": "unit_refundAtCounter",
+        "label": "refundAtCounter",
+        "primary_span": {
+          "file_id": "file_0",
+          "path": "src/counter-refund.ts",
+          "start_line": 1,
+          "end_line": 7
+        },
+        "member_symbol_ids": [],
+        "role": "policy",
+        "review_state": "inspected",
+        "boundary_reason": "関数の本文が判断を所有する",
+        "evidence_ids": [
+          "evidence_0"
+        ]
+      },
+      {
+        "unit_id": "unit_refundOnline",
+        "label": "refundOnline",
+        "primary_span": {
+          "file_id": "file_1",
+          "path": "src/online-refund.ts",
+          "start_line": 1,
+          "end_line": 7
+        },
+        "member_symbol_ids": [],
+        "role": "policy",
+        "review_state": "inspected",
+        "boundary_reason": "関数の本文が判断を所有する",
+        "evidence_ids": [
+          "evidence_1"
+        ]
+      },
+      {
+        "unit_id": "unit_calculateRefund",
+        "label": "calculateRefund",
+        "primary_span": {
+          "file_id": "file_2",
+          "path": "src/refund-amount.ts",
+          "start_line": 1,
+          "end_line": 7
+        },
+        "member_symbol_ids": [],
+        "role": "calculation",
+        "review_state": "inspected",
+        "boundary_reason": "関数の本文が判断を所有する",
+        "evidence_ids": [
+          "evidence_2"
+        ]
+      },
+      {
+        "unit_id": "unit_buildNotification",
+        "label": "buildNotification",
+        "primary_span": {
+          "file_id": "file_3",
+          "path": "src/notification.ts",
+          "start_line": 1,
+          "end_line": 7
+        },
+        "member_symbol_ids": [],
+        "role": "adapter",
+        "review_state": "inspected",
+        "boundary_reason": "関数の本文が判断を所有する",
+        "evidence_ids": [
+          "evidence_3"
+        ]
+      }
+    ],
+    "events": [
+      {
+        "event_id": "event_0_0",
+        "concept_key": "r0_購入から30日以内",
+        "label": "購入から30日以内",
+        "meaning": "購入から30日以内",
+        "responsibility_id": "r0",
+        "unit_id": "unit_refundAtCounter",
+        "semantic_order": 0,
+        "kind": "decision",
+        "span": {
+          "file_id": "file_0",
+          "path": "src/counter-refund.ts",
+          "start_line": 5,
+          "end_line": 5
+        },
+        "evidence_ids": [
+          "evidence_0"
+        ],
+        "state": "grounded"
+      },
+      {
+        "event_id": "event_0_1",
+        "concept_key": "r0_購入証明と商品条件を確認",
+        "label": "購入証明と商品条件を確認",
+        "meaning": "購入証明と商品条件を確認",
+        "responsibility_id": "r0",
+        "unit_id": "unit_refundAtCounter",
+        "semantic_order": 1,
+        "kind": "decision",
+        "span": {
+          "file_id": "file_0",
+          "path": "src/counter-refund.ts",
+          "start_line": 6,
+          "end_line": 6
+        },
+        "evidence_ids": [
+          "evidence_0"
+        ],
+        "state": "grounded"
+      },
+      {
+        "event_id": "event_1_0",
+        "concept_key": "r0_購入から30日以内",
+        "label": "購入から30日以内",
+        "meaning": "購入から30日以内",
+        "responsibility_id": "r0",
+        "unit_id": "unit_refundOnline",
+        "semantic_order": 2,
+        "kind": "decision",
+        "span": {
+          "file_id": "file_1",
+          "path": "src/online-refund.ts",
+          "start_line": 5,
+          "end_line": 5
+        },
+        "evidence_ids": [
+          "evidence_1"
+        ],
+        "state": "grounded"
+      },
+      {
+        "event_id": "event_1_1",
+        "concept_key": "r0_購入証明と商品条件を確認",
+        "label": "購入証明と商品条件を確認",
+        "meaning": "購入証明と商品条件を確認",
+        "responsibility_id": "r0",
+        "unit_id": "unit_refundOnline",
+        "semantic_order": 3,
+        "kind": "decision",
+        "span": {
+          "file_id": "file_1",
+          "path": "src/online-refund.ts",
+          "start_line": 6,
+          "end_line": 6
+        },
+        "evidence_ids": [
+          "evidence_1"
+        ],
+        "state": "grounded"
+      },
+      {
+        "event_id": "event_2_0",
+        "concept_key": "r1_手数料を計算",
+        "label": "手数料を計算",
+        "meaning": "手数料を計算",
+        "responsibility_id": "r1",
+        "unit_id": "unit_calculateRefund",
+        "semantic_order": 0,
+        "kind": "calculation",
+        "span": {
+          "file_id": "file_2",
+          "path": "src/refund-amount.ts",
+          "start_line": 5,
+          "end_line": 5
+        },
+        "evidence_ids": [
+          "evidence_2"
+        ],
+        "state": "grounded"
+      },
+      {
+        "event_id": "event_2_1",
+        "concept_key": "r1_返金額を計算",
+        "label": "返金額を計算",
+        "meaning": "返金額を計算",
+        "responsibility_id": "r1",
+        "unit_id": "unit_calculateRefund",
+        "semantic_order": 1,
+        "kind": "calculation",
+        "span": {
+          "file_id": "file_2",
+          "path": "src/refund-amount.ts",
+          "start_line": 6,
+          "end_line": 6
+        },
+        "evidence_ids": [
+          "evidence_2"
+        ],
+        "state": "grounded"
+      },
+      {
+        "event_id": "event_3_0",
+        "concept_key": "r2_宛名を決める",
+        "label": "宛名を決める",
+        "meaning": "宛名を決める",
+        "responsibility_id": "r2",
+        "unit_id": "unit_buildNotification",
+        "semantic_order": 0,
+        "kind": "update",
+        "span": {
+          "file_id": "file_3",
+          "path": "src/notification.ts",
+          "start_line": 5,
+          "end_line": 5
+        },
+        "evidence_ids": [
+          "evidence_3"
+        ],
+        "state": "grounded"
+      },
+      {
+        "event_id": "event_3_1",
+        "concept_key": "r2_通知文を組み立てる",
+        "label": "通知文を組み立てる",
+        "meaning": "通知文を組み立てる",
+        "responsibility_id": "r2",
+        "unit_id": "unit_buildNotification",
+        "semantic_order": 1,
+        "kind": "update",
+        "span": {
+          "file_id": "file_3",
+          "path": "src/notification.ts",
+          "start_line": 6,
+          "end_line": 6
+        },
+        "evidence_ids": [
+          "evidence_3"
+        ],
+        "state": "grounded"
+      }
+    ],
+    "hypotheses": [],
+    "evidence": [
+      {
+        "evidence_id": "evidence_0",
+        "snapshot_id": "snapshot_scattered",
+        "span": {
+          "file_id": "file_0",
+          "path": "src/counter-refund.ts",
+          "start_line": 1,
+          "end_line": 7
+        },
+        "projection_sha256": "75e375e9a03534ca9639d70697ec44999ccb88511308ce1eaf0e252abca93351",
+        "source_kind": "code",
+        "observation": "refundAtCounter の判断・計算の本文（手作業サンプル）",
+        "created_by_tool_event_id": "fixture_0"
+      },
+      {
+        "evidence_id": "evidence_1",
+        "snapshot_id": "snapshot_scattered",
+        "span": {
+          "file_id": "file_1",
+          "path": "src/online-refund.ts",
+          "start_line": 1,
+          "end_line": 7
+        },
+        "projection_sha256": "f89b6a5ad76220e2f8ca0fffe978b17841c06c29e5d64998f598a5b766539370",
+        "source_kind": "code",
+        "observation": "refundOnline の判断・計算の本文（手作業サンプル）",
+        "created_by_tool_event_id": "fixture_1"
+      },
+      {
+        "evidence_id": "evidence_2",
+        "snapshot_id": "snapshot_scattered",
+        "span": {
+          "file_id": "file_2",
+          "path": "src/refund-amount.ts",
+          "start_line": 1,
+          "end_line": 7
+        },
+        "projection_sha256": "7382d17b5c9e4eceace29b7f6d09ea5d6d876491caf6f727605f564104f17c80",
+        "source_kind": "code",
+        "observation": "calculateRefund の判断・計算の本文（手作業サンプル）",
+        "created_by_tool_event_id": "fixture_2"
+      },
+      {
+        "evidence_id": "evidence_3",
+        "snapshot_id": "snapshot_scattered",
+        "span": {
+          "file_id": "file_3",
+          "path": "src/notification.ts",
+          "start_line": 1,
+          "end_line": 7
+        },
+        "projection_sha256": "9b618d8d55f9bf33837883ac1707844e5688e807271236e851285fb275c5a99b",
+        "source_kind": "code",
+        "observation": "buildNotification の判断・計算の本文（手作業サンプル）",
+        "created_by_tool_event_id": "fixture_3"
+      }
+    ],
+    "coverage": {
+      "indexed_source_files": 4,
+      "eligible_source_files": 4,
+      "indexed_units": 4,
+      "inspected_units": 4,
+      "unresolved_unit_ids": [],
+      "excluded_paths": [],
+      "inspected_line_ranges": [
+        {
+          "file_id": "file_0",
+          "path": "src/counter-refund.ts",
+          "start_line": 1,
+          "end_line": 7
+        },
+        {
+          "file_id": "file_1",
+          "path": "src/online-refund.ts",
+          "start_line": 1,
+          "end_line": 7
+        },
+        {
+          "file_id": "file_2",
+          "path": "src/refund-amount.ts",
+          "start_line": 1,
+          "end_line": 7
+        },
+        {
+          "file_id": "file_3",
+          "path": "src/notification.ts",
+          "start_line": 1,
+          "end_line": 7
+        }
+      ]
+    },
+    "model_id": "fixture (no model calls)",
+    "prompt_version": "fixture-v1",
+    "created_at": "2026-10-02T00:00:00Z"
+  },
+  "score": {
+    "analysis_id": "analysis_scattered",
+    "score_hash": "75b2734b77538a4a5077f1fac28d8e1dd53b3d7e0c22c5abf166cb93c59c3f63",
+    "scenes": [
+      {
+        "scene_id": "scene_1",
+        "unit_ids": [
+          "unit_refundAtCounter",
+          "unit_buildNotification",
+          "unit_refundOnline",
+          "unit_calculateRefund"
+        ],
+        "theme": {
+          "scene_id": "scene_1",
+          "grammar_version": "groove-v1",
+          "kit_id": "paper-studio-v1",
+          "kit_hash": "c1de3fbebe3e57868cc9d52ba1f0d9a435f879f05f31b88d0448ad174ef0e9f0",
+          "bpm": 96,
+          "beats_per_bar": 4,
+          "steps_per_bar": 16,
+          "ppq": 480,
+          "mode": "theme",
+          "total_bars": 3,
+          "phrases": [
+            {
+              "phrase_id": "theme_0",
+              "start_bar": 0,
+              "bar_count": 1,
+              "label": "返金条件",
+              "responsibility_id": "r0"
+            },
+            {
+              "phrase_id": "theme_1",
+              "start_bar": 1,
+              "bar_count": 1,
+              "label": "返金額",
+              "responsibility_id": "r1"
+            },
+            {
+              "phrase_id": "theme_2",
+              "start_bar": 2,
+              "bar_count": 1,
+              "label": "通知内容",
+              "responsibility_id": "r2"
+            }
+          ],
+          "notes": [
+            {
+              "note_id": "note_event_0_0",
+              "kind": "data",
+              "event_id": "event_0_0",
+              "responsibility_id": "r0",
+              "unit_id": "unit_refundAtCounter",
+              "duration_ms": 180,
+              "voice": "kick",
+              "variant": 0,
+              "velocity": 0.82,
+              "pan": -0.25,
+              "evidence_ids": [
+                "evidence_0"
+              ],
+              "tick": 0
+            },
+            {
+              "note_id": "pulse_0_0",
+              "kind": "pulse",
+              "tick": 0,
+              "duration_ms": 35,
+              "voice": "wood",
+              "variant": 0,
+              "velocity": 0.08,
+              "pan": 0,
+              "evidence_ids": []
+            },
+            {
+              "note_id": "note_event_1_0",
+              "kind": "data",
+              "event_id": "event_1_0",
+              "responsibility_id": "r0",
+              "unit_id": "unit_refundOnline",
+              "duration_ms": 120,
+              "voice": "snare",
+              "variant": 0,
+              "velocity": 0.72,
+              "pan": -0.25,
+              "evidence_ids": [
+                "evidence_1"
+              ],
+              "tick": 480
+            },
+            {
+              "note_id": "pulse_0_4",
+              "kind": "pulse",
+              "tick": 480,
+              "duration_ms": 35,
+              "voice": "wood",
+              "variant": 0,
+              "velocity": 0.08,
+              "pan": 0,
+              "evidence_ids": []
+            },
+            {
+              "note_id": "note_event_0_1",
+              "kind": "data",
+              "event_id": "event_0_1",
+              "responsibility_id": "r0",
+              "unit_id": "unit_refundAtCounter",
+              "duration_ms": 220,
+              "voice": "bass",
+              "variant": 0,
+              "velocity": 0.74,
+              "pan": -0.25,
+              "evidence_ids": [
+                "evidence_0"
+              ],
+              "tick": 960
+            },
+            {
+              "note_id": "pulse_0_8",
+              "kind": "pulse",
+              "tick": 960,
+              "duration_ms": 35,
+              "voice": "wood",
+              "variant": 0,
+              "velocity": 0.08,
+              "pan": 0,
+              "evidence_ids": []
+            },
+            {
+              "note_id": "note_event_1_1",
+              "kind": "data",
+              "event_id": "event_1_1",
+              "responsibility_id": "r0",
+              "unit_id": "unit_refundOnline",
+              "duration_ms": 120,
+              "voice": "snare",
+              "variant": 0,
+              "velocity": 0.68,
+              "pan": -0.25,
+              "evidence_ids": [
+                "evidence_1"
+              ],
+              "tick": 1440
+            },
+            {
+              "note_id": "pulse_0_12",
+              "kind": "pulse",
+              "tick": 1440,
+              "duration_ms": 35,
+              "voice": "wood",
+              "variant": 0,
+              "velocity": 0.08,
+              "pan": 0,
+              "evidence_ids": []
+            },
+            {
+              "note_id": "note_event_2_0",
+              "kind": "data",
+              "event_id": "event_2_0",
+              "responsibility_id": "r1",
+              "unit_id": "unit_calculateRefund",
+              "duration_ms": 180,
+              "voice": "kick",
+              "variant": 1,
+              "velocity": 0.82,
+              "pan": 0.2,
+              "evidence_ids": [
+                "evidence_2"
+              ],
+              "tick": 1920
+            },
+            {
+              "note_id": "pulse_1_0",
+              "kind": "pulse",
+              "tick": 1920,
+              "duration_ms": 35,
+              "voice": "wood",
+              "variant": 0,
+              "velocity": 0.08,
+              "pan": 0,
+              "evidence_ids": []
+            },
+            {
+              "note_id": "pulse_1_4",
+              "kind": "pulse",
+              "tick": 2400,
+              "duration_ms": 35,
+              "voice": "wood",
+              "variant": 0,
+              "velocity": 0.08,
+              "pan": 0,
+              "evidence_ids": []
+            },
+            {
+              "note_id": "note_event_2_1",
+              "kind": "data",
+              "event_id": "event_2_1",
+              "responsibility_id": "r1",
+              "unit_id": "unit_calculateRefund",
+              "duration_ms": 220,
+              "voice": "bass",
+              "variant": 1,
+              "velocity": 0.74,
+              "pan": 0.2,
+              "evidence_ids": [
+                "evidence_2"
+              ],
+              "tick": 2880
+            },
+            {
+              "note_id": "pulse_1_8",
+              "kind": "pulse",
+              "tick": 2880,
+              "duration_ms": 35,
+              "voice": "wood",
+              "variant": 0,
+              "velocity": 0.08,
+              "pan": 0,
+              "evidence_ids": []
+            },
+            {
+              "note_id": "pulse_1_12",
+              "kind": "pulse",
+              "tick": 3360,
+              "duration_ms": 35,
+              "voice": "wood",
+              "variant": 0,
+              "velocity": 0.08,
+              "pan": 0,
+              "evidence_ids": []
+            },
+            {
+              "note_id": "note_event_3_0",
+              "kind": "data",
+              "event_id": "event_3_0",
+              "responsibility_id": "r2",
+              "unit_id": "unit_buildNotification",
+              "duration_ms": 180,
+              "voice": "kick",
+              "variant": 2,
+              "velocity": 0.82,
+              "pan": -0.08,
+              "evidence_ids": [
+                "evidence_3"
+              ],
+              "tick": 3840
+            },
+            {
+              "note_id": "pulse_2_0",
+              "kind": "pulse",
+              "tick": 3840,
+              "duration_ms": 35,
+              "voice": "wood",
+              "variant": 0,
+              "velocity": 0.08,
+              "pan": 0,
+              "evidence_ids": []
+            },
+            {
+              "note_id": "pulse_2_4",
+              "kind": "pulse",
+              "tick": 4320,
+              "duration_ms": 35,
+              "voice": "wood",
+              "variant": 0,
+              "velocity": 0.08,
+              "pan": 0,
+              "evidence_ids": []
+            },
+            {
+              "note_id": "note_event_3_1",
+              "kind": "data",
+              "event_id": "event_3_1",
+              "responsibility_id": "r2",
+              "unit_id": "unit_buildNotification",
+              "duration_ms": 220,
+              "voice": "bass",
+              "variant": 2,
+              "velocity": 0.74,
+              "pan": -0.08,
+              "evidence_ids": [
+                "evidence_3"
+              ],
+              "tick": 4800
+            },
+            {
+              "note_id": "pulse_2_8",
+              "kind": "pulse",
+              "tick": 4800,
+              "duration_ms": 35,
+              "voice": "wood",
+              "variant": 0,
+              "velocity": 0.08,
+              "pan": 0,
+              "evidence_ids": []
+            },
+            {
+              "note_id": "pulse_2_12",
+              "kind": "pulse",
+              "tick": 5280,
+              "duration_ms": 35,
+              "voice": "wood",
+              "variant": 0,
+              "velocity": 0.08,
+              "pan": 0,
+              "evidence_ids": []
+            }
+          ]
+        },
+        "repo": {
+          "scene_id": "scene_1",
+          "grammar_version": "groove-v1",
+          "kit_id": "paper-studio-v1",
+          "kit_hash": "c1de3fbebe3e57868cc9d52ba1f0d9a435f879f05f31b88d0448ad174ef0e9f0",
+          "bpm": 96,
+          "beats_per_bar": 4,
+          "steps_per_bar": 16,
+          "ppq": 480,
+          "mode": "repo",
+          "total_bars": 4,
+          "phrases": [
+            {
+              "phrase_id": "repo_0",
+              "start_bar": 0,
+              "bar_count": 1,
+              "label": "refundAtCounter",
+              "unit_id": "unit_refundAtCounter"
+            },
+            {
+              "phrase_id": "repo_1",
+              "start_bar": 1,
+              "bar_count": 1,
+              "label": "buildNotification",
+              "unit_id": "unit_buildNotification"
+            },
+            {
+              "phrase_id": "repo_2",
+              "start_bar": 2,
+              "bar_count": 1,
+              "label": "refundOnline",
+              "unit_id": "unit_refundOnline"
+            },
+            {
+              "phrase_id": "repo_3",
+              "start_bar": 3,
+              "bar_count": 1,
+              "label": "calculateRefund",
+              "unit_id": "unit_calculateRefund"
+            }
+          ],
+          "notes": [
+            {
+              "note_id": "note_event_0_0",
+              "kind": "data",
+              "event_id": "event_0_0",
+              "responsibility_id": "r0",
+              "unit_id": "unit_refundAtCounter",
+              "duration_ms": 180,
+              "voice": "kick",
+              "variant": 0,
+              "velocity": 0.82,
+              "pan": -0.25,
+              "evidence_ids": [
+                "evidence_0"
+              ],
+              "tick": 0
+            },
+            {
+              "note_id": "pulse_0_0",
+              "kind": "pulse",
+              "tick": 0,
+              "duration_ms": 35,
+              "voice": "wood",
+              "variant": 0,
+              "velocity": 0.08,
+              "pan": 0,
+              "evidence_ids": []
+            },
+            {
+              "note_id": "pulse_0_4",
+              "kind": "pulse",
+              "tick": 480,
+              "duration_ms": 35,
+              "voice": "wood",
+              "variant": 0,
+              "velocity": 0.08,
+              "pan": 0,
+              "evidence_ids": []
+            },
+            {
+              "note_id": "note_event_0_1",
+              "kind": "data",
+              "event_id": "event_0_1",
+              "responsibility_id": "r0",
+              "unit_id": "unit_refundAtCounter",
+              "duration_ms": 220,
+              "voice": "bass",
+              "variant": 0,
+              "velocity": 0.74,
+              "pan": -0.25,
+              "evidence_ids": [
+                "evidence_0"
+              ],
+              "tick": 960
+            },
+            {
+              "note_id": "pulse_0_8",
+              "kind": "pulse",
+              "tick": 960,
+              "duration_ms": 35,
+              "voice": "wood",
+              "variant": 0,
+              "velocity": 0.08,
+              "pan": 0,
+              "evidence_ids": []
+            },
+            {
+              "note_id": "pulse_0_12",
+              "kind": "pulse",
+              "tick": 1440,
+              "duration_ms": 35,
+              "voice": "wood",
+              "variant": 0,
+              "velocity": 0.08,
+              "pan": 0,
+              "evidence_ids": []
+            },
+            {
+              "note_id": "note_event_3_0",
+              "kind": "data",
+              "event_id": "event_3_0",
+              "responsibility_id": "r2",
+              "unit_id": "unit_buildNotification",
+              "duration_ms": 180,
+              "voice": "kick",
+              "variant": 2,
+              "velocity": 0.82,
+              "pan": -0.08,
+              "evidence_ids": [
+                "evidence_3"
+              ],
+              "tick": 1920
+            },
+            {
+              "note_id": "pulse_1_0",
+              "kind": "pulse",
+              "tick": 1920,
+              "duration_ms": 35,
+              "voice": "wood",
+              "variant": 0,
+              "velocity": 0.08,
+              "pan": 0,
+              "evidence_ids": []
+            },
+            {
+              "note_id": "pulse_1_4",
+              "kind": "pulse",
+              "tick": 2400,
+              "duration_ms": 35,
+              "voice": "wood",
+              "variant": 0,
+              "velocity": 0.08,
+              "pan": 0,
+              "evidence_ids": []
+            },
+            {
+              "note_id": "note_event_3_1",
+              "kind": "data",
+              "event_id": "event_3_1",
+              "responsibility_id": "r2",
+              "unit_id": "unit_buildNotification",
+              "duration_ms": 220,
+              "voice": "bass",
+              "variant": 2,
+              "velocity": 0.74,
+              "pan": -0.08,
+              "evidence_ids": [
+                "evidence_3"
+              ],
+              "tick": 2880
+            },
+            {
+              "note_id": "pulse_1_8",
+              "kind": "pulse",
+              "tick": 2880,
+              "duration_ms": 35,
+              "voice": "wood",
+              "variant": 0,
+              "velocity": 0.08,
+              "pan": 0,
+              "evidence_ids": []
+            },
+            {
+              "note_id": "pulse_1_12",
+              "kind": "pulse",
+              "tick": 3360,
+              "duration_ms": 35,
+              "voice": "wood",
+              "variant": 0,
+              "velocity": 0.08,
+              "pan": 0,
+              "evidence_ids": []
+            },
+            {
+              "note_id": "pulse_2_0",
+              "kind": "pulse",
+              "tick": 3840,
+              "duration_ms": 35,
+              "voice": "wood",
+              "variant": 0,
+              "velocity": 0.08,
+              "pan": 0,
+              "evidence_ids": []
+            },
+            {
+              "note_id": "note_event_1_0",
+              "kind": "data",
+              "event_id": "event_1_0",
+              "responsibility_id": "r0",
+              "unit_id": "unit_refundOnline",
+              "duration_ms": 120,
+              "voice": "snare",
+              "variant": 0,
+              "velocity": 0.72,
+              "pan": -0.25,
+              "evidence_ids": [
+                "evidence_1"
+              ],
+              "tick": 4320
+            },
+            {
+              "note_id": "pulse_2_4",
+              "kind": "pulse",
+              "tick": 4320,
+              "duration_ms": 35,
+              "voice": "wood",
+              "variant": 0,
+              "velocity": 0.08,
+              "pan": 0,
+              "evidence_ids": []
+            },
+            {
+              "note_id": "pulse_2_8",
+              "kind": "pulse",
+              "tick": 4800,
+              "duration_ms": 35,
+              "voice": "wood",
+              "variant": 0,
+              "velocity": 0.08,
+              "pan": 0,
+              "evidence_ids": []
+            },
+            {
+              "note_id": "note_event_1_1",
+              "kind": "data",
+              "event_id": "event_1_1",
+              "responsibility_id": "r0",
+              "unit_id": "unit_refundOnline",
+              "duration_ms": 120,
+              "voice": "snare",
+              "variant": 0,
+              "velocity": 0.68,
+              "pan": -0.25,
+              "evidence_ids": [
+                "evidence_1"
+              ],
+              "tick": 5280
+            },
+            {
+              "note_id": "pulse_2_12",
+              "kind": "pulse",
+              "tick": 5280,
+              "duration_ms": 35,
+              "voice": "wood",
+              "variant": 0,
+              "velocity": 0.08,
+              "pan": 0,
+              "evidence_ids": []
+            },
+            {
+              "note_id": "note_event_2_0",
+              "kind": "data",
+              "event_id": "event_2_0",
+              "responsibility_id": "r1",
+              "unit_id": "unit_calculateRefund",
+              "duration_ms": 180,
+              "voice": "kick",
+              "variant": 1,
+              "velocity": 0.82,
+              "pan": 0.2,
+              "evidence_ids": [
+                "evidence_2"
+              ],
+              "tick": 5760
+            },
+            {
+              "note_id": "pulse_3_0",
+              "kind": "pulse",
+              "tick": 5760,
+              "duration_ms": 35,
+              "voice": "wood",
+              "variant": 0,
+              "velocity": 0.08,
+              "pan": 0,
+              "evidence_ids": []
+            },
+            {
+              "note_id": "pulse_3_4",
+              "kind": "pulse",
+              "tick": 6240,
+              "duration_ms": 35,
+              "voice": "wood",
+              "variant": 0,
+              "velocity": 0.08,
+              "pan": 0,
+              "evidence_ids": []
+            },
+            {
+              "note_id": "note_event_2_1",
+              "kind": "data",
+              "event_id": "event_2_1",
+              "responsibility_id": "r1",
+              "unit_id": "unit_calculateRefund",
+              "duration_ms": 220,
+              "voice": "bass",
+              "variant": 1,
+              "velocity": 0.74,
+              "pan": 0.2,
+              "evidence_ids": [
+                "evidence_2"
+              ],
+              "tick": 6720
+            },
+            {
+              "note_id": "pulse_3_8",
+              "kind": "pulse",
+              "tick": 6720,
+              "duration_ms": 35,
+              "voice": "wood",
+              "variant": 0,
+              "velocity": 0.08,
+              "pan": 0,
+              "evidence_ids": []
+            },
+            {
+              "note_id": "pulse_3_12",
+              "kind": "pulse",
+              "tick": 7200,
+              "duration_ms": 35,
+              "voice": "wood",
+              "variant": 0,
+              "velocity": 0.08,
+              "pan": 0,
+              "evidence_ids": []
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "sources": {
+    "src/counter-refund.ts": "export function refundAtCounter(\n  price: number, daysSincePurchase: number, isFinalSale: boolean,\n  hasReceipt: boolean, customerName: string,\n) {\n  const withinWindow = daysSincePurchase <= 30;\n  return withinWindow && !isFinalSale && hasReceipt;\n}\n",
+    "src/online-refund.ts": "export function refundOnline(\n  price: number, daysSincePurchase: number, isFinalSale: boolean,\n  hasReceipt: boolean, customerName: string,\n) {\n  const withinWindow = daysSincePurchase <= 30;\n  return withinWindow && !isFinalSale && hasReceipt;\n}\n",
+    "src/refund-amount.ts": "export function calculateRefund(\n  price: number, daysSincePurchase: number, isFinalSale: boolean,\n  hasReceipt: boolean, customerName: string,\n) {\n  const fee = Math.round(price * 0.05);\n  return Math.max(0, price - fee);\n}\n",
+    "src/notification.ts": "export function buildNotification(\n  price: number, daysSincePurchase: number, isFinalSale: boolean,\n  hasReceipt: boolean, customerName: string,\n) {\n  const greeting = `Hello, ${customerName}`;\n  return `${greeting}. Your refund is ${price} yen.`;\n}\n",
+    "README.md": "# 散らばった返金条件\n公開サンプルの返金アプリ。返金条件、返金額、通知本文が対象です。\n同じ条件が、別の所有単位で演奏される。\n"
+  },
+  "sample_id": "scattered"
+}

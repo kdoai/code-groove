@@ -1,0 +1,39 @@
+name: Deploy verified revision
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+  id-token: write
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+jobs:
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24'
+      - uses: astral-sh/setup-uv@d0d8abe699bfb85fec6de9f7adb5ae17292296ff
+        with:
+          version: '0.6.11'
+          python-version: '3.13'
+      - run: npm install -g pnpm@10.27.0
+      - run: pnpm install --frozen-lockfile && uv sync --frozen
+      - run: pnpm exec playwright install --with-deps chromium
+      - name: Release verification
+        run: pnpm test:changed --all
+      - uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093
+        with:
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: cg-deploy@artful-bonsai-491601-p3.iam.gserviceaccount.com
+      - uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db
+      - name: Build and roll out
+        env:
+          CG_DEPLOY_SKIP_IAM: '1'
+          PYTHONPATH: apps/backend:.
+          GOOGLE_CLOUD_QUOTA_PROJECT: artful-bonsai-491601-p3
+        run: uv run python scripts/release.py --revision "${GITHUB_SHA}"
