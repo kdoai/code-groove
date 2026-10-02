@@ -12,3 +12,4 @@ playwright-report
 artifacts
 docs/assets
 *.sqlite*
+gha-creds-*.json

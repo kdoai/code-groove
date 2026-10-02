@@ -248,6 +248,7 @@ def bootstrap():
     bucket_role(ARTIFACTS, accounts["worker"], "roles/storage.objectUser")
     bucket_role(BUILD_BUCKET, accounts["build"], "roles/storage.objectViewer")
     bucket_role(BUILD_BUCKET, accounts["deploy"], "roles/storage.objectUser")
+    bucket_role(BUILD_BUCKET, accounts["deploy"], "roles/storage.bucketViewer")
     cloud(
         "artifacts",
         "repositories",
@@ -256,6 +257,15 @@ def bootstrap():
         f"--location={REGION}",
         f"--member=serviceAccount:{accounts['build']}",
         "--role=roles/artifactregistry.writer",
+    )
+    cloud(
+        "artifacts",
+        "repositories",
+        "add-iam-policy-binding",
+        "code-groove",
+        f"--location={REGION}",
+        f"--member=serviceAccount:{accounts['deploy']}",
+        "--role=roles/artifactregistry.reader",
     )
     project_role(accounts["build"], "roles/logging.logWriter")
     project_role(accounts["deploy"], "roles/cloudbuild.builds.editor")
