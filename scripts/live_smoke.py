@@ -2,6 +2,7 @@
 
 import argparse
 import json
+import re
 import time
 import uuid
 
@@ -15,7 +16,11 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--sample", default="justified")
     parser.add_argument("--investigate", action="store_true")
+    parser.add_argument("--report-prefix", default="deployed")
     args = parser.parse_args()
+    prefix = args.report_prefix
+    if not re.fullmatch(r"[a-z0-9][a-z0-9-]{0,39}", prefix):
+        parser.error("report-prefix must contain 1-40 lowercase letters, digits or hyphens")
     state = json.loads(STATE.read_text())
     password = cloud("secrets", "versions", "access", "latest", "--secret=reviewer-password-placeholder")
     sign_in = httpx.post(
@@ -82,7 +87,7 @@ def main():
             state["web_url"] + "/api/v1/projects", timeout=30
         ).status_code,
     }
-    (ROOT / "artifacts/deployed-analysis-trace.json").write_text(
+    (ROOT / f"artifacts/{prefix}-analysis-trace.json").write_text(
         json.dumps(events, ensure_ascii=False, indent=2), encoding="utf-8"
     )
     if args.investigate:
@@ -104,15 +109,15 @@ def main():
             "findings": len(result["findings"]),
             "fresh_evidence": len(result["evidence"]),
         }
-        (ROOT / "artifacts/deployed-investigation-trace.json").write_text(
+        (ROOT / f"artifacts/{prefix}-investigation-trace.json").write_text(
             json.dumps(api(f"/runs/{investigation['run_id']}/events"), ensure_ascii=False, indent=2),
             encoding="utf-8",
         )
-        (ROOT / "artifacts/deployed-investigation.json").write_text(
+        (ROOT / f"artifacts/{prefix}-investigation.json").write_text(
             json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8"
         )
-    (ROOT / "artifacts/deployed-smoke.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
-    (ROOT / ".local/deployed-bundle.json").write_text(
+    (ROOT / f"artifacts/{prefix}-smoke.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
+    (ROOT / f".local/{prefix}-bundle.json").write_text(
         json.dumps(bundle, ensure_ascii=False), encoding="utf-8"
     )
     print(json.dumps(report), flush=True)

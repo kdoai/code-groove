@@ -397,14 +397,15 @@ def deploy(image):
     if state.get("web_url"):
         web_env["PUBLIC_BASE_URL"] = state["web_url"]
     web = rollout("code-groove-web", web_env, "512Mi", "60s", 40, 2)
-    cloud(
-        "run",
-        "services",
-        "update",
-        "code-groove-web",
-        f"--region={REGION}",
-        f"--update-env-vars=PUBLIC_BASE_URL={web}",
-    )
+    if web_env.get("PUBLIC_BASE_URL") != web:
+        cloud(
+            "run",
+            "services",
+            "update",
+            "code-groove-web",
+            f"--region={REGION}",
+            f"--update-env-vars=PUBLIC_BASE_URL={web}",
+        )
     if not os.environ.get("CG_DEPLOY_SKIP_IAM"):
         cloud(
             "run",
