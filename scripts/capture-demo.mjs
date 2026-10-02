@@ -1,5 +1,6 @@
 import { chromium, expect } from '@playwright/test';
 import { mkdir, writeFile } from 'node:fs/promises';
+import { performance } from 'node:perf_hooks';
 import { setTimeout as wait } from 'node:timers/promises';
 
 const url = process.env.E2E_BASE_URL ?? 'https://code-groove-web-a5ygiois2a-an.a.run.app';
