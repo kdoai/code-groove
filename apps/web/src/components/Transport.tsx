@@ -1,15 +1,20 @@
-import { useEffect, useState } from 'react';
-import { Play, Pause, Square, Repeat2, SkipBack, SkipForward, Volume2 } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { Play, Pause, Square, Repeat2, Volume2 } from 'lucide-react';
 import type { ScoreBundle } from '../../../../packages/contracts';
 import { useWorkspace } from '../state';
 import { engine } from '../audio/engine';
+import { playbackPlan } from '../audio/playback';
 
 export function Transport({ score, onError }: { score?: ScoreBundle; onError: (message: string) => void }) {
   const ws = useWorkspace();
   const [playing, setPlaying] = useState(false),
     [seconds, setSeconds] = useState(0),
     [loading, setLoading] = useState(false);
-  const plan = score?.scenes[ws.scene]?.[ws.mode];
+  const playbackScene = ws.wholeWork ? 0 : ws.scene;
+  const plan = useMemo(
+    () => playbackPlan(score, ws.mode, playbackScene, ws.wholeWork),
+    [score, ws.mode, playbackScene, ws.wholeWork],
+  );
   useEffect(() => {
     if (plan) engine.configure(plan);
     else engine.stop();
@@ -18,7 +23,9 @@ export function Transport({ score, onError }: { score?: ScoreBundle; onError: (m
     engine.setVolume(ws.volume);
     engine.setLoop(ws.loop);
     engine.setFilters(ws.muted, ws.solo, ws.pulseMuted);
-  }, [ws.volume, ws.loop, ws.muted, ws.solo, ws.pulseMuted]);
+    engine.setInstrumentMutes(ws.instrumentMutes);
+    engine.setSupportMuted(ws.focusEvidence);
+  }, [ws.volume, ws.loop, ws.muted, ws.solo, ws.pulseMuted, ws.instrumentMutes, ws.focusEvidence]);
   useEffect(() => {
     let frame = 0,
       last = 0;
@@ -41,88 +48,64 @@ export function Transport({ score, onError }: { score?: ScoreBundle; onError: (m
       try {
         await engine.play();
       } catch {
-        onError('音源を読み込めませんでした。Playで再試行できます。');
+        onError('音源を読み込めませんでした。再生ボタンで再試行できます。');
       } finally {
         setLoading(false);
       }
     }
   }
   useEffect(() => {
-    const keydown = (e: KeyboardEvent) => {
-      const element = e.target as HTMLElement;
-      if (element.closest('input,textarea,.monaco-editor,[role="dialog"]')) return;
+    const handler = (e: KeyboardEvent) => {
+      if ((e.target as HTMLElement).closest('input,textarea,.monaco-editor,[role="dialog"]')) return;
       if (e.code === 'Space') {
         e.preventDefault();
         void toggle();
       } else if (e.code === 'Home') engine.stop();
-      else if (e.key.toLowerCase() === 'l') ws.set({ loop: !ws.loop });
     };
-    window.addEventListener('keydown', keydown);
-    return () => window.removeEventListener('keydown', keydown);
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
   });
+  const clock = (value: number) =>
+    `${Math.floor(value / 60)
+      .toString()
+      .padStart(2, '0')}:${Math.floor(value % 60)
+      .toString()
+      .padStart(2, '0')}`;
   return (
     <div className="transport">
-      <div className="mode-switch" aria-label="演奏の配置">
-        {(['theme', 'repo'] as const).map((mode) => (
-          <button key={mode} aria-pressed={ws.mode === mode} onClick={() => ws.set({ mode })}>
-            {mode === 'theme' ? 'Theme' : 'Repo'}
-            <small>{mode === 'theme' ? '責務ごと' : '実装の配置'}</small>
-          </button>
-        ))}
-      </div>
-      <div className="transport-controls">
-        <button
-          aria-label="前のシーン"
-          disabled={!score || ws.scene === 0}
-          onClick={() => ws.set({ scene: ws.scene - 1 })}
-        >
-          <SkipBack size={15} />
-        </button>
-        <button aria-label="Stop" title="Stop · Home" onClick={() => engine.stop()}>
-          <Square size={16} />
-        </button>
-        <button
-          className="play-button"
-          aria-label={playing ? 'Pause' : 'Play'}
-          disabled={!plan || loading}
-          title="Play / Pause · Space"
-          onClick={() => void toggle()}
-        >
-          {playing ? <Pause size={19} fill="currentColor" /> : <Play size={19} fill="currentColor" />}
-        </button>
-        <button
-          aria-label="次のシーン"
-          disabled={!score || ws.scene >= score.scenes.length - 1}
-          onClick={() => ws.set({ scene: ws.scene + 1 })}
-        >
-          <SkipForward size={15} />
-        </button>
-      </div>
-      <div className="time-display">
-        <b>{`${Math.floor(seconds / 60)
-          .toString()
-          .padStart(2, '0')}:${Math.floor(seconds % 60)
-          .toString()
-          .padStart(2, '0')}`}</b>
-        <small>{score ? `SCENE ${ws.scene + 1} / ${score.scenes.length}` : 'NO REPOSITORY'}</small>
-      </div>
-      <span className="tempo">
-        96 <small>BPM</small>
-        <i />
-        4/4
-      </span>
       <button
-        className="loop-button"
-        aria-label="Loop"
-        title="Loop · L"
-        aria-pressed={ws.loop}
-        onClick={() => ws.set({ loop: !ws.loop })}
+        className="play-button"
+        data-tour="play"
+        aria-label={playing ? 'Pause' : 'Play'}
+        disabled={!plan || loading}
+        title="Play / Pause · Space"
+        onClick={() => void toggle()}
       >
-        <Repeat2 size={18} />
-        <span>Loop</span>
+        {playing ? <Pause size={16} fill="currentColor" /> : <Play size={16} fill="currentColor" />}
+        <span>{loading ? '読込中' : playing ? '一時停止' : ws.wholeWork ? '全体を聴く' : '区間を聴く'}</span>
+      </button>
+      <button
+        className="stop-button"
+        aria-label="Stop"
+        title="最初に戻す · Home"
+        onClick={() => engine.stop()}
+      >
+        <Square size={13} />
+      </button>
+      <div className="time-display">
+        <b>{clock(seconds)}</b>
+        <small>/ {clock(plan ? plan.total_bars * 2.5 : 0)}</small>
+      </div>
+      <span className="playback-hint">聴く → オレンジの区間を選ぶ → コードとAgentの理由を見る</span>
+      <button
+        className="evidence-solo"
+        aria-pressed={ws.focusEvidence}
+        onClick={() => ws.set({ focusEvidence: !ws.focusEvidence })}
+      >
+        根拠の音だけ
       </button>
       <div className="volume">
-        <Volume2 size={16} />
+        <Volume2 size={15} />
         <input
           aria-label="音量"
           type="range"
@@ -133,9 +116,65 @@ export function Transport({ score, onError }: { score?: ScoreBundle; onError: (m
           onChange={(e) => ws.set({ volume: Number(e.target.value) })}
         />
       </div>
-      <span className="kit-label">
-        PAPER STUDIO <span>01</span>
-      </span>
+      <details className="playback-settings">
+        <summary>再生設定</summary>
+        <div className="settings-popover">
+          <span>聴く範囲</span>
+          <div className="mode-switch">
+            {(['repo', 'theme'] as const).map((mode) => (
+              <button key={mode} aria-pressed={ws.mode === mode} onClick={() => ws.set({ mode })}>
+                {mode === 'repo' ? 'ファイルの配置' : '意味ごとの比較'}
+              </button>
+            ))}
+          </div>
+          <button aria-pressed={ws.wholeWork} onClick={() => ws.set({ wholeWork: !ws.wholeWork })}>
+            {ws.wholeWork ? '全体を再生' : '選択区間を再生'}
+          </button>
+          {!ws.wholeWork && (
+            <select
+              aria-label="再生区間"
+              value={ws.scene}
+              onChange={(e) => ws.set({ scene: Number(e.target.value) })}
+            >
+              {score?.scenes.map((scene, i) => (
+                <option key={scene.scene_id} value={i}>
+                  区間 {i + 1}
+                </option>
+              ))}
+            </select>
+          )}
+          <button aria-label="Loop" aria-pressed={ws.loop} onClick={() => ws.set({ loop: !ws.loop })}>
+            <Repeat2 size={14} />
+            繰り返す
+          </button>
+          <button aria-pressed={!ws.pulseMuted} onClick={() => ws.set({ pulseMuted: !ws.pulseMuted })}>
+            メトロノーム
+          </button>
+          <span>伴奏・メロディー</span>
+          <div className="instrument-settings">
+            {[
+              ['bass', 'Bass'],
+              ['piano', 'Piano'],
+              ['vibes', 'Melody'],
+            ].map(([voice, label]) => (
+              <button
+                key={voice}
+                aria-pressed={!ws.instrumentMutes.includes(voice)}
+                onClick={() =>
+                  ws.set({
+                    instrumentMutes: ws.instrumentMutes.includes(voice)
+                      ? ws.instrumentMutes.filter((v) => v !== voice)
+                      : [...ws.instrumentMutes, voice],
+                  })
+                }
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          <small>96 BPM · 4/4 · 音はコードから再現可能</small>
+        </div>
+      </details>
     </div>
   );
 }

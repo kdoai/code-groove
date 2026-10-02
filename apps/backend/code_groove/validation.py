@@ -42,8 +42,10 @@ def validate_candidate(candidate: AnalysisCandidate, index: dict, evidence: list
             if member in members or not target or callers != {unit.unit_id}:
                 errors.append("Helper must have one confirmed owner")
             members.add(member)
-        if unit.review_state == "inspected" and not any(e in proofs for e in unit.evidence_ids):
-            errors.append("Inspected unit requires read evidence")
+        if unit.review_state == "inspected" and not any(
+            e in proofs and contains(proofs[e].span, unit.primary_span) for e in unit.evidence_ids
+        ):
+            errors.append("Inspected unit requires covering read evidence")
     for obj in [*candidate.responsibilities, *candidate.units, *candidate.events, *candidate.hypotheses]:
         if any(e not in proofs for e in obj.model_dump()["evidence_ids"]):
             errors.append("Unknown evidence ID")
@@ -84,6 +86,40 @@ def validate_candidate(candidate: AnalysisCandidate, index: dict, evidence: list
         spans.add(span_key)
         if sum(e.unit_id == event.unit_id for e in candidate.events) > 24:
             errors.append("Unit exceeds 24 events")
+    for signal in candidate.review_signals:
+        if (
+            not signal.unit_ids
+            or not signal.evidence_ids
+            or any(u not in units for u in signal.unit_ids)
+            or any(e not in {item.event_id for item in candidate.events} for e in signal.event_ids)
+            or any(e not in proofs for e in signal.evidence_ids)
+        ):
+            errors.append("Review signal requires known units, events and read evidence")
+        if not any(e in proofs and proofs[e].source_kind == "code" for e in signal.evidence_ids):
+            errors.append("Review signal requires code evidence")
+        if signal.verdict == "concern" and not signal.event_ids:
+            errors.append("Audible concern requires a grounded meaning event")
+        if signal.verdict == "concern" and (
+            not signal.change_scenario or not signal.alternative_evidence_ids
+        ):
+            errors.append(
+                "Audible concern requires a concrete change scenario and checked alternative evidence"
+            )
+        if any(e not in proofs or e not in signal.evidence_ids for e in signal.alternative_evidence_ids):
+            errors.append("Alternative evidence must be an actual read included in the signal")
+        for unit_id in signal.unit_ids:
+            if unit_id in units and not any(
+                e in proofs and contains(proofs[e].span, units[unit_id].primary_span)
+                for e in signal.evidence_ids
+            ):
+                errors.append("Review signal requires evidence covering its selected units")
+        if any(
+            e.event_id in signal.event_ids and (e.state != "grounded" or e.unit_id not in signal.unit_ids)
+            for e in candidate.events
+        ):
+            errors.append("Review signal events must be grounded in its selected units")
+    if len({s.signal_id for s in candidate.review_signals}) != len(candidate.review_signals):
+        errors.append("Duplicate review signal IDs")
     if errors:
         raise GrooveError("INVALID_ANALYSIS", "; ".join(errors[:10]))
 

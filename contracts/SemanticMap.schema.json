@@ -454,6 +454,108 @@
       "title": "Responsibility",
       "type": "object"
     },
+    "ReviewSignal": {
+      "additionalProperties": false,
+      "properties": {
+        "signal_id": {
+          "pattern": "^[a-zA-Z0-9_-]{1,80}$",
+          "title": "Signal Id",
+          "type": "string"
+        },
+        "category": {
+          "enum": [
+            "policy_scattering",
+            "responsibility_mixing",
+            "change_coupling",
+            "justified_boundary"
+          ],
+          "title": "Category",
+          "type": "string"
+        },
+        "verdict": {
+          "enum": [
+            "concern",
+            "justified",
+            "inconclusive"
+          ],
+          "title": "Verdict",
+          "type": "string"
+        },
+        "label": {
+          "maxLength": 48,
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "explanation": {
+          "maxLength": 160,
+          "minLength": 1,
+          "title": "Explanation",
+          "type": "string"
+        },
+        "alternative": {
+          "maxLength": 160,
+          "minLength": 1,
+          "title": "Alternative",
+          "type": "string"
+        },
+        "change_scenario": {
+          "default": "",
+          "maxLength": 800,
+          "title": "Change Scenario",
+          "type": "string"
+        },
+        "alternative_evidence_ids": {
+          "items": {
+            "pattern": "^[a-zA-Z0-9_-]{1,80}$",
+            "type": "string"
+          },
+          "maxItems": 96,
+          "title": "Alternative Evidence Ids",
+          "type": "array"
+        },
+        "unit_ids": {
+          "items": {
+            "pattern": "^[a-zA-Z0-9_-]{1,80}$",
+            "type": "string"
+          },
+          "maxItems": 96,
+          "title": "Unit Ids",
+          "type": "array"
+        },
+        "event_ids": {
+          "items": {
+            "pattern": "^[a-zA-Z0-9_-]{1,80}$",
+            "type": "string"
+          },
+          "maxItems": 96,
+          "title": "Event Ids",
+          "type": "array"
+        },
+        "evidence_ids": {
+          "items": {
+            "pattern": "^[a-zA-Z0-9_-]{1,80}$",
+            "type": "string"
+          },
+          "maxItems": 96,
+          "title": "Evidence Ids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "signal_id",
+        "category",
+        "verdict",
+        "label",
+        "explanation",
+        "alternative",
+        "unit_ids",
+        "event_ids",
+        "evidence_ids"
+      ],
+      "title": "ReviewSignal",
+      "type": "object"
+    },
     "Span": {
       "additionalProperties": false,
       "properties": {
@@ -526,6 +628,14 @@
       },
       "maxItems": 16,
       "title": "Hypotheses",
+      "type": "array"
+    },
+    "review_signals": {
+      "items": {
+        "$ref": "#/$defs/ReviewSignal"
+      },
+      "maxItems": 12,
+      "title": "Review Signals",
       "type": "array"
     },
     "schema_version": {

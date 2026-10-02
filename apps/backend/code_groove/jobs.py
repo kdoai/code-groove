@@ -11,7 +11,8 @@ from google.cloud import tasks_v2
 
 from code_groove.agent import AgentContext, run_agent
 from code_groove.errors import GrooveError
-from code_groove.schemas import Coverage, InvestigationResult, SemanticMap
+from code_groove.incremental import INDEX_VERSION, PROMPT_VERSION, compatible, reuse_unchanged
+from code_groove.schemas import Coverage, Evidence, InvestigationResult, SemanticMap
 from code_groove.settings import ROOT, Settings
 from code_groove.source import build_index, github_snapshot, run_node, sample_snapshot
 from code_groove.storage import ArtifactStore, MetadataStore, Transaction
@@ -84,8 +85,10 @@ class JobService:
                 raise GrooveError("STALE_BASE_ANALYSIS", "解釈が更新されています。", 409)
             if active and active["status"] not in TERMINAL:
                 raise GrooveError("ACTIVE_RUN_LIMIT", "実行中の調査を完了または停止してください。", 429)
-            counter = "investigations" if kind == "investigation" else "analyses"
-            if user_quota[counter] >= (10 if kind == "investigation" else 3):
+            refresh = kind == "analysis" and bool(body.get("refresh"))
+            counter = "refreshes" if refresh else "investigations" if kind == "investigation" else "analyses"
+            user_quota.setdefault("refreshes", 0)
+            if user_quota[counter] >= (10 if refresh or kind == "investigation" else 3):
                 raise GrooveError("DAILY_QUOTA", "本日（UTC）の実解析上限に達しました。", 429)
             if (
                 global_quota["reserved_input"] + global_quota["consumed_input"] + reserved_input > 3000000
@@ -113,6 +116,7 @@ class JobService:
                 "quota_id": quota_id,
                 "quota_date": date,
                 "quota_released": False,
+                "analysis_counted": not refresh,
                 "created_at": now,
                 "updated_at": now,
                 "expires_at": expires,
@@ -350,7 +354,22 @@ class JobService:
             project = self.store.get("projects", run["project_id"])
             if not project:
                 raise GrooveError("CANCELLED", "projectが削除されています。")
+            previous = None
+            snapshot_key = project.get("snapshot_key")
+            cached, changes = None, None
+            cached_evidence: list[Evidence] = []
+            prior_map = None
+            if project.get("latest_analysis_id") and run["kind"] == "analysis":
+                meta = self.store.get("analyses", project["latest_analysis_id"])
+                if meta:
+                    prior_map = self.artifacts.get(meta["artifact_key"])["map"]
             if project.get("snapshot_key"):
+                previous = await asyncio.to_thread(self.artifacts.get, project["snapshot_key"])
+                if prior_map and meta and not meta.get("snapshot_key"):
+                    self.store.update(
+                        "analyses", project["latest_analysis_id"], {"snapshot_key": project["snapshot_key"]}
+                    )
+            if project.get("snapshot_key") and not run["body"].get("refresh"):
                 snapshot = await asyncio.to_thread(self.artifacts.get, project["snapshot_key"])
             else:
                 self.mutate(run_id, attempt, {"status": "fetching"})
@@ -359,23 +378,74 @@ class JobService:
                     sha, sources = sample_snapshot(source["sample_id"])
                 else:
                     sha, sources = await github_snapshot(source["url"], source.get("ref"))
-                snapshot_id = f"snap_{sha[:24]}"
+                snapshot_id = f"snap_{sha[:24]}_{hashlib.sha256(INDEX_VERSION.encode()).hexdigest()[:6]}"
                 emit("source_pinned", {"sha": sha, "snapshot_id": snapshot_id})
                 self.mutate(run_id, attempt, {"status": "indexing"})
-                index = await asyncio.to_thread(build_index, snapshot_id, sources)
-                snapshot = {"sha": sha, "snapshot_id": snapshot_id, "sources": sources, "index": index}
-                key = f"projects/{run['project_id']}/snapshots/{snapshot_id}/snapshot.json.gz"
+                unchanged_index = (
+                    previous
+                    and previous["sources"] == sources
+                    and previous.get("index_version") == INDEX_VERSION
+                )
+                if unchanged_index:
+                    assert previous is not None
+                    snapshot_id = previous["snapshot_id"]
+                    index = previous["index"]
+                    emit("index_cache_hit", {"snapshot_id": snapshot_id})
+                else:
+                    index = await asyncio.to_thread(build_index, snapshot_id, sources)
+                snapshot = {
+                    "sha": sha,
+                    "snapshot_id": snapshot_id,
+                    "sources": sources,
+                    "index": index,
+                    "index_version": INDEX_VERSION,
+                }
+                key = (
+                    project["snapshot_key"]
+                    if unchanged_index
+                    else f"projects/{run['project_id']}/snapshots/{snapshot_id}/snapshot.json.gz"
+                )
+                snapshot_key = key
                 await asyncio.to_thread(self.artifacts.put, key, snapshot)
                 self.store.update(
                     "projects",
                     run["project_id"],
                     {"snapshot_key": key, "snapshot_id": snapshot_id, "sha": sha},
                 )
+            if prior_map and compatible(prior_map, self.settings.gemini_model) and previous:
+                if (
+                    previous["sources"] == snapshot["sources"]
+                    and previous.get("index_version") == INDEX_VERSION
+                ):
+                    emit("analysis_cache_hit", {"analysis_id": prior_map["analysis_id"], "model_requests": 0})
+                    self.mutate(
+                        run_id, attempt, {"status": "completed", "result_id": prior_map["analysis_id"]}
+                    )
+                    self.store.update("projects", run["project_id"], {"status": "completed"})
+                    return
+                if previous.get("index_version") == INDEX_VERSION:
+                    cached, cached_evidence, changes = reuse_unchanged(prior_map, previous, snapshot)
+                    emit("incremental_scope", changes)
             emit(
                 "index_ready",
                 {"units": len(snapshot["index"]["units"]), "files": len(snapshot["index"]["files"])},
             )
             self.mutate(run_id, attempt, {"status": "investigating"})
+            if run["kind"] == "analysis" and run["body"].get("refresh"):
+
+                def count_refresh_analysis(tx):
+                    current = tx.get("runs", run_id)
+                    quota = tx.get("daily_quotas", run["quota_id"])
+                    if current.get("analysis_counted"):
+                        return
+                    if quota["analyses"] >= 3:
+                        raise GrooveError(
+                            "DAILY_QUOTA", "変更あり。本日（UTC）のAI解析上限に達しました。", 429
+                        )
+                    tx.put("daily_quotas", run["quota_id"], {**quota, "analyses": quota["analyses"] + 1})
+                    tx.put("runs", run_id, {**current, "analysis_counted": True})
+
+                self.store.atomic(count_refresh_analysis)
             base = None
             if run["kind"] == "investigation":
                 analysis = self.store.get("analyses", run["body"]["analysis_id"])
@@ -396,6 +466,9 @@ class JobService:
                 guard,
                 lambda values: self.mutate(run_id, attempt, values),
                 base=base,
+                cached_interpretation=cached,
+                changes=changes,
+                evidence=cached_evidence,
                 selection=run["body"] if base else None,
                 input_tokens=run["input_tokens"],
                 output_tokens=run["output_tokens"],
@@ -440,11 +513,11 @@ class JobService:
                         }
                     ),
                     model_id=self.settings.gemini_model,
-                    prompt_version="conductor-system-v1",
+                    prompt_version=PROMPT_VERSION,
                     created_at=datetime.now(UTC).isoformat(),
                 ).model_dump(mode="json")
                 self.mutate(run_id, attempt, {"status": "compiling"})
-                kit = json.loads((ROOT / "apps/web/public/audio/paper-studio-v1/manifest.json").read_text())
+                kit = json.loads((ROOT / "apps/web/public/audio/midnight-jazz-v3/manifest.json").read_text())
                 score = await asyncio.to_thread(
                     run_node, "groove-core", {"map": semantic, "kit_hash": kit["kit_hash"]}
                 )
@@ -475,6 +548,8 @@ class JobService:
                         "project_id": run["project_id"],
                         "artifact_key": artifact_key,
                         "base_analysis_id": base and base["analysis_id"],
+                        "snapshot_key": snapshot_key,
+                        "snapshot_id": snapshot["snapshot_id"],
                         "run_id": run_id,
                         "created_at": time.time(),
                         "updated_at": time.time(),

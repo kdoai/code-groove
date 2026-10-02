@@ -31,6 +31,8 @@ SAMPLES = (
     "orchestrator",
     "recorded-scattered",
     "recorded-justified",
+    "recorded-returns-before",
+    "recorded-returns-after",
 )
 
 
@@ -38,7 +40,12 @@ class Source(Contract):
     kind: Literal["github_public", "sample"]
     url: str | None = Field(default=None, max_length=300)
     ref: str | None = Field(default=None, max_length=120, pattern=r"^[\w./-]+$")
-    sample_id: Literal["cohesive", "scattered", "mixed", "justified", "orchestrator"] | None = None
+    sample_id: (
+        Literal[
+            "cohesive", "scattered", "mixed", "justified", "orchestrator", "returns-before", "returns-after"
+        ]
+        | None
+    ) = None
 
 
 class CreateProject(Contract):
@@ -207,7 +214,11 @@ def create_app(settings: Settings | None = None, verifier: Callable[[str], str] 
                 else f"{sample_id}.json"
             )
         )
-        return {"data": json.loads(file.read_text(encoding="utf-8"))}
+        bundle = json.loads(file.read_text(encoding="utf-8"))
+        if bundle["score"]["scenes"][0]["repo"]["grammar_version"] != "groove-arrangement-v4":
+            kit = json.loads((ROOT / "apps/web/public/audio/midnight-jazz-v3/manifest.json").read_text())
+            bundle["score"] = run_node("groove-core", {"map": bundle["map"], "kit_hash": kit["kit_hash"]})
+        return {"data": bundle}
 
     @app.post("/api/v1/projects", status_code=202)
     def create_project(body: CreateProject, user: User, key: Key) -> dict:
@@ -270,7 +281,9 @@ def create_app(settings: Settings | None = None, verifier: Callable[[str], str] 
     @app.post("/api/v1/projects/{project_id}/analyses", status_code=202)
     def reanalyze(project_id: str, user: User, key: Key) -> dict:
         project = own("projects", project_id, user)
-        return {"data": jobs.create(user, {"source": project["source"]}, key, project=project)}
+        return {
+            "data": jobs.create(user, {"source": project["source"], "refresh": True}, key, project=project)
+        }
 
     def bundle_for(analysis_id: str, user: str) -> dict:
         return artifacts.get(own("analyses", analysis_id, user)["artifact_key"])
@@ -284,7 +297,12 @@ def create_app(settings: Settings | None = None, verifier: Callable[[str], str] 
         meta = own("analyses", identifier, user)
         if meta["project_id"] != project_id:
             raise GrooveError("NOT_FOUND", "対象が見つかりません。", 404)
-        return {"data": {**artifacts.get(meta["artifact_key"]), "sources": snapshot_for(project)["sources"]}}
+        snapshot = artifacts.get(meta["snapshot_key"]) if meta.get("snapshot_key") else snapshot_for(project)
+        bundle = artifacts.get(meta["artifact_key"])
+        if bundle["score"]["scenes"][0]["repo"]["grammar_version"] != "groove-arrangement-v4":
+            kit = json.loads((ROOT / "apps/web/public/audio/midnight-jazz-v3/manifest.json").read_text())
+            bundle["score"] = run_node("groove-core", {"map": bundle["map"], "kit_hash": kit["kit_hash"]})
+        return {"data": {**bundle, "sources": snapshot["sources"]}}
 
     @app.get("/api/v1/analyses/{analysis_id}")
     def get_analysis(analysis_id: str, user: User) -> dict:
@@ -356,7 +374,7 @@ def create_app(settings: Settings | None = None, verifier: Callable[[str], str] 
         validate_candidate(
             model, snapshot_for(project)["index"], [Evidence(**e) for e in semantic["evidence"]]
         )
-        kit = json.loads((ROOT / "apps/web/public/audio/paper-studio-v1/manifest.json").read_text())
+        kit = json.loads((ROOT / "apps/web/public/audio/midnight-jazz-v3/manifest.json").read_text())
         score = run_node("groove-core", {"map": semantic, "kit_hash": kit["kit_hash"]})
         artifact_key = f"projects/{project['project_id']}/analyses/{identifier}/bundle.json.gz"
         artifacts.put(artifact_key, {"map": semantic, "score": score})

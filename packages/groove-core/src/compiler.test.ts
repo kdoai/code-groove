@@ -21,8 +21,8 @@ describe('groove-v1 invariants', () => {
           expect({ ...note, tick: 0 }).toEqual({ ...b[i], tick: 0 });
           expect(note.evidence_ids.length).toBeGreaterThan(0);
         });
-        expect(scene.repo.total_bars).toBeLessThanOrEqual(8);
-        expect(scene.theme.total_bars).toBeLessThanOrEqual(8);
+        expect(scene.repo.total_bars).toBeLessThanOrEqual(32);
+        expect(scene.theme.total_bars).toBeLessThanOrEqual(32);
         seen.push(...a.map((n) => n.event_id!));
       }
       expect(seen.length).toBe(new Set(seen).size);

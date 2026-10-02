@@ -245,6 +245,92 @@ export type CounterQuestion = string;
  */
 export type EvidenceIds3 = string[];
 export type Status = "open" | "supported" | "rejected" | "undetermined";
+/**
+ * @maxItems 12
+ */
+export type ReviewSignals =
+  | []
+  | [ReviewSignal]
+  | [ReviewSignal, ReviewSignal]
+  | [ReviewSignal, ReviewSignal, ReviewSignal]
+  | [ReviewSignal, ReviewSignal, ReviewSignal, ReviewSignal]
+  | [ReviewSignal, ReviewSignal, ReviewSignal, ReviewSignal, ReviewSignal]
+  | [ReviewSignal, ReviewSignal, ReviewSignal, ReviewSignal, ReviewSignal, ReviewSignal]
+  | [ReviewSignal, ReviewSignal, ReviewSignal, ReviewSignal, ReviewSignal, ReviewSignal, ReviewSignal]
+  | [ReviewSignal, ReviewSignal, ReviewSignal, ReviewSignal, ReviewSignal, ReviewSignal, ReviewSignal, ReviewSignal]
+  | [
+      ReviewSignal,
+      ReviewSignal,
+      ReviewSignal,
+      ReviewSignal,
+      ReviewSignal,
+      ReviewSignal,
+      ReviewSignal,
+      ReviewSignal,
+      ReviewSignal
+    ]
+  | [
+      ReviewSignal,
+      ReviewSignal,
+      ReviewSignal,
+      ReviewSignal,
+      ReviewSignal,
+      ReviewSignal,
+      ReviewSignal,
+      ReviewSignal,
+      ReviewSignal,
+      ReviewSignal
+    ]
+  | [
+      ReviewSignal,
+      ReviewSignal,
+      ReviewSignal,
+      ReviewSignal,
+      ReviewSignal,
+      ReviewSignal,
+      ReviewSignal,
+      ReviewSignal,
+      ReviewSignal,
+      ReviewSignal,
+      ReviewSignal
+    ]
+  | [
+      ReviewSignal,
+      ReviewSignal,
+      ReviewSignal,
+      ReviewSignal,
+      ReviewSignal,
+      ReviewSignal,
+      ReviewSignal,
+      ReviewSignal,
+      ReviewSignal,
+      ReviewSignal,
+      ReviewSignal,
+      ReviewSignal
+    ];
+export type SignalId = string;
+export type Category = "policy_scattering" | "responsibility_mixing" | "change_coupling" | "justified_boundary";
+export type Verdict = "concern" | "justified" | "inconclusive";
+export type Label3 = string;
+export type Explanation = string;
+export type Alternative = string;
+export type ChangeScenario = string;
+/**
+ * @maxItems 96
+ */
+export type AlternativeEvidenceIds = string[];
+/**
+ * @maxItems 96
+ */
+export type UnitIds = string[];
+/**
+ * @maxItems 96
+ */
+export type EventIds = string[];
+/**
+ * @maxItems 96
+ */
+export type EvidenceIds4 = string[];
 export type SchemaVersion = "1.0";
 export type AnalysisId = string;
 export type ProjectId = string;
@@ -280,6 +366,7 @@ export interface SemanticMap {
   units: Units;
   events: Events;
   hypotheses: Hypotheses;
+  review_signals?: ReviewSignals;
   schema_version: SchemaVersion;
   analysis_id: AnalysisId;
   project_id: ProjectId;
@@ -342,6 +429,19 @@ export interface Hypothesis {
   counter_question: CounterQuestion;
   evidence_ids: EvidenceIds3;
   status: Status;
+}
+export interface ReviewSignal {
+  signal_id: SignalId;
+  category: Category;
+  verdict: Verdict;
+  label: Label3;
+  explanation: Explanation;
+  alternative: Alternative;
+  change_scenario?: ChangeScenario;
+  alternative_evidence_ids?: AlternativeEvidenceIds;
+  unit_ids: UnitIds;
+  event_ids: EventIds;
+  evidence_ids: EvidenceIds4;
 }
 export interface Evidence1 {
   evidence_id: EvidenceId;

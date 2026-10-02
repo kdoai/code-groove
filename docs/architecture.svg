@@ -7,11 +7,11 @@
   </defs>
   <rect width="1440" height="920" fill="#f7f8fa"/>
   <text x="64" y="78" class="title">Code Groove</text>
-  <text x="64" y="114" class="sub">Read code. Hear responsibilities. Follow the evidence.</text>
+  <text x="64" y="114" class="sub">Investigate design. Hear its rhythm. Follow exact source evidence.</text>
   <rect x="64" y="172" width="278" height="166" class="box"/>
   <text x="88" y="212" class="label">Browser workspace</text>
   <text x="88" y="246" class="small">React · Monaco · Tone.js</text>
-  <text x="88" y="274" class="small">Theme / Repo · Inspect</text>
+  <text x="88" y="274" class="small">Clips / notes / code evidence</text>
   <text x="88" y="305" class="small">Replay: zero model calls</text>
   <rect x="64" y="407" width="278" height="119" class="box"/>
   <text x="88" y="449" class="label">Firebase Auth</text>
@@ -34,7 +34,7 @@
   <text x="1102" y="291" class="small">Private · lease / heartbeat</text>
   <text x="1102" y="319" class="small">Bounded agent tool loop</text>
   <text x="1102" y="347" class="small">Read / search / relations</text>
-  <text x="1102" y="375" class="small">Validate → compile score</text>
+  <text x="1102" y="375" class="small">Validate / reuse → compose</text>
   <text x="1102" y="406" class="small">Min 0 / max 1 instance</text>
   <rect x="431" y="568" width="253" height="155" class="box"/>
   <text x="453" y="607" class="label">Firestore</text>

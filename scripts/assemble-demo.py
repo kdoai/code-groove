@@ -5,6 +5,7 @@ from pathlib import Path
 
 import imageio_ffmpeg
 import numpy as np
+from audio_render import render_plan
 
 ROOT = Path(__file__).resolve().parents[1]
 RATE = 44100
@@ -13,37 +14,19 @@ RATE = 44100
 def main():
     timing = json.loads((ROOT / "artifacts/demo-timing.json").read_text())
     pcm = np.zeros((RATE * 180, 2))
-    buffers = {}
-    for path in (ROOT / "apps/web/public/audio/paper-studio-v1").glob("*.wav"):
-        with wave.open(str(path), "rb") as source:
-            buffers[path.stem] = np.frombuffer(source.readframes(source.getnframes()), dtype="<i2") / 32768
     for segment in timing["segments"]:
         name = segment["sample"]
-        source = (
-            ROOT / f"fixtures/recorded-live/{name.removeprefix('recorded-')}.json"
-            if name.startswith("recorded-")
-            else ROOT / f"fixtures/{name}.json"
+        path = ROOT / f"fixtures/recorded-live/{name.removeprefix('recorded-')}.json"
+        plan = json.loads(path.read_text(encoding="utf-8"))["score"]["scenes"][0][segment["mode"]]
+        rendered = render_plan(plan, segment.get("focusEvidence", False))
+        start = round(segment["start"] * RATE)
+        offset = round(segment.get("offset", 0) * RATE)
+        length = min(
+            round((segment["end"] - segment["start"]) * RATE), len(rendered) - offset, len(pcm) - start
         )
-        plan = json.loads(source.read_text(encoding="utf-8"))["score"]["scenes"][0][segment["mode"]]
-        loop_seconds = plan["total_bars"] * 2.5
-        start, end = segment["start"] + 0.03, segment["end"]
-        cursor = start
-        while cursor < end:
-            for note in plan["notes"]:
-                position = cursor + note["tick"] / 768
-                if position >= end:
-                    continue
-                audio = buffers[f"{note['voice']}-{note['variant']}"]
-                duration = min(len(audio), round(note["duration_ms"] * RATE / 1000))
-                offset = round(position * RATE)
-                duration = min(duration, round(end * RATE) - offset, len(pcm) - offset)
-                if duration <= 0:
-                    continue
-                pan = np.sqrt(np.array([(1 - note["pan"]) / 2, (1 + note["pan"]) / 2]))
-                pcm[offset : offset + duration] += (
-                    audio[:duration, None] * pan * note["velocity"] * 0.45 * 0.3
-                )
-            cursor += loop_seconds
+        if length <= 0:
+            raise ValueError("Invalid captured playback segment")
+        pcm[start : start + length] += rendered[offset : offset + length]
     assert np.isfinite(pcm).all() and np.max(np.abs(pcm)) < 0.95
     with wave.open(str(ROOT / "artifacts/demo-audio.wav"), "wb") as output:
         output.setnchannels(2)

@@ -23,3 +23,5 @@ artifacts/*.mp4
 !artifacts/code-groove-demo.mp4
 artifacts/*.webm
 artifacts/demo-recording/
+
+apps/web/public/audio/midnight-jazz-v2/

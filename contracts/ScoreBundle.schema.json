@@ -69,7 +69,9 @@
         "kind": {
           "enum": [
             "data",
-            "pulse"
+            "pulse",
+            "accompaniment",
+            "cue"
           ],
           "title": "Kind",
           "type": "string"
@@ -129,10 +131,39 @@
             "snare",
             "hat",
             "wood",
-            "bass"
+            "bass",
+            "piano",
+            "vibes"
           ],
           "title": "Voice",
           "type": "string"
+        },
+        "midi": {
+          "anyOf": [
+            {
+              "maximum": 96,
+              "minimum": 24,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Midi"
+        },
+        "signal_id": {
+          "anyOf": [
+            {
+              "pattern": "^[a-zA-Z0-9_-]{1,80}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Signal Id"
         },
         "variant": {
           "maximum": 5,
@@ -193,12 +224,21 @@
           "type": "string"
         },
         "grammar_version": {
-          "const": "groove-v1",
+          "enum": [
+            "groove-v1",
+            "groove-jazz-v2",
+            "groove-rhythm-v3",
+            "groove-arrangement-v4"
+          ],
           "title": "Grammar Version",
           "type": "string"
         },
         "kit_id": {
-          "const": "paper-studio-v1",
+          "enum": [
+            "paper-studio-v1",
+            "midnight-jazz-v2",
+            "midnight-jazz-v3"
+          ],
           "title": "Kit Id",
           "type": "string"
         },
@@ -227,7 +267,7 @@
           "type": "integer"
         },
         "total_bars": {
-          "maximum": 8,
+          "maximum": 32,
           "minimum": 1,
           "title": "Total Bars",
           "type": "integer"

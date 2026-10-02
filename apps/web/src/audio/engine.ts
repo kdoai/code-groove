@@ -14,29 +14,58 @@ class GrooveEngine {
   private pulseMuted = false;
   private loop = true;
   private volume = 0.45;
+  private kit = '';
+  private instruments = new Set<string>();
+  private supportMuted = false;
   loading?: Promise<void>;
 
   async load() {
-    if (this.buffers.size === 30) return;
+    if (!this.plan) return;
+    const kit = this.plan.kit_id;
+    const needed = new Set(this.plan.notes.map((note) => `${note.voice}-${note.variant}`));
+    if (this.kit === kit && [...needed].every((key) => this.buffers.has(key))) return;
     this.loading ??= (async () => {
-      const response = await fetch('/audio/paper-studio-v1/manifest.json');
+      if (this.kit !== kit) {
+        for (const buffer of this.buffers.values()) buffer.dispose();
+        this.buffers.clear();
+        this.master?.dispose();
+        this.limiter?.dispose();
+        this.master = undefined;
+      }
+      const response = await fetch(`/audio/${kit}/manifest.json`);
       if (!response.ok) throw new Error('AUDIO_LOAD_FAILED');
       const manifest = await response.json();
       await Promise.all(
-        manifest.samples.map(async (sample: { voice: string; variant: number; file: string }) => {
-          const buffer = new Tone.ToneAudioBuffer();
-          await buffer.load(`/audio/paper-studio-v1/${sample.file}`);
-          this.buffers.set(`${sample.voice}-${sample.variant}`, buffer);
-        }),
+        manifest.samples
+          .filter(
+            (sample: { voice: string; variant: number }) =>
+              needed.has(`${sample.voice}-${sample.variant}`) &&
+              !this.buffers.has(`${sample.voice}-${sample.variant}`),
+          )
+          .map(async (sample: { voice: string; variant: number; file: string }) => {
+            const buffer = new Tone.ToneAudioBuffer();
+            await buffer.load(`/audio/${kit}/${sample.file}`);
+            this.buffers.set(`${sample.voice}-${sample.variant}`, buffer);
+          }),
       );
-      this.master = new Tone.Gain(this.volume * 0.3);
-      this.limiter = new Tone.Limiter(-3).toDestination();
-      this.master.connect(this.limiter);
+      if ([...needed].some((key) => !this.buffers.has(key))) throw new Error('AUDIO_LOAD_FAILED');
+      if (!this.master) {
+        this.master = new Tone.Gain(this.volume * 0.3);
+        this.limiter = new Tone.Limiter(-3).toDestination();
+        this.master.connect(this.limiter);
+      }
+      this.kit = kit;
+      this.loading = undefined;
     })().catch((error) => {
       this.loading = undefined;
       throw error;
     });
-    return this.loading;
+    await this.loading;
+    if (
+      this.plan?.kit_id !== this.kit ||
+      this.plan.notes.some((note) => !this.buffers.has(`${note.voice}-${note.variant}`))
+    )
+      await this.load();
   }
   configure(plan: ScorePlan) {
     this.stop();
@@ -52,16 +81,23 @@ class GrooveEngine {
       this.scheduleIds.push(
         transport.schedule((time) => {
           const responsibility = note.responsibility_id ?? '';
+          if (this.supportMuted && note.kind === 'accompaniment') return;
+          if (this.instruments.has(note.voice)) return;
           if (
             note.kind === 'pulse'
               ? this.pulseMuted
-              : this.muted.has(responsibility) || (this.solo.size > 0 && !this.solo.has(responsibility))
+              : responsibility &&
+                (this.muted.has(responsibility) || (this.solo.size > 0 && !this.solo.has(responsibility)))
           )
             return;
           const buffer = this.buffers.get(`${note.voice}-${note.variant}`);
           if (!buffer || !this.master) return;
           const panner = new Tone.Panner(note.pan).connect(this.master);
           const player = new Tone.Player(buffer).connect(panner);
+          if (note.midi != null)
+            player.playbackRate = 2 ** ((note.midi - (note.voice === 'bass' ? 36 : 60)) / 12);
+          player.fadeIn = note.midi != null ? 0.015 : 0.01;
+          player.fadeOut = note.kind === 'cue' ? 0.05 : 0.08;
           player.volume.value = Tone.gainToDb(note.velocity);
           this.active.add(player);
           player.onstop = () => {
@@ -69,7 +105,7 @@ class GrooveEngine {
             player.dispose();
             panner.dispose();
           };
-          player.start(time, 0, Math.min(buffer.duration, note.duration_ms / 1000));
+          player.start(time, 0, Math.min(buffer.duration, (note.duration_ms / 1000) * player.playbackRate));
         }, tickSeconds(note.tick)),
       );
     }
@@ -117,6 +153,18 @@ class GrooveEngine {
     this.muted = new Set(muted);
     this.solo = new Set(solo);
     this.pulseMuted = pulseMuted;
+  }
+  setInstrumentMutes(values: string[]) {
+    this.instruments = new Set(values);
+  }
+  setSupportMuted(value: boolean) {
+    this.supportMuted = value;
+  }
+  seek(tick: number) {
+    this.release();
+    Tone.getTransport().seconds = tickSeconds(
+      Math.max(0, Math.min(tick, (this.plan?.total_bars ?? 1) * 1920 - 1)),
+    );
   }
   get contextState() {
     return Tone.getContext().state;

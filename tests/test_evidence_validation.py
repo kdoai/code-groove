@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 from code_groove.errors import GrooveError
-from code_groove.schemas import AnalysisCandidate, Evidence
+from code_groove.schemas import AnalysisCandidate, Evidence, ReviewSignal
 from code_groove.validation import validate_candidate
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -36,6 +36,34 @@ def test_wrong_owner_and_duplicate_order_rejection():
     candidate.events[0].span.start_line = 999
     candidate.events[0].span.end_line = 999
     with pytest.raises(GrooveError):
+        validate_candidate(candidate, index, proofs)
+
+
+def test_audible_signal_cannot_claim_unread_units_or_unrelated_events():
+    candidate, index, proofs = case()
+    event = candidate.events[0]
+    candidate.review_signals = [
+        ReviewSignal(
+            signal_id="signal_test",
+            category="responsibility_mixing",
+            verdict="concern",
+            label="Multiple judgments",
+            explanation="The checked function owns separate changes.",
+            alternative="An orchestration boundary was considered.",
+            change_scenario="If the documented policy window changes, both decision sites need review.",
+            alternative_evidence_ids=[proofs[0].evidence_id],
+            unit_ids=[event.unit_id],
+            event_ids=[event.event_id],
+            evidence_ids=[proofs[0].evidence_id],
+        )
+    ]
+    validate_candidate(candidate, index, proofs)
+    candidate.review_signals[0].unit_ids = ["unread_unit"]
+    with pytest.raises(GrooveError, match="INVALID_ANALYSIS"):
+        validate_candidate(candidate, index, proofs)
+    candidate.review_signals[0].unit_ids = [event.unit_id]
+    candidate.events[0].state = "unresolved"
+    with pytest.raises(GrooveError, match="INVALID_ANALYSIS"):
         validate_candidate(candidate, index, proofs)
     candidate, index, proofs = case()
     candidate.events[1].semantic_order = candidate.events[0].semantic_order

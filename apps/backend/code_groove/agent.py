@@ -74,6 +74,8 @@ class AgentContext:
     guard: Callable[[], None]
     save_usage: Callable[[dict], None]
     base: dict | None = None
+    cached_interpretation: dict | None = None
+    changes: dict | None = None
     selection: dict | None = None
     evidence: list[Evidence] = field(default_factory=list)
     hypotheses: list[Hypothesis] = field(default_factory=list)
@@ -269,7 +271,12 @@ def execute_tool(ctx: AgentContext, name: str, args: dict, event_id: str) -> Any
                 "candidates": [
                     f
                     for f in ctx.index["files"]
-                    if (".test." in f["path"] or ".spec." in f["path"])
+                    if (
+                        ".test." in f["path"]
+                        or ".spec." in f["path"]
+                        or f["path"].endswith(".py")
+                        and ("tests/" in f["path"] or f["path"].split("/")[-1].startswith("test_"))
+                    )
                     and unit["label"] in ctx.sources[f["path"]]
                 ][:20],
                 "resolved": False,
@@ -304,6 +311,8 @@ async def run_agent(ctx: AgentContext) -> Any:
         "limits": {"responsibilities": 6, "events": 96},
         "base": ctx.base,
         "selection": ctx.selection,
+        "verified_unchanged_interpretation": ctx.cached_interpretation,
+        "changes": ctx.changes,
     }
     history = [types.Content(role="user", parts=[types.Part(text=json.dumps(payload, ensure_ascii=False))])]
     output_limit = 8192 if ctx.investigating else 16384
@@ -374,6 +383,7 @@ async def run_agent(ctx: AgentContext) -> Any:
                         raise GrooveError(
                             code, "モデルの接続・権限・利用可能性を確認してください。", 503
                         ) from exc
+                    ctx.emit("model_retry", {"code": exc.code, "attempt": retry + 1})
                     await asyncio.sleep(min(2**retry + random.random(), 4))
                 except TimeoutError as exc:
                     raise GrooveError("MODEL_TIMEOUT", "モデル応答がタイムアウトしました。", 504) from exc

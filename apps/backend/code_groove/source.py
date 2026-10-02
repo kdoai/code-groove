@@ -7,6 +7,7 @@ import re
 import shutil
 import socket
 import subprocess
+import sys
 import tarfile
 from pathlib import PurePosixPath
 from urllib.parse import quote, urlparse
@@ -16,8 +17,27 @@ import httpx
 from code_groove.errors import GrooveError
 from code_groove.settings import ROOT
 
-SAMPLE_IDS = ("cohesive", "scattered", "mixed", "justified", "orchestrator")
-EXCLUDED = {"node_modules", ".git", "dist", "build", ".next", "coverage", "vendor"}
+SAMPLE_IDS = (
+    "cohesive",
+    "scattered",
+    "mixed",
+    "justified",
+    "orchestrator",
+    "returns-before",
+    "returns-after",
+)
+EXCLUDED = {
+    "node_modules",
+    ".git",
+    "dist",
+    "build",
+    ".next",
+    "coverage",
+    "vendor",
+    ".venv",
+    "venv",
+    "__pycache__",
+}
 SECRET = re.compile(r"(?i)((?:api[_-]?key|password|secret|access[_-]?token)\s*[:=]\s*[\"']?)[^\s\"';,]+")
 
 
@@ -86,7 +106,7 @@ def safe_archive(data: bytes) -> dict[str, str]:
                 if entry.size < 0 or total > 40 * 1024 * 1024 or count > 1000:
                     raise GrooveError("SOURCE_TOO_LARGE", "展開サイズまたはファイル数の上限を超えています。")
                 if any(p in EXCLUDED or p.startswith(".env") for p in parts) or not path.endswith(
-                    (".ts", ".tsx", ".md", ".json")
+                    (".ts", ".tsx", ".py", ".md", ".json")
                 ):
                     continue
                 if (
@@ -173,7 +193,7 @@ def run_node(name: str, payload: dict) -> dict:
     if not node:
         raise RuntimeError("Trusted Node runtime missing")
     result = subprocess.run(
-        [node, str(ROOT / f"dist/tools/{name}.mjs")],
+        [node, "--max-old-space-size=128", str(ROOT / f"dist/tools/{name}.mjs")],
         input=json.dumps(payload),
         text=True,
         encoding="utf-8",
@@ -190,7 +210,8 @@ def build_index(snapshot_id: str, sources: dict[str, str]) -> dict:
     eligible = {
         path: content
         for path, content in sources.items()
-        if path.endswith((".ts", ".tsx")) and not re.search(r"\.(test|spec)\.tsx?$", path)
+        if path.endswith((".ts", ".tsx", ".py"))
+        and not re.search(r"\.(test|spec)\.tsx?$|(^|/)test_[^/]+\.py$|^tests/", path)
     }
     if (
         len(eligible) > 40
@@ -199,12 +220,31 @@ def build_index(snapshot_id: str, sources: dict[str, str]) -> dict:
     ):
         raise GrooveError("SCOPE_TOO_LARGE", "対象を40ファイル・6,000行・1 MiB以内へ縮小してください。")
     index = run_node("repo-indexer", {"snapshot_id": snapshot_id, "sources": sources})
+    if any(path.endswith(".py") for path in sources):
+        try:
+            parsed = subprocess.run(
+                [sys.executable, "-I", str(ROOT / "apps/backend/code_groove/python_indexer.py")],
+                input=json.dumps({"snapshot_id": snapshot_id, "sources": sources}),
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                timeout=5,
+                check=False,
+            )
+            if parsed.returncode or len(parsed.stdout) > 4 * 1024 * 1024:
+                raise GrooveError("SOURCE_PARSE_FAILED", "Pythonの静的解析上限を超えました。")
+            python_index = json.loads(parsed.stdout)
+        except subprocess.TimeoutExpired as exc:
+            raise GrooveError("SOURCE_PARSE_FAILED", "Pythonの静的解析がタイムアウトしました。") from exc
+        index["files"] = [f for f in index["files"] if not f["path"].endswith(".py")] + python_index["files"]
+        index["units"].extend(python_index["units"])
+        index["relations"].extend(python_index["relations"])
     for file in index["files"]:
         file["lines"] = len(sources[file["path"]].splitlines())
     if len(index["units"]) > 32:
         raise GrooveError("SCOPE_TOO_LARGE", "対象の実装単位が32を超えています。")
     if any(f["parse_errors"] for f in index["files"] if f["is_source"]):
-        raise GrooveError("SOURCE_PARSE_FAILED", "TypeScriptの構文エラーを確認してください。")
+        raise GrooveError("SOURCE_PARSE_FAILED", "TypeScript / Pythonの構文を確認してください。")
     return index
 
 

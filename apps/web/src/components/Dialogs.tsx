@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { X, ArrowRight, Check, FolderGit2, Music2, MousePointer2 } from 'lucide-react';
+import { X, ArrowRight, Music2 } from 'lucide-react';
 import { api, currentUser, login } from '../api';
 import { useQuery } from '@tanstack/react-query';
 
@@ -106,6 +106,16 @@ export function AuthDialog({ close, done }: { close: () => void; done: () => voi
 }
 export const sampleLabels = [
   {
+    id: 'recorded-returns-before',
+    label: 'A · 改善前 / TypeScript',
+    detail: '長い実例 · Agentが共有ポリシーの散在を調査',
+  },
+  {
+    id: 'recorded-returns-after',
+    label: 'B · 改善後 / TypeScript',
+    detail: '動作を保ち、重複していた判断を一つに',
+  },
+  {
     id: 'recorded-scattered',
     label: '実解析を再生 · 分散',
     detail: 'Geminiの解釈と実ツール記録 · AI費用なし',
@@ -208,47 +218,19 @@ export function OpenDialog({
   );
 }
 export function Onboarding({ close, loadSample }: { close: () => void; loadSample: () => void }) {
-  const [step, setStep] = useState(0),
-    [hide, setHide] = useState(false);
-  const icons = [FolderGit2, Music2, MousePointer2];
-  const Icon = icons[step];
-  const headings = ['コードの設計を、聴いてみる。', '同じ意味。二つの配置。', '気になる音から、根拠へ。'];
-  const copy = [
-    'まずは内蔵サンプル。公開リポジトリはログイン後にAgentが調べます。',
-    'Playを押してRepoを聴く。Themeに切り替えると、同じ意味を責務ごとに聴けます。',
-    '打点や小節を選び「調べる」。コードを開き、なぜその判断があるのかを確かめます。',
-  ];
+  const [hide, setHide] = useState(false);
   const finish = () => {
     if (hide) localStorage.setItem('code-groove-hide-guide', 'true');
     close();
   };
   return (
-    <Dialog title="Code Grooveの使い方" close={finish}>
-      <div className="guide-visual">
-        <span className="guide-count">0{step + 1} / 03</span>
-        <Icon size={36} strokeWidth={1.3} />
-        <div className={`guide-notes step-${step}`}>
-          {[0, 1, 2].map((row) => (
-            <div key={row}>
-              {[0, 1, 2, 3].map((col) => (
-                <i
-                  key={col}
-                  style={{
-                    marginLeft: `${((row + col) % 3) * 8}px`,
-                    background: ['#b6a2d5', '#91bea9', '#cdae7a'][row],
-                  }}
-                />
-              ))}
-            </div>
-          ))}
-        </div>
-      </div>
-      <h3>{headings[step]}</h3>
-      <p className="guide-copy">{copy[step]}</p>
-      <div className="guide-dots">
-        {[0, 1, 2].map((i) => (
-          <button key={i} aria-label={`説明 ${i + 1}`} aria-pressed={i === step} onClick={() => setStep(i)} />
-        ))}
+    <Dialog title="Code Groove の使い方" close={finish}>
+      <div className="guide-invitation">
+        <Music2 size={32} />
+        <span className="eyebrow">LISTEN. LOCATE. ASK.</span>
+        <h2>設計の違いを、聴いてみよう。</h2>
+        <p>実際の画面を動かす短いデモです。改善前を聴き、気になる音の根拠を開き、改善後と比べます。</p>
+        <small>保存したGemini調査を使用 · 新しいAI費用なし</small>
       </div>
       <label className="checkbox">
         <input type="checkbox" checked={hide} onChange={(e) => setHide(e.target.checked)} />
@@ -259,13 +241,12 @@ export function Onboarding({ close, loadSample }: { close: () => void; loadSampl
         <button
           className="primary"
           onClick={() => {
-            if (step === 0) loadSample();
-            if (step < 2) setStep(step + 1);
-            else finish();
+            finish();
+            loadSample();
           }}
         >
-          {step === 0 ? 'サンプルを開く' : step === 2 ? 'はじめる' : '次へ'}
-          {step === 2 ? <Check size={16} /> : <ArrowRight size={16} />}
+          実画面のデモを見る
+          <ArrowRight size={16} />
         </button>
       </div>
     </Dialog>

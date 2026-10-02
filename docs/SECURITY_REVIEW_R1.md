@@ -1,0 +1,38 @@
+# Refinement security review
+
+Threat boundaries: browser / public API; Firebase identity / server allowlist;
+public GitHub archive / trusted parsers; untrusted repository content / Agent
+authority; web / private OIDC worker; owner metadata / immutable artifacts; GitHub
+Actions OIDC / scoped deployment IAM. Repository source is data, never executable.
+
+R1–R3 checks and hardening:
+
+- Structural signals require known grounded events, their actual owners, covering
+  code reads, valid evidence, a hypothetical change scenario and actual alternative-check reads. Inspected units require
+  covering reads. Unknown evidence and altered owners are rejected.
+- Cached evidence is rehashed against unchanged source lines and remapped to the
+  new snapshot; changed context and callers invalidate reuse. Historical bundles
+  retain their source key rather than joining old events to new code.
+- Python parsing runs in a trusted isolated child, never importing repository
+  modules; a test includes a top-level file-write payload and verifies no execution.
+  Linux enforces CPU/address-space limits; Node parsing has a 128 MiB heap cap.
+- Agent tools remain bounded read/search/relations operations. No shell, arbitrary
+  fetch, write or deploy tools are exposed. Repository instructions cannot grant
+  privileges. Trace responses are escaped React text; no HTML rendering was added.
+- The chat requires authorized ownership for fresh investigations. Public recorded
+  answers are explicitly saved interpretations and make no paid model request.
+  Viewing code no longer starts a paid investigation automatically.
+- Body, archive, file, unit, token, model/tool, lease/deadline and daily quotas
+  remain enforced. Refresh adds a separate bounded check counter; changed work
+  must obtain an analysis allowance before its first model request.
+- Secret Manager, Firebase email/password allowlist, disabled self-registration,
+  revoked-token checks, private worker, restricted browser API key, storage PAP,
+  CSP/HSTS/nosniff, owner checks and WIF deployment remain the existing boundaries.
+
+Validation is recorded in EXECUTION_PLAN.md and deployment artifacts. The locked
+runtime dependencies are unchanged; no third-party package was added in R1–R3.
+R3 locked runtime audits: npm 114 dependencies and Python 56 packages, zero known
+vulnerabilities (`artifacts/npm-audit-r3.json`, `artifacts/python-audit-r3.json`).
+Dependency advisories and deployed permission probes detect known issues and
+tested boundary failures; this review does not claim that every possible attack
+or vulnerability has been eliminated. Private GitHub OAuth is outside scope.

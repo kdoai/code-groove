@@ -5,7 +5,7 @@ from pathlib import Path
 import numpy as np
 
 ROOT = Path(__file__).resolve().parents[1]
-kit = ROOT / "apps/web/public/audio/paper-studio-v1"
+kit = ROOT / "apps/web/public/audio/midnight-jazz-v2"
 buffers = {}
 for path in kit.glob("*.wav"):
     with wave.open(str(path), "rb") as source:

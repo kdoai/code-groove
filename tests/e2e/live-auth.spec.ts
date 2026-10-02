@@ -32,14 +32,16 @@ test('reviewer sign-in, saved live source and real investigation', async ({ page
   await page.goto(`/projects/${deployment.project_id}/arrange?analysis=${deployment.analysis_id}&scene=1`);
   await expect(page.getByTestId('data-note').first()).toBeVisible({ timeout: 30000 });
   await page.getByTestId('data-note').first().click();
-  await page.getByRole('button', { name: '調べる', exact: true }).click();
   await expect(page.locator('.monaco-editor')).toBeVisible({ timeout: 30000 });
-  await expect(page.getByText('実解析', { exact: true })).toBeVisible();
+  await expect(page.locator('.statusbar')).toContainText('実解析');
+  await page
+    .getByRole('textbox', { name: '選択した範囲への質問' })
+    .fill('このフレーズの意味と、設計上の違いが正当化される理由を調べてください。');
+  await page.getByRole('button', { name: '質問を送信' }).click();
   await expect(page.locator('.finding')).toBeVisible({ timeout: 180000 });
   await expect(page.locator('.finding .evidence-link').first()).toBeVisible();
   await page.locator('.finding .evidence-link').first().click();
   await page.screenshot({ path: 'artifacts/deployed-live-inspect.png' });
-  await page.getByRole('button', { name: 'Arrangeへ', exact: true }).click();
   await page.getByRole('button', { name: 'Play', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Pause', exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Pause', exact: true }).click();

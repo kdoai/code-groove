@@ -1,5 +1,6 @@
 import type { SemanticMap, ScoreBundle } from '../../contracts';
 import type { ScorePlan, ScheduledNote } from '../../contracts/ScoreBundle';
+import { arrangeJazz, melody } from './arrangement';
 
 const motifs = [
   [0, 8, 4, 12, 6, 14, 3, 10],
@@ -9,9 +10,8 @@ const motifs = [
   [0, 8, 4, 13, 6, 11, 2, 15],
   [0, 8, 5, 11, 3, 14, 7, 12],
 ];
-const voices: ScheduledNote['voice'][] = ['kick', 'bass', 'snare', 'snare', 'hat', 'wood', 'hat', 'wood'];
-const velocity = [0.82, 0.74, 0.72, 0.68, 0.43, 0.58, 0.38, 0.52];
-const duration = [180, 220, 120, 120, 45, 90, 40, 85];
+const velocity = [0.58, 0.52, 0.55, 0.48, 0.52, 0.5, 0.48, 0.54];
+const duration = [650, 520, 540, 700, 580, 520, 560, 820];
 const pan = [-0.25, 0.2, -0.08, 0.3, -0.3, 0.08];
 export const tickSeconds = (tick: number) => ((tick / 480) * 60) / 96;
 export const canonical = (value: unknown): string => {
@@ -53,10 +53,10 @@ export async function compileGroove(map: SemanticMap, kitHash: string): Promise<
   const responsibilities = [...map.responsibilities].sort((a, b) => a.display_order - b.display_order);
   function layout(unitIds: string[]) {
     const sceneEvents = events.filter((e) => unitIds.includes(e.unit_id));
-    const counts = responsibilities.map((r) =>
-      Math.ceil(sceneEvents.filter((e) => e.responsibility_id === r.responsibility_id).length / 8),
+    const counts = responsibilities.map(
+      (r) => Math.ceil(sceneEvents.filter((e) => e.responsibility_id === r.responsibility_id).length / 8) * 4,
     );
-    const q = Math.max(1, ...counts);
+    const q = Math.max(4, ...counts);
     return {
       sceneEvents,
       counts,
@@ -70,12 +70,12 @@ export async function compileGroove(map: SemanticMap, kitHash: string): Promise<
   for (const unit of units) {
     const next = [...group, unit.unit_id];
     const plan = layout(next);
-    if (plan.repoBars > 8 || plan.themeBars > 8) {
+    if (plan.repoBars > 32 || plan.themeBars > 32) {
       if (!group.length) throw new Error('UNIT_TOO_DENSE');
       groups.push(group);
       group = [unit.unit_id];
       const single = layout(group);
-      if (single.repoBars > 8 || single.themeBars > 8) throw new Error('UNIT_TOO_DENSE');
+      if (single.repoBars > 32 || single.themeBars > 32) throw new Error('UNIT_TOO_DENSE');
     } else group = next;
   }
   if (group.length) groups.push(group);
@@ -84,8 +84,8 @@ export async function compileGroove(map: SemanticMap, kitHash: string): Promise<
     const sceneId = `scene_${index + 1}`;
     const base = {
       scene_id: sceneId,
-      grammar_version: 'groove-v1' as const,
-      kit_id: 'paper-studio-v1' as const,
+      grammar_version: 'groove-arrangement-v4' as const,
+      kit_id: 'midnight-jazz-v3' as const,
       kit_hash: kitHash,
       bpm: 96 as const,
       beats_per_bar: 4 as const,
@@ -123,7 +123,7 @@ export async function compileGroove(map: SemanticMap, kitHash: string): Promise<
       ordered.forEach((event, j) => {
         if (!event.evidence_ids.length) throw new Error('INVALID_EVIDENCE');
         const slot = j % 8;
-        const localStep = Math.floor(j / 8) * 16 + motifs[variant][slot];
+        const localStep = Math.floor(j / 8) * 64 + motifs[variant][slot] * 4;
         const note = {
           note_id: `note_${event.event_id}`,
           kind: 'data' as const,
@@ -131,7 +131,8 @@ export async function compileGroove(map: SemanticMap, kitHash: string): Promise<
           responsibility_id: r.responsibility_id,
           unit_id: event.unit_id,
           duration_ms: duration[slot],
-          voice: voices[slot],
+          voice: (variant % 2 ? 'vibes' : 'piano') as ScheduledNote['voice'],
+          midi: melody[variant][slot],
           variant,
           velocity: velocity[slot],
           pan: pan[variant],
@@ -143,6 +144,7 @@ export async function compileGroove(map: SemanticMap, kitHash: string): Promise<
       startBar += counts[ri];
     });
     for (const plan of [theme, repo]) {
+      arrangeJazz(plan, map);
       for (let bar = 0; bar < plan.total_bars; bar++)
         for (const step of [0, 4, 8, 12]) {
           plan.notes.push({
@@ -177,13 +179,18 @@ export async function compileGroove(map: SemanticMap, kitHash: string): Promise<
     })),
     units: map.units.map((value) => ({ ...value, evidence_ids: normalizedEvidence(value.evidence_ids) })),
     events: map.events.map((value) => ({ ...value, evidence_ids: normalizedEvidence(value.evidence_ids) })),
+    review_signals: (map.review_signals ?? []).map((value) => ({
+      ...value,
+      evidence_ids: normalizedEvidence(value.evidence_ids),
+      alternative_evidence_ids: normalizedEvidence(value.alternative_evidence_ids ?? []),
+    })),
     evidence: map.evidence.map((e) => ({ span: e.span, projection_sha256: e.projection_sha256 })),
   };
   return {
     analysis_id: map.analysis_id,
     score_hash: await sha256({
       semanticContent,
-      grammar: 'groove-v1',
+      grammar: 'groove-arrangement-v4',
       kitHash,
       scenes: scenes.map((scene) => ({
         ...scene,

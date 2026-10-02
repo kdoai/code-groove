@@ -23,74 +23,78 @@ const at = async (second, label, action) => {
   console.log(`${second}s: ${label}`);
   await action();
 };
-const play = async (sample, mode) => {
-  await page.getByRole('button', { name: 'Play', exact: true }).click();
+let playbackStarted = 0;
+const play = async (sample, offset = 0, audition = false) => {
+  if (audition) await page.getByRole('button', { name: '懸念の前後を聴く', exact: true }).click();
+  else await page.getByRole('button', { name: 'Play', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Pause', exact: true })).toBeVisible();
-  segments.push({ sample, mode, start: seconds(), end: 0 });
+  playbackStarted = seconds() - offset;
+  segments.push({ sample, mode: 'repo', start: seconds(), end: 0, offset, focusEvidence: false });
 };
-const pause = async () => {
-  await page.getByRole('button', { name: 'Pause', exact: true }).click();
-  segments.at(-1).end = seconds();
-};
-const inspect = async () => {
-  await page.getByTestId('data-note').first().click();
-  await page.getByRole('button', { name: '調べる', exact: true }).click();
-  await expect(page.locator('.monaco-editor')).toBeVisible({ timeout: 20000 });
+const finishSegment = () => {
+  if (segments.at(-1)?.end === 0) segments.at(-1).end = seconds();
 };
 try {
   await page.goto(url);
   await expect(page.getByRole('dialog')).toBeVisible();
-  await at(12, 'Guide: open sample', async () => {
+  await at(8, 'Actual-screen tour invitation', async () => {
     await page.getByRole('checkbox', { name: '今後このメッセージを表示しない', exact: true }).check();
-    await page.getByRole('button', { name: 'サンプルを開く', exact: true }).click();
+    await page.getByRole('button', { name: '実画面のデモを見る', exact: true }).click();
+    await expect(page.locator('.monaco-editor')).toBeVisible({ timeout: 30000 });
   });
-  await at(19, 'Guide: evidence', () => page.getByRole('button', { name: '次へ', exact: true }).click());
-  await at(25, 'Mixed Repo', async () => {
-    await page.getByRole('button', { name: 'はじめる', exact: true }).click();
-    await page.getByRole('button', { name: /Repo.*実装の配置/ }).click();
-    await play('mixed', 'repo');
+  await at(13, 'Open arrangement', () =>
+    page.getByRole('button', { name: 'デモを閉じる', exact: true }).click(),
+  );
+  await at(15, 'Before: whole arrangement', () => play('recorded-returns-before'));
+  await at(36, 'Checked design alternative', () => page.locator('.alternative summary').click());
+  await at(48, 'Solo the evidence notes', async () => {
+    finishSegment();
+    await page.getByRole('button', { name: '根拠の音だけ', exact: true }).click();
+    segments.push({
+      sample: 'recorded-returns-before',
+      mode: 'repo',
+      start: seconds(),
+      end: playbackStarted + 50,
+      offset: seconds() - playbackStarted,
+      focusEvidence: true,
+    });
   });
-  await at(45, 'Same material in Theme', async () => {
-    await pause();
-    await page.getByRole('button', { name: /Theme.*責務ごと/ }).click();
-    await play('mixed', 'theme');
+  await at(68, 'After: same behavior, different ownership', async () => {
+    await page.getByRole('button', { name: 'Stop', exact: true }).click();
+    await page.getByRole('button', { name: 'B 改善後', exact: true }).click();
+    await expect(page.getByTestId('cue-note')).toHaveCount(0);
   });
-  await at(65, 'Inspect code', async () => {
-    await pause();
-    await inspect();
+  await at(73, 'After: whole arrangement', async () => {
+    await play('recorded-returns-after');
+    segments.at(-1).end = playbackStarted + 40;
   });
-  await at(85, 'Recorded Gemini result', async () => {
-    await page.goto(`${url}/projects/sample-recorded-scattered/arrange?scene=1`);
-    await page.getByRole('button', { name: /Repo.*実装の配置/ }).click();
-    await play('recorded-scattered', 'repo');
+  await at(118, 'Return to the diagnostic passage', async () => {
+    await page.getByRole('button', { name: 'A 改善前', exact: true }).click();
+    await expect(page.getByTestId('cue-note').first()).toBeVisible();
+    await play('recorded-returns-before', 10, true);
   });
-  await at(105, 'Real read-only tool trace', async () => {
-    await pause();
-    await inspect();
-    await page.getByText(/実際の調査記録/).click();
+  await at(137, 'Follow the exact code', async () => {
+    finishSegment();
+    await page.getByRole('button', { name: 'Pause', exact: true }).click();
+    await page.locator('.structural-finding .evidence-link').first().click();
   });
-  await at(125, 'Recorded investigation: justified difference', async () => {
-    await page.goto(`${url}/projects/sample-recorded-justified/arrange?scene=1`);
-    await page.getByRole('button', { name: 'enterprise-policy.ts', exact: true }).click();
-    await expect(page.locator('.monaco-editor')).toBeVisible({ timeout: 20000 });
-    await page.locator('.finding .finding-label').first().scrollIntoViewIfNeeded();
+  await at(147, 'Real Agent tool record', () => page.getByText(/Agentの実行記録/).click());
+  await at(160, 'Ask from saved interpretation', async () => {
+    await page
+      .getByRole('textbox', { name: '選択した範囲への質問' })
+      .fill('この設計のどの判断が、このリズムになっていますか？');
+    await page.getByRole('button', { name: '質問を送信', exact: true }).click();
   });
-  await at(150, 'Follow the proof to source', async () => {
-    await page.locator('.finding .evidence-link').last().click();
-  });
-  await at(165, 'Return to the workspace', async () => {
-    await page.getByRole('button', { name: 'Arrangeへ', exact: true }).click();
-    await page.getByRole('button', { name: /Theme.*責務ごと/ }).click();
-    await play('recorded-justified', 'theme');
-  });
-  await at(178, 'Pause', pause);
+  await at(173, 'Comparison remains reproducible', () =>
+    page.getByRole('button', { name: 'B 改善後', exact: true }).click(),
+  );
   await at(180, 'Finish', async () => {});
   if (paidRequests) throw new Error(`Unexpected paid API requests: ${paidRequests}`);
   const video = page.video();
   await context.close();
   await video.saveAs('artifacts/demo-browser.webm');
   await writeFile('artifacts/demo-timing.json', JSON.stringify({ url, paidRequests, segments }, null, 2));
-  console.log('Recorded real deployed UI; zero new model requests.');
+  console.log('Recorded actual deployed arrangement; zero new model requests.');
 } finally {
   await browser.close();
 }

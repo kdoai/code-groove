@@ -93,12 +93,27 @@ class RepositoryProfile(Contract):
     unknowns: list[Text] = Field(max_length=16)
 
 
+class ReviewSignal(Contract):
+    signal_id: Id
+    category: Literal["policy_scattering", "responsibility_mixing", "change_coupling", "justified_boundary"]
+    verdict: Literal["concern", "justified", "inconclusive"]
+    label: str = Field(min_length=1, max_length=48)
+    explanation: Text
+    alternative: Text
+    change_scenario: str = Field(default="", max_length=800)
+    alternative_evidence_ids: Ids = Field(default_factory=list)
+    unit_ids: Ids
+    event_ids: Ids
+    evidence_ids: Ids
+
+
 class AnalysisCandidate(Contract):
     profile: RepositoryProfile
     responsibilities: list[Responsibility] = Field(min_length=1, max_length=6)
     units: list[ImplementationUnit] = Field(min_length=1, max_length=32)
     events: list[MeaningEvent] = Field(max_length=96)
     hypotheses: list[Hypothesis] = Field(max_length=16)
+    review_signals: list[ReviewSignal] = Field(default_factory=list, max_length=12)
 
 
 class SemanticMap(AnalysisCandidate):
@@ -117,13 +132,15 @@ class SemanticMap(AnalysisCandidate):
 
 class ScheduledNote(Contract):
     note_id: Id
-    kind: Literal["data", "pulse"]
+    kind: Literal["data", "pulse", "accompaniment", "cue"]
     event_id: Id | None = None
     responsibility_id: Id | None = None
     unit_id: Id | None = None
     tick: int = Field(ge=0)
     duration_ms: int = Field(gt=0)
-    voice: Literal["kick", "snare", "hat", "wood", "bass"]
+    voice: Literal["kick", "snare", "hat", "wood", "bass", "piano", "vibes"]
+    midi: int | None = Field(default=None, ge=24, le=96)
+    signal_id: Id | None = None
     variant: int = Field(ge=0, le=5)
     velocity: float = Field(ge=0, le=1)
     pan: float = Field(ge=-1, le=1)
@@ -142,14 +159,14 @@ class Phrase(Contract):
 class ScorePlan(Contract):
     mode: Literal["theme", "repo"]
     scene_id: Id
-    grammar_version: Literal["groove-v1"]
-    kit_id: Literal["paper-studio-v1"]
+    grammar_version: Literal["groove-v1", "groove-jazz-v2", "groove-rhythm-v3", "groove-arrangement-v4"]
+    kit_id: Literal["paper-studio-v1", "midnight-jazz-v2", "midnight-jazz-v3"]
     kit_hash: str
     bpm: Literal[96]
     beats_per_bar: Literal[4]
     steps_per_bar: Literal[16]
     ppq: Literal[480]
-    total_bars: int = Field(ge=1, le=8)
+    total_bars: int = Field(ge=1, le=32)
     phrases: list[Phrase]
     notes: list[ScheduledNote]
 

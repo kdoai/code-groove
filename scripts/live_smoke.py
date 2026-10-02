@@ -16,6 +16,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--sample", default="justified")
     parser.add_argument("--investigate", action="store_true")
+    parser.add_argument("--refresh-cache", action="store_true")
     parser.add_argument("--report-prefix", default="deployed")
     args = parser.parse_args()
     prefix = args.report_prefix
@@ -90,8 +91,39 @@ def main():
     (ROOT / f"artifacts/{prefix}-analysis-trace.json").write_text(
         json.dumps(events, ensure_ascii=False, indent=2), encoding="utf-8"
     )
+    if args.refresh_cache:
+        refreshed = api(f"/projects/{created['project_id']}/analyses", {})
+        cached = wait(refreshed["run_id"])
+        cache_events = api(f"/runs/{refreshed['run_id']}/events")
+        cache_kinds = {event["type"] for event in cache_events}
+        report["unchanged_refresh"] = {
+            "status": "PASS"
+            if cached["model_requests"] == 0
+            and cached["result_id"] == completed["result_id"]
+            and {"index_cache_hit", "analysis_cache_hit"}.issubset(cache_kinds)
+            else "FAIL",
+            "model_requests": cached["model_requests"],
+            "input_tokens": cached["input_tokens"],
+            "output_tokens": cached["output_tokens"],
+            "index_cache_hit": "index_cache_hit" in cache_kinds,
+            "analysis_cache_hit": "analysis_cache_hit" in cache_kinds,
+        }
+        (ROOT / f"artifacts/{prefix}-refresh-trace.json").write_text(
+            json.dumps(cache_events, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
+        if report["unchanged_refresh"]["status"] != "PASS":
+            raise RuntimeError("Unchanged refresh did not reuse the index and analysis")
     if args.investigate:
-        selected = bundle["map"]["events"][0]
+        concern_events = {
+            event_id
+            for signal in bundle["map"].get("review_signals", [])
+            if signal["verdict"] == "concern"
+            for event_id in signal["event_ids"]
+        }
+        selected = next(
+            (event for event in bundle["map"]["events"] if event["event_id"] in concern_events),
+            bundle["map"]["events"][0],
+        )
         investigation = api(
             f"/analyses/{completed['result_id']}/investigations",
             {

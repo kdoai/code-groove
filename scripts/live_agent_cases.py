@@ -9,6 +9,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "apps/backend"))
 from code_groove.agent import AgentContext, run_agent  # noqa: E402
+from code_groove.incremental import PROMPT_VERSION  # noqa: E402
 from code_groove.schemas import SemanticMap  # noqa: E402
 from code_groove.settings import Settings  # noqa: E402
 from code_groove.source import build_index, run_node, sample_snapshot  # noqa: E402
@@ -16,7 +17,7 @@ from code_groove.source import build_index, run_node, sample_snapshot  # noqa: E
 
 async def main():
     reports = []
-    kit = json.loads((ROOT / "apps/web/public/audio/paper-studio-v1/manifest.json").read_text())
+    kit = json.loads((ROOT / "apps/web/public/audio/midnight-jazz-v3/manifest.json").read_text())
     for sample_id in sys.argv[1:] or ["scattered", "justified"]:
         started = time.monotonic()
         sha, sources = sample_snapshot(sample_id)
@@ -73,7 +74,7 @@ async def main():
                     "inspected_line_ranges": [e.span.model_dump() for e in ctx.evidence],
                 },
                 model_id=ctx.settings.gemini_model,
-                prompt_version="conductor-system-v1",
+                prompt_version=PROMPT_VERSION,
                 created_at=datetime.now(UTC).isoformat(),
             )
             score = run_node(

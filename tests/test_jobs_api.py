@@ -136,3 +136,71 @@ def test_chunked_request_cannot_bypass_body_limit(setup):
         headers={"Content-Type": "application/json"},
     )
     assert response.status_code == 413
+
+
+def test_unchanged_refresh_reuses_index_and_analysis_without_model_or_ai_quota(setup, monkeypatch):
+    import asyncio
+    import hashlib
+    import json
+    from pathlib import Path
+
+    from code_groove.incremental import INDEX_VERSION, PROMPT_VERSION
+    from code_groove.source import sample_snapshot
+
+    client, state = setup
+    initial = create(client).json()["data"]
+    project_id = initial["project_id"]
+    state.store.update("runs", initial["run_id"], {"status": "completed"})
+    state.jobs.settle_quota(initial["run_id"])
+    bundle = json.loads(
+        (Path(__file__).resolve().parents[1] / "fixtures/mixed.json").read_text(encoding="utf-8")
+    )
+    sha, sources = sample_snapshot("mixed")
+    snapshot_id = f"snap_{sha[:24]}_{hashlib.sha256(INDEX_VERSION.encode()).hexdigest()[:6]}"
+    # A persisted map stands in for a previous completed job; this test never calls Gemini.
+    bundle["map"].update(
+        analysis_id="cached_analysis",
+        model_id=state.jobs.settings.gemini_model,
+        prompt_version=PROMPT_VERSION,
+    )
+    snapshot_key = f"projects/{project_id}/snapshots/{snapshot_id}/snapshot.json.gz"
+    artifact_key = f"projects/{project_id}/analyses/cached.json.gz"
+    state.artifacts.put(
+        snapshot_key,
+        {
+            "sha": sha,
+            "snapshot_id": snapshot_id,
+            "sources": sources,
+            "index": {"units": [], "files": []},
+            "index_version": INDEX_VERSION,
+        },
+    )
+    state.artifacts.put(artifact_key, bundle)
+    state.store.put(
+        "analyses", "cached_analysis", {"artifact_key": artifact_key, "snapshot_key": snapshot_key}
+    )
+    state.store.update(
+        "projects",
+        project_id,
+        {"snapshot_key": snapshot_key, "latest_analysis_id": "cached_analysis", "status": "completed"},
+    )
+
+    def forbidden(*args, **kwargs):
+        raise AssertionError("Unchanged cache must not index code or call Gemini")
+
+    monkeypatch.setattr("code_groove.jobs.build_index", forbidden)
+    monkeypatch.setattr("code_groove.jobs.run_agent", forbidden)
+    response = client.post(
+        f"/api/v1/projects/{project_id}/analyses",
+        json={},
+        headers={"Authorization": "Bearer alice", "Idempotency-Key": "refresh001"},
+    )
+    assert response.status_code == 202
+    run_id = response.json()["data"]["run_id"]
+    asyncio.run(state.jobs.handle(run_id))
+    run = state.store.get("runs", run_id)
+    assert run["status"] == "completed" and run["result_id"] == "cached_analysis"
+    assert run["model_requests"] == run["input_tokens"] == run["output_tokens"] == 0
+    assert run["quota_released"]
+    quota = state.store.list("daily_quotas")[0]
+    assert quota["analyses"] == 1 and quota["refreshes"] == 1 and quota["reserved_input"] == 0

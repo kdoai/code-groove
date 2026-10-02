@@ -2,22 +2,24 @@
 
 実デプロイ先：https://code-groove-web-a5ygiois2a-an.a.run.app
 
-模擬サンプルと有料モデル実測を別に記録しています。保存済み実解析２例は実際の Gemini 応答と根拠を公開サンプルに固定したものです。再生時にモデルを呼びません。審査員はログインなしでも、実解析の打点・コード・調査ログ・理由のある違いを確認できます。
+模擬サンプルと実測を区別します。保存済み実解析４例は、実際のGemini応答・ツール記録・根拠を固定したものです。再生時にモデルを呼びません。R3はユーザーのDTM方向の要望に合わせ、編曲画面・音楽規則・Agentの判断を更新しています。リリースの結果はEXECUTION_PLAN.mdに追記します。
 
 | 対象 | 確認した内容 | 証跡 |
 |---|---|---|
-| 音と楽譜 | Theme/Repoのイベント保存、再現性、責務の音源固定、無音の未確定単位、サンプル30点のハッシュとピーク | compiler tests / kit manifest |
-| 静的索引 | ローカルimport aliasとシンボル関係、外部パッケージ未解決、対象コード・設定を実行しない | indexer tests |
-| Agent | SDKの関数ID/Content維持、read/search/relations/反証、token/tool制限、final修復、許可されない操作の拒否 | test_agent_loop.py / live-agent-cases.json |
-| GCP実解析 | Firebase審査ログイン、Cloud Tasks、private worker、Gemini initial + investigation、6点の新規根拠、justified_difference | deployed-smoke.json / deployed-*-trace.json |
-| API | 所有権/期限、idempotency、同時実行、予約/精算、lease、キャンセル、削除、キュー障害時の再投入、chunked body制限 | Python tests |
-| UI | 初回ガイド、Arrange、Theme/Repo、コード選択、サンプル、保存済み実解析、実ログ、ログイン/追加調査、音声開始 | Playwright + in-app browser / deployed-live-*.png |
-| 配備 | lock固定、静的検査、選択的CI、鍵なしWIF、Cloud Build、SHA固定コンテナ | GitHub Actions / deployment.json |
+| 音と楽譜 | イベント保存、証拠IDに依存しないハッシュ、固定モチーフ、スウィング、根拠のあるリズム応答、未確認コードに意味を作らない | compiler / jazz tests、kit manifest |
+| 音源・比較 | 42個の自作PCM、14編曲が有限・非無音・クリップなし。改善前151行・改善後116行の24動作比較 | audio-verification-v2.json、comparison.test.ts |
+| 静的索引 | TSのローカルalias、Pythonの関数とローカル呼出し。対象コード・設定を実行しない | indexer / test_python_indexer.py |
+| Agent | 仮説・読み取り・関連調査・反証。懸念は具体的な変更シナリオと実際の別理由確認を要求 | validation tests、live-returns-*-trace.json |
+| 保存・差分 | 同じスナップショットはparser・Gemini不要。変更された関数と新旧の呼出し元へ限定、根拠を再検証、資料変更は意味の再利用を無効化 | test_incremental.py、test_jobs_api.py |
+| API | 所有権・期限、idempotency、予約・精算、lease、キャンセル、削除、キュー障害、本文制限 | Python tests |
+| UI | 実操作のガイド、ディレクトリ、全発音表示、根拠・A/B、質問、伴奏ミュート。1440×900 / 1280×720 / 980×600で文書スクロールなし。複数sceneでも再生継続 | Playwright workspace / recorded、rhythm-review-*.png |
+| セキュリティ | 非公開worker、認証・所有権、直接Firestore/Storage拒否、CSP/HSTS/nosniff、既知依存問題0件 | SECURITY_REVIEW_R1.md、audit/deployed-security artifacts |
+| 配備 | lock固定、選択的CI、正確なSHAのCI再利用、鍵なしWIF、Cloud Build | GitHub Actions、deployment.json |
 
-最終リリース: [GitHub Actions SUCCESS](https://github.com/kdoai/code-groove/actions/runs/36998211760)。Python 30件、JS 12件、E2E 2件成功。有料E2Eは通常CIでスキップし、GCP上のログイン・実解析・追加調査は別途実行して成功を記録しました。
+最新のローカル実SDK調査：改善前108.05秒・4モデル呼出し・8ツール調査・9意味イベント、改善後148.19秒・7モデル呼出し・11ツール調査・11意味イベント。改善前に共有ポリシーの重複を指摘し、改善後はチャネルごとの妥当な境界と判断しました。実データを読んだ事実と、判断の正しさを完全に保証することは区別します。
 
-最新配備版の混在ケースは96.45秒・モデル8回・意味イベント6点で成功。保存済み作業のOpen、再読み込み、Play、ログアウト後の消去も確認し、この操作による新規モデル呼び出しは0件でした。本番依存監査はnpm/Pythonとも既知の問題0件です。
+基準版M0–M5はGCP配備・Firebaseログイン・実解析・追加調査・保存済み作業の再生まで成功しています。R3のGCP確認はEXECUTION_PLAN.mdと新しいdeployed-r3-*報告に記録します。
 
-有料実測は３ケースとGCP上の解析・追加調査に限定しました。通常のCI/E2Eは模擬または保存済み結果で検証します。リリース時のみ全体テスト、日常変更は影響する領域だけを実行します。
+有料モデル実測は明示した検証だけで実行します。通常CIの有料E2Eはスキップし、保存された結果を使います。日常変更は影響する領域だけを検証し、確認済みの同じSHAを配備する際は全スイートを繰り返しません。
 
-音として責務を理解しやすいかは人による聴取評価が必要です。画像・PCMの技術確認を人の評価として扱いません。YouTube公開と審査ダッシュボードへの提出も未実施です。
+音として設計を理解しやすいかは人の聴取評価が必要です。画像・PCMの技術確認を人の評価として扱いません。YouTube公開と審査ダッシュボードへの提出も未実施です。

@@ -10,19 +10,39 @@ jobs:
   verify:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
     steps:
+      - name: Reuse successful verification of this commit
+        id: existing
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          count=$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/ci.yml/runs?head_sha=${GITHUB_SHA}&branch=main&status=success" --jq "[.workflow_runs[] | select(.head_sha == \"${GITHUB_SHA}\" and .head_branch == \"main\" and .conclusion == \"success\")] | length")
+          if [ "$count" -gt 0 ]; then
+            echo "verified=true" >> "$GITHUB_OUTPUT"
+            echo "Using successful CI for the exact release commit."
+          fi
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        if: steps.existing.outputs.verified != 'true'
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        if: steps.existing.outputs.verified != 'true'
         with:
           node-version: '24'
       - uses: astral-sh/setup-uv@d0d8abe699bfb85fec6de9f7adb5ae17292296ff
+        if: steps.existing.outputs.verified != 'true'
         with:
           version: '0.6.11'
           python-version: '3.13'
       - run: npm install -g pnpm@10.27.0
+        if: steps.existing.outputs.verified != 'true'
       - run: pnpm install --frozen-lockfile && uv sync --frozen
+        if: steps.existing.outputs.verified != 'true'
       - run: pnpm exec playwright install --with-deps chromium
+        if: steps.existing.outputs.verified != 'true'
       - name: Release verification
+        if: steps.existing.outputs.verified != 'true'
         run: pnpm test:changed --all
   deploy:
     needs: verify

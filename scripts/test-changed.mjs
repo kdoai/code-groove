@@ -44,6 +44,7 @@ if (backend) {
 if (music) {
   run('pnpm', ['test']);
   run('uv', ['run', 'python', 'scripts/build-kit.py', '--verify']);
+  run('uv', ['run', 'python', 'scripts/build-jazz-kit.py', '--verify']);
 }
 if (web) {
   run('pnpm', ['typecheck']);

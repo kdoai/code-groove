@@ -12,6 +12,7 @@ export function AgentPanel({
   investigate,
   publish,
   error,
+  activateLive,
 }: {
   bundle: Bundle;
   result?: InvestigationResult;
@@ -20,65 +21,124 @@ export function AgentPanel({
   investigate: (question: string) => void;
   publish: () => void;
   error: string;
+  activateLive?: () => void;
 }) {
   const ws = useWorkspace(),
-    [question, setQuestion] = useState('');
+    [question, setQuestion] = useState(''),
+    [savedAnswer, setSavedAnswer] = useState('');
   const event = bundle.map.events.find((e) => e.event_id === ws.eventId);
-  const unit = bundle.map.units.find((u) => u.unit_id === ws.unitId);
+  const unit = bundle.map.units.find((u) => u.unit_id === ws.unitId) ?? bundle.map.units[0];
+  const supportingFile =
+    !!ws.codeSpan && !bundle.map.units.some((u) => u.primary_span.path === ws.codeSpan?.path);
+  const selectedSignal = supportingFile
+    ? undefined
+    : bundle.map.review_signals?.find(
+        (s) => s.event_ids.includes(ws.eventId) || s.unit_ids.includes(unit.unit_id),
+      );
   const fixture = bundle.map.origin === 'fixture';
   const recorded = bundle.map.origin === 'recorded_live' && !!ws.sampleId;
   return (
     <section className="agent-panel">
       <div className="panel-heading">
         <span>
-          <ScanLine size={15} />{' '}
-          {fixture ? 'サンプルの読み方' : recorded ? '保存済み実解析' : 'Agent investigation'}
+          <ScanLine size={15} /> {fixture ? 'サンプルの説明' : 'Gemini Agent'}
         </span>
         <span className={`agent-indicator ${pending ? 'working' : ''}`}>
-          {fixture ? 'FIXTURE' : recorded ? 'RECORDED LIVE' : pending ? 'INVESTIGATING' : 'READ ONLY'}
+          {fixture ? '模擬' : recorded ? '保存済み' : pending ? '調査中' : '実解析'}
         </span>
       </div>
       <div className="agent-content">
-        <div className="section-label">SELECTED PHRASE</div>
-        <h3>{event?.label ?? unit?.label ?? '実装の意味を調べる'}</h3>
-        <p className="muted">{event?.meaning ?? unit?.boundary_reason}</p>
+        <div className="selected-file">
+          {ws.codeSpan?.path ?? event?.span.path ?? unit?.primary_span.path}
+        </div>
+        {!selectedSignal && (
+          <>
+            <h3>{supportingFile ? '関連資料・型定義' : 'この箇所の判断'}</h3>
+            <p>
+              {supportingFile
+                ? 'このファイルに直接の発音イベントはありません。Agentが実装の意味を判断する際の関連資料として確認できます。'
+                : (event?.meaning ?? unit?.boundary_reason)}
+            </p>
+          </>
+        )}
+        {selectedSignal && (
+          <div className={`structural-finding ${selectedSignal.verdict}`}>
+            <div className="finding-label">
+              {selectedSignal.verdict === 'concern'
+                ? '同じ変更で、一緒に直す箇所'
+                : selectedSignal.verdict === 'justified'
+                  ? '理由のある境界'
+                  : '判断は保留'}
+            </div>
+            <p>{selectedSignal.explanation}</p>
+            {selectedSignal.change_scenario && (
+              <div className="change-scenario">
+                <b>例えば、仕様がこう変わったら</b>
+                {selectedSignal.change_scenario}
+              </div>
+            )}
+            <details className="alternative">
+              <summary>別の設計理由も確認しました</summary>
+              <p>{selectedSignal.alternative}</p>
+            </details>
+            {selectedSignal.evidence_ids.map((id) => {
+              const proof = bundle.map.evidence.find((e) => e.evidence_id === id);
+              return (
+                proof && (
+                  <button
+                    key={id}
+                    className="evidence-link"
+                    onClick={() => {
+                      const target = bundle.map.units.find(
+                        (u) =>
+                          u.primary_span.path === proof.span.path &&
+                          u.primary_span.start_line <= proof.span.start_line &&
+                          u.primary_span.end_line >= proof.span.end_line,
+                      );
+                      ws.set({
+                        codeSpan: proof.span,
+                        screen: 'inspect',
+                        ...(target ? { unitId: target.unit_id } : {}),
+                      });
+                    }}
+                  >
+                    {proof.span.path}:{proof.span.start_line}
+                    <ArrowUpRight size={14} />
+                  </button>
+                )
+              );
+            })}
+          </div>
+        )}
         {fixture || recorded ? (
           <>
-            <div className="finding-label">
-              {fixture ? '手作業サンプルの説明' : 'Geminiがコードを読み、保存した解釈'}
-            </div>
-            <p>{bundle.map.profile.purpose}</p>
-            <p className="muted">
-              打点は判断・計算・更新に対応しています。ThemeとRepoで音の素材は同じ。変わるのは実装の場所を表す時間です。
-            </p>
-            <div className="section-label">CODE EVIDENCE</div>
-            <button
-              className="evidence-link"
-              onClick={() => ws.set({ eventId: event?.event_id ?? '', unitId: unit?.unit_id ?? '' })}
-            >
-              {event?.span.path ?? unit?.primary_span.path}
-              <ArrowUpRight size={14} />
-            </button>
+            {selectedSignal?.verdict === 'concern' && (
+              <p className="rhythm-explanation">
+                同じ旋律の応答が重なる = 複数の場所で同じ判断を管理。オレンジの区間から該当コードへ移れます。
+              </p>
+            )}
             {recorded && bundle.investigation && (
               <>
-                <div className="section-label">関連する返品ポリシーの保存済み追加調査</div>
+                <div className="section-label">保存済み追加調査</div>
                 <FindingCards result={bundle.investigation} map={bundle.map} />
               </>
             )}
             {recorded && (
               <details className="trace">
                 <summary>
-                  実際の調査記録 · {bundle.trace?.filter((e) => e.type === 'tool_completed').length ?? 0}{' '}
-                  tools
+                  Agentの実行記録 · {bundle.trace?.filter((e) => e.type === 'tool_completed').length ?? 0}{' '}
+                  回のツール調査
                 </summary>
-                {bundle.trace?.map((e) => (
-                  <div key={e.seq}>
-                    <b>{e.payload.tool ?? e.type}</b>
-                    <small>
-                      {e.payload.purpose ?? e.payload.message ?? e.payload.statement ?? e.payload.code}
-                    </small>
-                  </div>
-                ))}
+                {bundle.trace
+                  ?.filter((e) => e.type === 'tool_completed' || e.type === 'hypothesis_recorded')
+                  .map((e) => (
+                    <div key={e.seq}>
+                      <b>{e.payload.tool ?? e.type}</b>
+                      <small>
+                        {e.payload.purpose ?? e.payload.message ?? e.payload.statement ?? e.payload.code}
+                      </small>
+                    </div>
+                  ))}
               </details>
             )}
             <p className="limit-note">
@@ -119,46 +179,69 @@ export function AgentPanel({
           </p>
         )}
       </div>
-      {!fixture && !recorded && (
-        <form
-          className="question-form"
-          onSubmit={(e) => {
-            e.preventDefault();
-            investigate(question || 'このフレーズが分かれている理由を調べてください。');
-            setQuestion('');
-          }}
-        >
-          <div className="question-presets">
-            <button
-              type="button"
-              disabled={pending}
-              onClick={() => investigate('なぜ同じ責務と判断したのですか？')}
-            >
-              なぜ同じ責務？
-            </button>
-            <button
-              type="button"
-              disabled={pending}
-              onClick={() => investigate('理由のある例外はありますか？')}
-            >
-              例外はある？
-            </button>
-          </div>
-          <div>
-            <input
-              aria-label="選択した範囲への質問"
-              maxLength={1000}
-              value={question}
-              onChange={(e) => setQuestion(e.target.value)}
-              placeholder="このフレーズについて質問…"
-            />
-            <button aria-label="質問を送信" disabled={pending}>
-              <Send size={16} />
-            </button>
-          </div>
-          <small>解釈の調査です。ソースコードは変更しません。</small>
-        </form>
+      {savedAnswer && (
+        <div className="saved-answer">
+          <small>保存済み解釈からの回答 · 新しいモデル呼び出しなし</small>
+          <p>{savedAnswer}</p>
+        </div>
       )}
+      <form
+        className="question-form"
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (fixture || recorded) {
+            const signal =
+              bundle.map.review_signals?.find((s) => s.unit_ids.includes(ws.unitId)) ??
+              bundle.map.review_signals?.[0];
+            setSavedAnswer(
+              signal
+                ? `${signal.explanation} ${signal.verdict === 'concern' ? '同じ判断の管理が重なるため、同じ旋律の応答を重ねて表しています。根拠のファイル行から確認できます。' : '独立した変更理由が確認されているため、懸念のリズムは追加していません。'}`
+                : `${event?.meaning ?? unit?.boundary_reason ?? bundle.map.profile.purpose} 保存された範囲を超える質問には、新しいAgent調査が必要です。`,
+            );
+          } else
+            investigate(question || 'ここの設計判断と、この音になった理由を根拠付きで説明してください。');
+          setQuestion('');
+        }}
+      >
+        <div className="question-presets">
+          <button
+            type="button"
+            disabled={pending}
+            onClick={() => setQuestion('このファイルのどこを確認すべきですか？')}
+          >
+            どこを確認する？
+          </button>
+          <button
+            type="button"
+            disabled={pending}
+            onClick={() => setQuestion('理由のある例外はありますか？')}
+          >
+            例外はある？
+          </button>
+        </div>
+        <div>
+          <input
+            aria-label="選択した範囲への質問"
+            maxLength={1000}
+            value={question}
+            onChange={(e) => setQuestion(e.target.value)}
+            placeholder="ここの何が、こんな音になるの？"
+          />
+          <button aria-label="質問を送信" disabled={pending}>
+            <Send size={16} />
+          </button>
+        </div>
+        <small>
+          {fixture || recorded
+            ? '保存済み根拠を読む · 新規Agent調査はログイン後'
+            : '選択範囲と関連コードだけ調査 · 読み取り専用'}
+        </small>
+        {(fixture || recorded) && (
+          <button type="button" className="live-question" onClick={activateLive}>
+            Agentに新しく質問する
+          </button>
+        )}
+      </form>
     </section>
   );
 }

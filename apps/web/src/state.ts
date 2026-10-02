@@ -17,6 +17,9 @@ type Workspace = {
   muted: string[];
   solo: string[];
   pulseMuted: boolean;
+  wholeWork: boolean;
+  instrumentMutes: string[];
+  focusEvidence: boolean;
   set: (values: Partial<Omit<Workspace, 'set'>>) => void;
 };
 export const useWorkspace = create<Workspace>()(
@@ -32,10 +35,13 @@ export const useWorkspace = create<Workspace>()(
       unitId: '',
       codeSpan: null,
       volume: 0.45,
-      loop: true,
+      loop: false,
       muted: [],
       solo: [],
-      pulseMuted: false,
+      pulseMuted: true,
+      wholeWork: true,
+      instrumentMutes: [],
+      focusEvidence: false,
       set: (values) => set(values),
     }),
     { name: 'code-groove-workspace-v1' },
