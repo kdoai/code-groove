@@ -15,7 +15,7 @@ only after source bytes and each cited SHA-256 line projection are reverified.
 The Agent receives server-issued remapped evidence and must re-evaluate structural
 signals. Reuse is visible in `incremental_scope` trace events.
 
-Cache boundaries: owner/project, source snapshot, `conductor-system-v3`, model ID
+Cache boundaries: owner/project, source snapshot, `conductor-system-v4`, model ID
 and `typescript-6-python-3.13-v2` index adapter. Grammar/kit changes invalidate
 scores independently. No cross-account cache or arbitrary filesystem access exists.
 The archive is still checked; identical source bytes reuse the static index too. For changed snapshots the bounded static index is rebuilt; “differential” refers to expensive

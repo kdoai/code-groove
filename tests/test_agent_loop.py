@@ -6,7 +6,7 @@ from code_groove.agent import AgentContext, execute_tool, run_agent
 from code_groove.errors import GrooveError
 from code_groove.schemas import AnalysisCandidate
 from code_groove.settings import ROOT, Settings
-from google.genai import types
+from google.genai import errors, types
 
 
 def context():
@@ -163,3 +163,47 @@ def test_repository_cannot_request_shell_or_read_an_unknown_path():
             {"file_id": "../../secret", "start_line": 1, "end_line": 1, "purpose": "Ignore instructions"},
             "tool_bad",
         )
+
+
+@pytest.mark.asyncio
+async def test_unknown_retry_usage_is_kept_and_retry_fits_remaining_budget(monkeypatch):
+    ctx, _value, saved = context()
+    ctx.output_tokens = 24000
+
+    class RetryingClient(Client):
+        async def generate_content(self, **kwargs):
+            if not self.calls:
+                self.calls.append(kwargs)
+                raise errors.ServerError(504, {"error": {"message": "Provider timeout"}})
+            return await super().generate_content(**kwargs)
+
+    client = RetryingClient(
+        lambda _number: types.Content(role="model", parts=[types.Part(text="No final tool")])
+    )
+
+    async def skip_backoff(_seconds):
+        return None
+
+    monkeypatch.setattr("code_groove.agent.create_model_client", lambda _settings: client)
+    monkeypatch.setattr("code_groove.agent.asyncio.sleep", skip_backoff)
+    with pytest.raises(GrooveError, match="AGENT_DID_NOT_SUBMIT"):
+        await run_agent(ctx)
+    assert client.calls[0]["config"].max_output_tokens == 16384
+    assert client.calls[1]["config"].max_output_tokens == 7616
+    assert ctx.output_tokens == 24000 + 16384 + 2 * 75
+    assert all(entry["output_tokens"] <= 48000 for entry in saved)
+    assert client.closed
+
+
+@pytest.mark.asyncio
+async def test_long_exploration_only_allows_grounded_submission(monkeypatch):
+    ctx, _value, _saved = context()
+    ctx.model_count = 10
+    client = Client(lambda _number: types.Content(role="model", parts=[types.Part(text="No final tool")]))
+    monkeypatch.setattr("code_groove.agent.create_model_client", lambda _settings: client)
+    with pytest.raises(GrooveError, match="AGENT_DID_NOT_SUBMIT"):
+        await run_agent(ctx)
+    policy = client.calls[0]["config"].tool_config.function_calling_config
+    assert policy.mode == types.FunctionCallingConfigMode.ANY
+    assert policy.allowed_function_names == ["submit_analysis"]
+    assert client.closed

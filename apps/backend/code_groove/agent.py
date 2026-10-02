@@ -328,6 +328,33 @@ async def run_agent(ctx: AgentContext) -> Any:
     try:
         while True:
             ctx.check()
+            closing = (
+                ctx.model_count >= (6 if ctx.investigating else 10)
+                or max_output - ctx.output_tokens < output_limit + 4096
+                or time.monotonic() - ctx.started > (110 if ctx.investigating else 300)
+            )
+            if closing:
+                if config.tool_config is None:
+                    history.append(
+                        types.Content(
+                            role="user",
+                            parts=[
+                                types.Part(
+                                    text="The exploration boundary is reached. Submit concise grounded "
+                                    "results using existing evidence. Mark unsupported units and claims "
+                                    "as unknown; do not perform further reads."
+                                )
+                            ],
+                        )
+                    )
+                config.tool_config = types.ToolConfig(
+                    function_calling_config=types.FunctionCallingConfig(
+                        mode=types.FunctionCallingConfigMode.ANY,
+                        allowed_function_names=[
+                            "submit_investigation" if ctx.investigating else "submit_analysis"
+                        ],
+                    )
+                )
             try:
                 counted = await asyncio.wait_for(
                     client.aio.models.count_tokens(model=ctx.settings.gemini_model, contents=history),
@@ -343,21 +370,22 @@ async def run_agent(ctx: AgentContext) -> Any:
             if (
                 input_count > (32000 if ctx.investigating else 48000)
                 or ctx.input_tokens + input_count > max_input
-                or ctx.output_tokens + output_limit > max_output
+                or max_output - ctx.output_tokens < 1024
             ):
                 raise GrooveError("BUDGET_EXCEEDED", "トークン予算に達しました。", 429)
             for retry in range(3):
                 ctx.check()
+                request_output_limit = min(output_limit, max_output - ctx.output_tokens)
                 if (
                     ctx.input_tokens + input_count > max_input
-                    or ctx.output_tokens + output_limit > max_output
+                    or request_output_limit < 1024
                 ):
                     raise GrooveError("BUDGET_EXCEEDED", "再試行のトークン予算に達しました。", 429)
                 if ctx.model_count >= (8 if ctx.investigating else 18):
                     raise GrooveError("BUDGET_EXCEEDED", "モデル呼び出し上限に達しました。", 429)
                 ctx.model_count += 1
                 ctx.input_tokens += input_count
-                ctx.output_tokens += output_limit
+                ctx.output_tokens += request_output_limit
                 ctx.save_usage(
                     {
                         "model_requests": ctx.model_count,
@@ -367,11 +395,13 @@ async def run_agent(ctx: AgentContext) -> Any:
                     }
                 )
                 try:
+                    request_config = config.model_copy(deep=True)
+                    request_config.max_output_tokens = request_output_limit
                     response = await asyncio.wait_for(
                         client.aio.models.generate_content(
                             model=ctx.settings.gemini_model,
                             contents=history,
-                            config=config.model_copy(deep=True),
+                            config=request_config,
                         ),
                         min(95, (180 if ctx.investigating else 480) - (time.monotonic() - ctx.started)),
                     )
@@ -393,7 +423,7 @@ async def run_agent(ctx: AgentContext) -> Any:
                 ctx.output_tokens += (
                     int(usage.candidates_token_count or 0)
                     + int(usage.thoughts_token_count or 0)
-                    - output_limit
+                    - request_output_limit
                 )
             usage_data = {
                 "model_requests": ctx.model_count,
@@ -429,6 +459,10 @@ async def run_agent(ctx: AgentContext) -> Any:
                 ctx.emit("tool_started", {"tool": call.name, "purpose": purpose, "tool_event_id": event_id})
                 started = time.monotonic()
                 try:
+                    if closing and call.name != (
+                        "submit_investigation" if ctx.investigating else "submit_analysis"
+                    ):
+                        raise GrooveError("FINALIZATION_REQUIRED", "取得済みの根拠で提出してください。")
                     if call.name.startswith("submit_") and len(calls) != 1:
                         raise GrooveError("FINALIZE_MUST_BE_ALONE", "提出は単独のbatchで行ってください。")
                     result = execute_tool(ctx, call.name, call.args or {}, event_id)
@@ -443,7 +477,17 @@ async def run_agent(ctx: AgentContext) -> Any:
                         "data": result,
                         "evidence_ids": result.get("evidence_ids", []),
                         "budget_remaining": {
-                            "tool_calls": (20 if ctx.investigating else 48) - ctx.tool_count
+                            "tool_calls": (20 if ctx.investigating else 48) - ctx.tool_count,
+                            "model_requests": (8 if ctx.investigating else 18) - ctx.model_count,
+                            "output_tokens": max_output - ctx.output_tokens,
+                            "seconds": max(
+                                0,
+                                round(
+                                    (180 if ctx.investigating else 480)
+                                    - (time.monotonic() - ctx.started)
+                                ),
+                            ),
+                            "finalize_next": closing,
                         },
                     }
                     ctx.emit(
