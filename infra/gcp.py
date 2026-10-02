@@ -351,6 +351,7 @@ def deploy(image):
 
     def rollout(name, environment, memory, timeout, concurrency, max_instances):
         environment_file = ROOT / f".local/{name}-env.yaml"
+        environment_file.parent.mkdir(parents=True, exist_ok=True)
         environment_file.write_text(json.dumps(environment), encoding="utf-8")
         cloud(
             "run",

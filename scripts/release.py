@@ -15,6 +15,12 @@ def main():
         parser.error("Use a full Git commit SHA")
     state = json.loads(STATE.read_text())
     image = f"{REGION}-docker.pkg.dev/{PROJECT}/code-groove/runtime:{args.revision}"
+    existing = cloud("artifacts", "docker", "images", "describe", image, json_output=True, optional=True)
+    if existing:
+        print("Reusing the existing revision image", flush=True)
+        deploy(image)
+        verify_health()
+        return
     build = cloud(
         "builds",
         "submit",
@@ -37,6 +43,10 @@ def main():
     else:
         raise RuntimeError("Build polling deadline exceeded")
     deploy(image)
+    verify_health()
+
+
+def verify_health():
     saved = json.loads((ROOT / ".local/deploy-settings.json").read_text())
     response = httpx.get(f"{saved['web_url']}/health", timeout=30)
     response.raise_for_status()

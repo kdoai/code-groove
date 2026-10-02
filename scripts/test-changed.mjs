@@ -30,7 +30,10 @@ const music =
   );
 const web =
   contracts || music || files.some((path) => /^(apps\/web\/|tests\/e2e\/|playwright.config)/.test(path));
+const tooling = files.some((path) => /^(infra\/|scripts\/|\.github\/)/.test(path));
 console.log(JSON.stringify({ backend, music, web, files: files.length }));
+if (tooling && !backend) run('uv', ['run', 'ruff', 'check', 'infra', 'scripts']);
+if (tooling && !web) run('pnpm', ['exec', 'eslint', 'scripts/*.mjs']);
 if (backend || music || web) run('pnpm', ['build:tools']);
 if (backend) {
   run('uv', ['run', 'ruff', 'check', 'apps/backend', 'scripts', 'tests', 'infra']);

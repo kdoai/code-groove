@@ -8,4 +8,4 @@ The [Cloud Run price sheet](https://cloud.google.com/run/pricing) lists a reques
 
 Model cost: reserved per-run tokens, user daily limits, global input/output token limits, one active run per user, persistent kill switch. Replay never calls the model. Amount estimates remain disabled until verified pricing is configured.
 
-Configure a billing budget restricted to this project's non-AI services at ¥6,000 with 50/80/100% notifications. Budget notifications do not stop billing. Preserve AI as a separate budget. Deployment records will identify whether budget creation is permitted.
+A billing budget restricted to this project's nine non-AI services is configured at ¥6,000 with 50/80/100% notifications. See `artifacts/operations.json` for the actual budget ID and service filter. Budget notifications do not stop billing. AI is excluded from this infrastructure budget and controlled with persistent token reservations and run limits.
