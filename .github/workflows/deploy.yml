@@ -35,5 +35,4 @@ jobs:
         env:
           CG_DEPLOY_SKIP_IAM: '1'
           PYTHONPATH: apps/backend:.
-          GOOGLE_CLOUD_QUOTA_PROJECT: artful-bonsai-491601-p3
         run: uv run python scripts/release.py --revision "${GITHUB_SHA}"

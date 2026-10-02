@@ -230,7 +230,11 @@ class JobService:
                 )
                 return None
             run.update(
-                attempt=run["attempt"] + 1, attempt_id=attempt_id, lease_expires_at=now + 90, updated_at=now
+                attempt=run["attempt"] + 1,
+                attempt_id=attempt_id,
+                lease_expires_at=now + 90,
+                started_at=run.get("started_at", now),
+                updated_at=now,
             )
             tx.put("runs", run_id, run)
             return run
@@ -253,6 +257,9 @@ class JobService:
             raise GrooveError("CANCELLED", "新規モデル呼び出しを停止しました。")
         if not (self.store.get("accounts", run["owner_uid"]) or {}).get("enabled"):
             raise GrooveError("CANCELLED", "アカウントの利用を停止しました。")
+        limit = 180 if run["kind"] == "investigation" else 480
+        if time.time() - run["started_at"] > limit:
+            raise GrooveError("MODEL_TIMEOUT", "調査の制限時間を超えました。", 408)
         return run
 
     def mutate(self, run_id: str, attempt: str, values: dict) -> None:
@@ -394,6 +401,7 @@ class JobService:
                 output_tokens=run["output_tokens"],
                 model_count=run["model_requests"],
                 tool_count=run["tool_calls"],
+                started=time.monotonic() - max(0, time.time() - run["started_at"]),
             )
             candidate = await run_agent(ctx)
             self.guard(run_id, attempt)

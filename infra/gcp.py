@@ -224,7 +224,7 @@ def bootstrap():
         project_role(accounts[name], "roles/datastore.user")
     project_role(accounts["web"], "roles/firebaseauth.viewer")
     project_role(accounts["worker"], "roles/aiplatform.user")
-    for name in ("web", "worker"):
+    for name in ("web", "worker", "deploy"):
         project_role(accounts[name], "roles/serviceusage.serviceUsageConsumer")
     cloud(
         "tasks",

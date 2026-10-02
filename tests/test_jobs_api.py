@@ -64,7 +64,7 @@ def test_lease_preserves_consumption_and_stale_worker_cannot_publish(setup):
     client, state = setup
     created = create(client).json()["data"]
     run_id = created["run_id"]
-    state.jobs.claim(run_id, "first")
+    first = state.jobs.claim(run_id, "first")
     with pytest.raises(GrooveError, match="LEASE_BUSY"):
         state.jobs.claim(run_id, "second")
     state.jobs.mutate(
@@ -72,11 +72,26 @@ def test_lease_preserves_consumption_and_stale_worker_cannot_publish(setup):
     )
     second = state.jobs.claim(run_id, "second")
     assert second["input_tokens"] == 1000 and second["model_requests"] == 2
+    assert second["started_at"] == first["started_at"]
     with pytest.raises(GrooveError, match="LEASE_LOST"):
         state.jobs.mutate(run_id, "first", {"status": "completed"})
     state.jobs.mutate(run_id, "second", {"lease_expires_at": time.time() - 1})
     assert state.jobs.claim(run_id, "third") is None
     assert state.store.get("runs", run_id)["status"] == "failed"
+
+
+def test_replacement_worker_cannot_restart_run_deadline(setup):
+    client, state = setup
+    run_id = create(client).json()["data"]["run_id"]
+    state.jobs.claim(run_id, "first")
+    state.jobs.mutate(
+        run_id,
+        "first",
+        {"started_at": time.time() - 481, "lease_expires_at": time.time() - 1},
+    )
+    state.jobs.claim(run_id, "replacement")
+    with pytest.raises(GrooveError, match="MODEL_TIMEOUT"):
+        state.jobs.guard(run_id, "replacement")
 
 
 def test_delete_hides_immediately_and_removes_artifacts(setup):
