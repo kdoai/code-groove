@@ -2434,3 +2434,9 @@ html[data-theme='dark'] .agent-toggle[aria-expanded='true'] {
   color: var(--text);
   border-color: var(--line);
 }
+.repository-chunks { max-height: 40vh; overflow: auto; margin: 18px 0; }
+.repository-chunk { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.repository-chunk span { min-width: 0; }
+.repository-chunk strong, .repository-chunk small { display: block; overflow-wrap: anywhere; }
+.repository-chunk button { flex-shrink: 0; }
+.repository-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }

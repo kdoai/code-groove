@@ -1,5 +1,7 @@
 # Code Groove — technical guide
 
+R10 adds authenticated committed-snapshot ingestion, Python method/TypeScript lexical ownership indexing, bounded semantic partitions, dependency-aware result caching and explicit continuation/retry. Whole-repository coverage remains visibly partial; cross-partition interpretation is not implemented. See [Repository Agent R10](REPOSITORY_AGENT_R10.md) for limits, cost controls and official SDK/ADK references.
+
 | Layer | Implementation | Purpose |
 |---|---|---|
 | Arrangement workspace | React 19 / TypeScript 6 / Vite / Zustand / TanStack Query | Directory tree, file/function MIDI clips, optional backing lanes, exact code dock, full/file transport, themes, spotlight tour, persistent questions |

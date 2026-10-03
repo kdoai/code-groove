@@ -3,7 +3,17 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { User } from 'firebase/auth';
 import { FolderGit2, ArrowRight, HelpCircle, LogOut, ScanLine, Sun, Moon, PanelRight } from 'lucide-react';
 import { AgentActivity } from './components/AgentActivity';
-import { api, currentUser, logout, setupAuth, type Bundle, type PublicConfig } from './api';
+import {
+  api,
+  currentUser,
+  logout,
+  setupAuth,
+  type Bundle,
+  type PublicConfig,
+  type RepositoryStatus,
+  type ImportSnapshot,
+} from './api';
+import { RepositoryDialog } from './components/RepositoryDialog';
 import { useWorkspace } from './state';
 import { Transport } from './components/Transport';
 import { AgentPanel } from './components/AgentPanel';
@@ -28,7 +38,7 @@ const active = ['enqueue_pending', 'queued', 'fetching', 'indexing', 'investigat
 export default function App() {
   const ws = useWorkspace(),
     cache = useQueryClient();
-  const [modal, setModal] = useState<'open' | 'auth' | 'guide' | ''>(() =>
+  const [modal, setModal] = useState<'open' | 'auth' | 'guide' | 'repository' | ''>(() =>
     localStorage.getItem('code-groove-hide-guide') === 'true' ? '' : 'guide',
   );
   const [user, setUser] = useState<User | null>(null),
@@ -177,6 +187,13 @@ export default function App() {
       active.includes(query.state.data?.status ?? 'queued') ? (document.hidden ? 5000 : 1000) : false,
   });
   const runEvents = useRunEvents(runId, !!user, active.includes(run.data?.status ?? 'queued'));
+  const repository = useQuery({
+    queryKey: ['repository', ws.projectId],
+    queryFn: () => api<RepositoryStatus | null>(`/projects/${ws.projectId}/repository`),
+    enabled: !!ws.projectId && !ws.sampleId && !!user,
+    retry: false,
+    refetchInterval: runId ? 5000 : false,
+  });
   useEffect(() => {
     if (!run.data || active.includes(run.data.status)) return;
     if (['completed', 'partial'].includes(run.data.status)) {
@@ -189,6 +206,7 @@ export default function App() {
       setRunId('');
       setAcceptingImprovement(false);
       cache.invalidateQueries({ queryKey: ['project', ws.projectId] });
+      cache.invalidateQueries({ queryKey: ['repository', ws.projectId] });
     } else {
       setError(run.data.error?.message ?? '処理を終了しました。');
       setRunId('');
@@ -300,7 +318,7 @@ export default function App() {
       setStarting(false);
     }
   }
-  async function openRepo(url?: string, scopePath?: string) {
+  async function openRepo(url?: string, scopePath?: string, snapshot?: ImportSnapshot) {
     if (!currentUser) {
       setModal('auth');
       return;
@@ -312,11 +330,14 @@ export default function App() {
     setAcceptingImprovement(false);
     setError('');
     try {
-      const project = await api<{ project_id: string; run_id: string }>('/projects', {
-        source: url
-          ? { kind: 'github_public', url, scope_path: scopePath || null }
-          : { kind: 'sample', sample_id: ws.sampleId.replace(/^recorded-/, '') || 'mixed' },
-      });
+      const project = await api<{ project_id: string; run_id: string }>(
+        snapshot ? '/projects/import' : '/projects',
+        snapshot ?? {
+          source: url
+            ? { kind: 'github_public', url, scope_path: scopePath || null }
+            : { kind: 'sample', sample_id: ws.sampleId.replace(/^recorded-/, '') || 'mixed' },
+        },
+      );
       ws.set({
         projectId: project.project_id,
         sampleId: '',
@@ -330,6 +351,23 @@ export default function App() {
       });
       setRunId(project.run_id);
       setModal('');
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setStarting(false);
+    }
+  }
+  async function analyzeChunk(chunkId: string, retryPartial = false) {
+    setStarting(true);
+    setError('');
+    setModal('');
+    engine.pause();
+    try {
+      const created = await api<{ run_id: string }>(`/projects/${ws.projectId}/chunks`, {
+        chunk_id: chunkId,
+        ...(retryPartial ? { retry_partial: true } : {}),
+      });
+      setRunId(created.run_id);
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -594,16 +632,25 @@ export default function App() {
           <button onClick={() => setModal('auth')}>ログイン</button>
         )}
       </header>
-      <Transport score={data?.score} selectedFile={selectedFile} fileUnits={fileUnits} onError={setError} />
+      <Transport
+        score={data?.score}
+        selectedFile={selectedFile}
+        fileUnits={fileUnits}
+        partitioned={!!data?.partition}
+        onError={setError}
+      />
       {user && ws.projectId && !ws.sampleId && (
         <div className="refresh-bar">
           <span>
-            {project.data?.source?.scope_path
-              ? `対象: ${project.data.source.scope_path} · 範囲外は未検査`
-              : project.data?.working_copy
-                ? 'アプリ内のスナップショット · 元のRepositoryは保持'
-                : '保存済み結果を再生中 · Git更新時は変更と影響先だけ調査'}
+            {repository.data
+              ? `${repository.data.eligible_source_files}ファイル · ${repository.data.analyzed_chunks}/${repository.data.chunks.length}範囲に保存結果 · 全体は未判定`
+              : project.data?.source?.scope_path
+                ? `対象: ${project.data.source.scope_path} · 範囲外は未検査`
+                : project.data?.working_copy
+                  ? 'アプリ内のスナップショット · 元のRepositoryは保持'
+                  : '保存済み結果を再生中 · Git更新時は変更と影響先だけ調査'}
           </span>
+          {repository.data && <button onClick={() => setModal('repository')}>検査範囲と続きを選ぶ</button>}
           <button disabled={pending} onClick={() => void refreshRepository()}>
             {project.data?.working_copy ? '保存したコードを再確認' : 'Gitの差分を調べる'}
           </button>
@@ -706,8 +753,24 @@ export default function App() {
           close={() => setModal('')}
           openSample={openSample}
           openRepo={(url, scope) => void openRepo(url, scope)}
+          openSnapshot={(snapshot) => void openRepo(undefined, undefined, snapshot)}
           openProject={(id) => void openSaved(id)}
           pending={starting}
+        />
+      )}
+      {modal === 'repository' && repository.data && (
+        <RepositoryDialog
+          repository={repository.data}
+          close={() => setModal('')}
+          pending={pending}
+          analyze={(id, retryPartial) => void analyzeChunk(id, retryPartial)}
+          open={(id) => {
+            engine.pause();
+            ws.set({ analysisId: id, unitId: '', eventId: '', codeSpan: null, scene: 0, playbackFile: '' });
+            setResult(undefined);
+            setInvestigationRunId('');
+            setModal('');
+          }}
         />
       )}
       {modal === 'auth' && (

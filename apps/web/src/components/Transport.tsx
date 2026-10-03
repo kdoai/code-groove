@@ -9,11 +9,13 @@ export function Transport({
   score,
   fileUnits,
   selectedFile,
+  partitioned = false,
   onError,
 }: {
   score?: ScoreBundle;
   fileUnits?: string[];
   selectedFile?: string;
+  partitioned?: boolean;
   onError: (message: string) => void;
 }) {
   const ws = useWorkspace();
@@ -106,7 +108,9 @@ export function Transport({
               : ws.playbackFile
                 ? 'ファイルを聴く'
                 : ws.wholeWork
-                  ? '全体を聴く'
+                  ? partitioned
+                    ? '検査範囲を聴く'
+                    : '全体を聴く'
                   : '区間を聴く'}
         </span>
       </button>
@@ -131,7 +135,7 @@ export function Transport({
           ws.set({ playbackFile: e.target.value === 'file' ? (selectedFile ?? '') : '', wholeWork: true });
         }}
       >
-        <option value="all">リポジトリ全体</option>
+        <option value="all">{partitioned ? '表示中の検査範囲' : 'リポジトリ全体'}</option>
         <option value="file" disabled={!fileUnits?.length}>
           選択ファイル{selectedFile ? ` · ${selectedFile.split('/').at(-1)}` : ''}
         </option>
@@ -157,7 +161,7 @@ export function Transport({
             aria-pressed={ws.wholeWork}
             onClick={() => ws.set({ wholeWork: !ws.wholeWork, playbackFile: '' })}
           >
-            {ws.wholeWork ? '全体を再生' : '選択区間を再生'}
+            {ws.wholeWork ? (partitioned ? '検査範囲を再生' : '全体を再生') : '選択区間を再生'}
           </button>
           {!ws.wholeWork && (
             <select

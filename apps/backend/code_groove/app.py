@@ -21,6 +21,7 @@ from code_groove.http_limits import BodyLimitMiddleware
 from code_groove.improvements import apply_edits, source_hash
 from code_groove.incremental import INDEX_VERSION
 from code_groove.jobs import JobService
+from code_groove.repository import repository_status, validate_local_sources
 from code_groove.schemas import (
     Contract,
     Evidence,
@@ -92,6 +93,17 @@ class CreateProject(Contract):
     label: str | None = Field(default=None, max_length=80)
 
 
+class LocalImport(Contract):
+    revision: str = Field(pattern=r"^[a-f0-9]{40}$")
+    sources: dict[str, str] = Field(min_length=1, max_length=500)
+    label: str = Field(default="Local snapshot", min_length=1, max_length=80)
+
+
+class ChunkRequest(Contract):
+    chunk_id: Id
+    retry_partial: bool = False
+
+
 class Selection(Contract):
     scene_id: Id
     unit_ids: list[Id] = Field(default_factory=list, max_length=32)
@@ -139,7 +151,8 @@ def create_app(settings: Settings | None = None, verifier: Callable[[str], str] 
                 {"error": {"code": "NOT_FOUND", "message": "対象が見つかりません。"}}, status_code=404
             )
         length = request.headers.get("content-length", "0")
-        if not length.isdigit() or int(length) > 131072:
+        limit = 8 * 1024 * 1024 if request.url.path == "/api/v1/projects/import" else 131072
+        if not length.isdigit() or int(length) > limit:
             return JSONResponse(
                 {"error": {"code": "REQUEST_TOO_LARGE", "message": "入力が大きすぎます。"}}, status_code=413
             )
@@ -287,6 +300,18 @@ def create_app(settings: Settings | None = None, verifier: Callable[[str], str] 
             raise GrooveError("INVALID_SOURCE", "内蔵サンプルを指定してください。")
         return {"data": jobs.create(user, body.model_dump(mode="json"), key)}
 
+    @app.post("/api/v1/projects/import", status_code=202)
+    def import_project(body: LocalImport, user: User, key: Key) -> dict:
+        sources = validate_local_sources(body.sources)
+        source = {
+            "kind": "local_snapshot",
+            "revision": body.revision,
+            "label": body.label,
+            "source_hash": source_hash(sources),
+            "provenance": "user_supplied_committed_snapshot",
+        }
+        return {"data": jobs.create(user, {"source": source}, key, local_sources=sources)}
+
     @app.post("/api/v1/samples/{sample_id}/projects", status_code=201)
     def adopt_recorded_sample(sample_id: str, user: User, key: Key) -> dict:
         if sample_id not in ("recorded-returns-before", "recorded-checkout-flow"):
@@ -410,6 +435,50 @@ def create_app(settings: Settings | None = None, verifier: Callable[[str], str] 
             raise GrooveError("NOT_READY", "スナップショットを準備しています。", 409)
         return artifacts.get(project["snapshot_key"])
 
+    @app.get("/api/v1/projects/{project_id}/repository")
+    def get_repository(project_id: str, user: User) -> dict:
+        snapshot = snapshot_for(own("projects", project_id, user))
+        if not snapshot.get("repository_plan"):
+            return {"data": None}
+        analyses = [
+            a
+            for a in store.list("analyses", "project_id", project_id)
+            if a["owner_uid"] == user and a["expires_at"] > time.time()
+        ]
+        return {"data": repository_status(snapshot, analyses, settings.gemini_model)}
+
+    @app.post("/api/v1/projects/{project_id}/chunks", status_code=202)
+    def analyze_chunk(project_id: str, body: ChunkRequest, user: User, key: Key) -> dict:
+        project = own("projects", project_id, user)
+        snapshot = snapshot_for(project)
+        if not any(
+            c["chunk_id"] == body.chunk_id for c in snapshot.get("repository_plan", {}).get("chunks", [])
+        ):
+            raise GrooveError("INVALID_SELECTION", "存在する検査範囲を選んでください。")
+        if body.retry_partial:
+            analyses = [
+                a
+                for a in store.list("analyses", "project_id", project_id)
+                if a["owner_uid"] == user and a["expires_at"] > time.time()
+            ]
+            status = repository_status(snapshot, analyses, settings.gemini_model)
+            selected = next(c for c in status["chunks"] if c["chunk_id"] == body.chunk_id)
+            if selected["status"] != "partial":
+                raise GrooveError("INVALID_SELECTION", "未解決のある保存範囲を選んでください。")
+        return {
+            "data": jobs.create(
+                user,
+                {
+                    "source": project["source"],
+                    "chunk_id": body.chunk_id,
+                    "refresh": True,
+                    "retry_partial": body.retry_partial,
+                },
+                key,
+                project=project,
+            )
+        }
+
     @app.get("/api/v1/projects/{project_id}/files")
     def get_files(project_id: str, user: User) -> dict:
         return {"data": snapshot_for(own("projects", project_id, user))["index"]}
@@ -463,7 +532,28 @@ def create_app(settings: Settings | None = None, verifier: Callable[[str], str] 
                         store.list("run_events", "run_id", meta["run_id"]), key=lambda e: e["seq"]
                     )[:200]
                 ]
-        return {"data": {**bundle, "sources": snapshot["sources"], "trace": trace}}
+        return {
+            "data": {
+                **bundle,
+                "sources": snapshot["sources"],
+                "trace": trace,
+                **(
+                    {
+                        "repository": repository_status(
+                            snapshot,
+                            [
+                                a
+                                for a in store.list("analyses", "project_id", project_id)
+                                if a["expires_at"] > time.time()
+                            ],
+                            settings.gemini_model,
+                        )
+                    }
+                    if snapshot.get("repository_plan")
+                    else {}
+                ),
+            }
+        }
 
     @app.get("/api/v1/analyses/{analysis_id}")
     def get_analysis(analysis_id: str, user: User) -> dict:
@@ -643,7 +733,18 @@ def create_app(settings: Settings | None = None, verifier: Callable[[str], str] 
         kit = json.loads((ROOT / "apps/web/public/audio/midnight-jazz-v4/manifest.json").read_text())
         score = run_node("groove-core", {"map": semantic, "kit_hash": kit["kit_hash"]})
         artifact_key = f"projects/{project['project_id']}/analyses/{identifier}/bundle.json.gz"
-        artifacts.put(artifact_key, {"map": semantic, "score": score})
+        artifacts.put(
+            artifact_key,
+            {
+                "map": semantic,
+                "score": score,
+                **(
+                    {"partition": bundle_for(previous, user)["partition"]}
+                    if base_meta.get("chunk_id")
+                    else {}
+                ),
+            },
+        )
 
         def operation(tx: Transaction) -> None:
             current = tx.get("projects", project["project_id"])
@@ -658,6 +759,24 @@ def create_app(settings: Settings | None = None, verifier: Callable[[str], str] 
                     "base_analysis_id": previous,
                     "created_at": time.time(),
                     "updated_at": time.time(),
+                    **(
+                        {
+                            "analysis_id": identifier,
+                            **{
+                                k: base_meta[k]
+                                for k in (
+                                    "chunk_id",
+                                    "chunk_fingerprint",
+                                    "prompt_version",
+                                    "model_id",
+                                    "inspected_units",
+                                    "unresolved_units",
+                                )
+                            },
+                        }
+                        if base_meta.get("chunk_id")
+                        else {}
+                    ),
                 },
             )
             tx.put(

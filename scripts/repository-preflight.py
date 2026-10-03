@@ -10,6 +10,7 @@ from collections import Counter
 from pathlib import Path, PurePosixPath
 
 from code_groove.errors import GrooveError
+from code_groove.repository import plan_repository
 from code_groove.source import build_index, run_node, sanitize, validate_scope
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -29,16 +30,19 @@ def source_path(path: str) -> bool:
         and not path.endswith(".d.ts")
         and not re.search(r"\.(test|spec)\.tsx?$|(^|/)test_[^/]+\.py$|(^|/)tests/", path)
         and not any(
-            part in {"node_modules", "dist", "build", ".venv", "__pycache__"}
-            or part.startswith(".")
+            part in {"node_modules", "dist", "build", ".venv", "__pycache__"} or part.startswith(".")
             for part in PurePosixPath(path).parts
         )
     )
 
 
-def assess(repository: Path, ref: str = "HEAD", scopes: tuple[str, ...] = ()) -> tuple[dict, dict]:
+def assess(
+    repository: Path, ref: str = "HEAD", scopes: tuple[str, ...] = (), partitioned: bool = False
+) -> tuple[dict, dict]:
     scopes = tuple(validate_scope(scope) for scope in scopes)
-    revision = git(repository, "rev-parse", "--verify", "--end-of-options", f"{ref}^{{commit}}").decode().strip()
+    revision = (
+        git(repository, "rev-parse", "--verify", "--end-of-options", f"{ref}^{{commit}}").decode().strip()
+    )
     if not re.fullmatch(r"[a-f0-9]{40,64}", revision):
         raise ValueError("Cannot pin the repository revision")
     sources, excluded = {}, []
@@ -90,7 +94,9 @@ def assess(repository: Path, ref: str = "HEAD", scopes: tuple[str, ...] = ()) ->
     }
     if not selected:
         raise ValueError("No supported source files in the requested scope")
-    missing = [scope for scope in scopes if not any(p == scope or p.startswith(scope + "/") for p in selected)]
+    missing = [
+        scope for scope in scopes if not any(p == scope or p.startswith(scope + "/") for p in selected)
+    ]
     if missing:
         raise ValueError("At least one requested scope has no supported source files")
     files = [
@@ -98,7 +104,8 @@ def assess(repository: Path, ref: str = "HEAD", scopes: tuple[str, ...] = ()) ->
             "path": path,
             "lines": len(source.splitlines()),
             "indexed_functions": units[path],
-            "unindexed_class_methods": methods.get(path, 0),
+            "class_methods": methods.get(path, 0),
+            "unindexed_class_methods": 0,
             "parse_errors": parse_errors.get(path, 0),
             "selected": path in selected,
             "source_sha256": hashlib.sha256(source.encode()).hexdigest(),
@@ -110,7 +117,9 @@ def assess(repository: Path, ref: str = "HEAD", scopes: tuple[str, ...] = ()) ->
         return {
             "files": len(rows),
             "lines": sum(file["lines"] for file in rows),
-            "indexed_functions": sum(file["indexed_functions"] for file in rows),
+            "indexed_functions": sum(
+                file["indexed_functions"] + file.get("class_methods", 0) for file in rows
+            ),
             "unindexed_class_methods": sum(file["unindexed_class_methods"] for file in rows),
             "parse_errors": sum(file["parse_errors"] for file in rows),
         }
@@ -123,10 +132,8 @@ def assess(repository: Path, ref: str = "HEAD", scopes: tuple[str, ...] = ()) ->
         for item in excluded
     ):
         rejected.append("unsupported_selected_files")
-    if scope_counts["unindexed_class_methods"]:
-        rejected.append("python_class_methods_not_indexed")
     try:
-        index = build_index(snapshot_id, sanitized)
+        index = build_index(snapshot_id, sanitized, repository=partitioned)
     except GrooveError as error:
         rejected.append(error.code)
         index = None
@@ -138,7 +145,13 @@ def assess(repository: Path, ref: str = "HEAD", scopes: tuple[str, ...] = ()) ->
         "inventory": counts(files),
         "selected": scope_counts,
         "excluded": excluded,
-        "limits": {"files": 40, "lines": 6000, "bytes": 1024 * 1024, "functions": 32},
+        "limits": {
+            "files": 400 if partitioned else 40,
+            "lines": 60000 if partitioned else 6000,
+            "bytes": 4 * 1024 * 1024 if partitioned else 1024 * 1024,
+            "symbols": 4096 if partitioned else 32,
+        },
+        "analysis_strategy": "resumable_partitions" if partitioned else "single_scope",
         "static_scope_accepted": not rejected,
         "rejections": rejected,
         "redacted_files": [path for path in selected if sanitized[path] != selected[path]],
@@ -147,7 +160,12 @@ def assess(repository: Path, ref: str = "HEAD", scopes: tuple[str, ...] = ()) ->
         "music": "not_generated",
         "files": files,
     }
-    return report, {"snapshot_id": snapshot_id, "sources": sanitized, "index": index}
+    prepared = {"snapshot_id": snapshot_id, "sources": sanitized, "index": index}
+    if partitioned and index:
+        prepared["repository_plan"] = plan_repository(index, sanitized)
+        report["partitions"] = len(prepared["repository_plan"]["chunks"])
+        report["implementation_units"] = prepared["repository_plan"]["implementation_units"]
+    return report, prepared
 
 
 def main() -> None:
@@ -156,9 +174,12 @@ def main() -> None:
     parser.add_argument("--ref", default="HEAD")
     parser.add_argument("--scope", action="append", default=[])
     parser.add_argument("--prepare", action="store_true")
+    parser.add_argument("--partitioned", action="store_true")
     args = parser.parse_args()
-    report, prepared = assess(args.repository.resolve(), args.ref, tuple(args.scope))
-    scope_hash = hashlib.sha256(json.dumps(report["scope_paths"]).encode()).hexdigest()[:12]
+    report, prepared = assess(args.repository.resolve(), args.ref, tuple(args.scope), args.partitioned)
+    scope_hash = hashlib.sha256(
+        json.dumps({"scopes": report["scope_paths"], "partitioned": args.partitioned}).encode()
+    ).hexdigest()[:12]
     output = ROOT / ".local/repository-preflight" / report["revision"] / scope_hash
     if not output.resolve().is_relative_to((ROOT / ".local").resolve()):
         raise ValueError("Output must stay inside the local workspace")
@@ -167,6 +188,17 @@ def main() -> None:
     if args.prepare and report["static_scope_accepted"]:
         (output / "snapshot.json").write_text(
             json.dumps(prepared, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
+        (output / "import.json").write_text(
+            json.dumps(
+                {
+                    "revision": report["revision"],
+                    "label": args.repository.name,
+                    "sources": prepared["sources"],
+                },
+                ensure_ascii=False,
+            ),
+            encoding="utf-8",
         )
     print(json.dumps({key: value for key, value in report.items() if key != "files"}, ensure_ascii=False))
     print(f"Local report: {output / 'report.json'}")

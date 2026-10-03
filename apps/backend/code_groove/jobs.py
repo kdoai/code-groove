@@ -13,6 +13,7 @@ from code_groove.agent import AgentContext, run_agent
 from code_groove.errors import GrooveError
 from code_groove.improvements import apply_edits, proposal_diff, source_hash
 from code_groove.incremental import INDEX_VERSION, PROMPT_VERSION, compatible, reuse_unchanged
+from code_groove.repository import cached_chunks, follow_chunk, plan_repository, select_chunk
 from code_groove.schemas import Coverage, Evidence, ImprovementProposal, InvestigationResult, SemanticMap
 from code_groove.settings import ROOT, Settings
 from code_groove.source import build_index, github_snapshot, run_node, sample_snapshot
@@ -26,7 +27,13 @@ class JobService:
         self.settings, self.store, self.artifacts = settings, metadata, artifacts
 
     def create(
-        self, uid: str, body: dict, key: str, kind: str = "analysis", project: dict | None = None
+        self,
+        uid: str,
+        body: dict,
+        key: str,
+        kind: str = "analysis",
+        project: dict | None = None,
+        local_sources: dict[str, str] | None = None,
     ) -> dict:
         if not self.settings.enable_live_analysis:
             raise GrooveError("LIVE_DISABLED", "実解析は現在停止しています。保存結果は再生できます。", 503)
@@ -43,6 +50,11 @@ class JobService:
         ).hexdigest()
         run_id = f"run_{uuid.uuid4().hex}"
         project_id = project["project_id"] if project else f"p_{uuid.uuid4().hex}"
+        prepared_key = None
+        if local_sources is not None:
+            project_id = f"p_{idem[:32]}"
+            sha = source_hash(local_sources)
+            prepared_key = f"projects/{project_id}/inputs/{sha}/source.json.gz"
         reserved_input, reserved_output = (
             (160000, 20000) if kind in ("investigation", "proposal") else (400000, 48000)
         )
@@ -155,6 +167,7 @@ class JobService:
                         "created_at": now,
                         "updated_at": now,
                         "expires_at": expires,
+                        **({"snapshot_key": prepared_key} if prepared_key else {}),
                     },
                 )
             elif kind == "analysis":
@@ -209,6 +222,10 @@ class JobService:
             return run
 
         run = self.store.atomic(operation)
+        if prepared_key and local_sources is not None:
+            # Admission precedes storage; a denied upload creates no billable artifact.
+            # Idempotent retries can finish this write before the task is enqueued.
+            self.artifacts.put(prepared_key, {"sha": source_hash(local_sources), "sources": local_sources})
         try:
             self.enqueue(run)
         except GrooveError as exc:
@@ -420,7 +437,12 @@ class JobService:
                 sha = source_hash(sources)
                 snapshot_id = f"snap_{sha[:24]}_{hashlib.sha256(INDEX_VERSION.encode()).hexdigest()[:6]}"
                 self.mutate(run_id, attempt, {"status": "indexing"})
-                index = await asyncio.to_thread(build_index, snapshot_id, sources)
+                index = await asyncio.to_thread(
+                    build_index,
+                    snapshot_id,
+                    sources,
+                    repository=bool(previous and previous.get("repository_plan")),
+                )
                 if project["source"].get("scope_path"):
                     index["scope_path"] = project["source"]["scope_path"]
                     index["scope_note"] = (
@@ -434,15 +456,56 @@ class JobService:
                     "index_version": INDEX_VERSION,
                 }
                 snapshot_key = f"projects/{run['project_id']}/snapshots/{snapshot_id}/snapshot.json.gz"
+                if previous and previous.get("repository_plan"):
+                    snapshot["repository_plan"] = plan_repository(index, sources)
+                    prior_analysis = self.store.get("analyses", run["body"]["analysis_id"]) or {}
+                    matching = follow_chunk(
+                        previous["repository_plan"],
+                        snapshot["repository_plan"],
+                        prior_analysis.get("chunk_id"),
+                    )
+                    if matching:
+                        run["body"]["chunk_id"] = matching
                 await asyncio.to_thread(self.artifacts.put, snapshot_key, snapshot)
                 emit(
                     "improvement_applied",
                     {"proposal_id": run["body"]["proposal_id"], "snapshot_id": snapshot_id},
                 )
             elif project.get("snapshot_key") and (
-                not run["body"].get("refresh") or project.get("working_copy")
+                not run["body"].get("refresh")
+                or project.get("working_copy")
+                or run["body"].get("chunk_id")
+                or project["source"]["kind"] == "local_snapshot"
             ):
                 snapshot = await asyncio.to_thread(self.artifacts.get, project["snapshot_key"])
+                if "index" not in snapshot:
+                    sha, sources = snapshot["sha"], snapshot["sources"]
+                    snapshot_id = f"snap_{sha[:24]}_{hashlib.sha256(INDEX_VERSION.encode()).hexdigest()[:6]}"
+                    self.mutate(run_id, attempt, {"status": "indexing"})
+                    index = await asyncio.to_thread(build_index, snapshot_id, sources, repository=True)
+                    snapshot = {
+                        "sha": sha,
+                        "snapshot_id": snapshot_id,
+                        "sources": sources,
+                        "index": index,
+                        "index_version": INDEX_VERSION,
+                    }
+                    snapshot_key = f"projects/{run['project_id']}/snapshots/{snapshot_id}/snapshot.json.gz"
+                    snapshot["repository_plan"] = plan_repository(index, sources)
+                    await asyncio.to_thread(self.artifacts.put, snapshot_key, snapshot)
+                    self.store.update(
+                        "projects",
+                        run["project_id"],
+                        {"snapshot_key": snapshot_key, "snapshot_id": snapshot_id, "sha": sha},
+                    )
+                    emit(
+                        "source_pinned",
+                        {
+                            "sha": sha,
+                            "snapshot_id": snapshot_id,
+                            "provenance": "user_supplied_committed_snapshot",
+                        },
+                    )
             else:
                 self.mutate(run_id, attempt, {"status": "fetching"})
                 source = project["source"]
@@ -476,7 +539,7 @@ class JobService:
                     index = previous["index"]
                     emit("index_cache_hit", {"snapshot_id": snapshot_id})
                 else:
-                    index = await asyncio.to_thread(build_index, snapshot_id, sources)
+                    index = await asyncio.to_thread(build_index, snapshot_id, sources, repository=True)
                     if source.get("scope_path"):
                         index["scope_path"] = source["scope_path"]
                         index["scope_note"] = (
@@ -489,6 +552,12 @@ class JobService:
                     "index": index,
                     "index_version": INDEX_VERSION,
                 }
+                if (
+                    len(index["units"]) > 32
+                    or sum(f["is_source"] for f in index["files"]) > 40
+                    or sum(f["lines"] for f in index["files"] if f["is_source"]) > 6000
+                ):
+                    snapshot["repository_plan"] = plan_repository(index, sources)
                 key = (
                     project["snapshot_key"]
                     if unchanged_index
@@ -501,7 +570,49 @@ class JobService:
                     run["project_id"],
                     {"snapshot_key": key, "snapshot_id": snapshot_id, "sha": sha},
                 )
-            if prior_map and compatible(prior_map, self.settings.gemini_model) and previous:
+            partition = None
+            agent_index = snapshot["index"]
+            if snapshot.get("repository_plan"):
+                plan = snapshot["repository_plan"]
+                available = cached_chunks(
+                    plan,
+                    self.store.list("analyses", "project_id", run["project_id"]),
+                    self.settings.gemini_model,
+                )
+                chosen = run["body"].get("chunk_id")
+                if run["kind"] in ("investigation", "proposal"):
+                    chosen = (base_meta or {}).get("chunk_id")
+                if not chosen:
+                    chosen = next(
+                        (c["chunk_id"] for c in plan["chunks"] if c["chunk_id"] not in available),
+                        plan["chunks"][0]["chunk_id"],
+                    )
+                agent_index = select_chunk(snapshot, chosen)
+                partition = next(c for c in plan["chunks"] if c["chunk_id"] == chosen)
+                emit(
+                    "partition_selected",
+                    {
+                        "message": f"分割範囲を検査 · 保存済み{len(available)}/{len(plan['chunks'])}範囲 · 残りは未検査",
+                        "chunk_id": chosen,
+                        "paths": partition["paths"],
+                        "units": len(partition["unit_ids"]),
+                        "repository_symbols": plan["indexed_symbols"],
+                    },
+                )
+                if run["kind"] == "analysis" and chosen in available and not run["body"].get("retry_partial"):
+                    saved = available[chosen]
+                    emit(
+                        "analysis_cache_hit",
+                        {"analysis_id": saved["analysis_id"], "chunk_id": chosen, "model_requests": 0},
+                    )
+                    self.mutate(run_id, attempt, {"status": "partial", "result_id": saved["analysis_id"]})
+                    self.store.update(
+                        "projects",
+                        run["project_id"],
+                        {"status": "partial", "latest_analysis_id": saved["analysis_id"]},
+                    )
+                    return
+            if not partition and prior_map and compatible(prior_map, self.settings.gemini_model) and previous:
                 if (
                     previous["sources"] == snapshot["sources"]
                     and previous.get("index_version") == INDEX_VERSION
@@ -550,7 +661,7 @@ class JobService:
                 run["project_id"],
                 snapshot["snapshot_id"],
                 snapshot["sources"],
-                snapshot["index"],
+                agent_index,
                 emit,
                 guard,
                 lambda values: self.mutate(run_id, attempt, values),
@@ -570,6 +681,7 @@ class JobService:
                 model_count=run["model_requests"],
                 tool_count=run["tool_calls"],
                 started=time.monotonic() - max(0, time.time() - run["started_at"]),
+                repository_index=snapshot["index"] if partition else None,
             )
             candidate = await run_agent(ctx)
             self.guard(run_id, attempt)
@@ -612,13 +724,20 @@ class JobService:
                     coverage=Coverage(
                         **{
                             "indexed_source_files": sum(f["is_source"] for f in ctx.index["files"]),
-                            "eligible_source_files": sum(f["is_source"] for f in ctx.index["files"]),
+                            "eligible_source_files": sum(f["is_source"] for f in snapshot["index"]["files"]),
                             "indexed_units": len(ctx.index["units"]),
                             "inspected_units": sum(u.review_state == "inspected" for u in candidate.units),
                             "unresolved_unit_ids": [
                                 u.unit_id for u in candidate.units if u.review_state != "inspected"
                             ],
-                            "excluded_paths": [],
+                            "excluded_paths": [
+                                {"path": f["path"], "reason": "outside_current_partition_not_analyzed"}
+                                for f in snapshot["index"]["files"]
+                                if f["is_source"]
+                                and f["path"] not in {u["primary_span"]["path"] for u in ctx.index["units"]}
+                            ]
+                            if partition
+                            else [],
                             "inspected_line_ranges": [e.span.model_dump() for e in ctx.evidence],
                         }
                     ),
@@ -632,7 +751,21 @@ class JobService:
                 score = await asyncio.to_thread(
                     run_node, "groove-core", {"map": semantic, "kit_hash": kit["kit_hash"]}
                 )
-                result = {"map": semantic, "score": score}
+                result = {
+                    "map": semantic,
+                    "score": score,
+                    **(
+                        {
+                            "partition": {
+                                "chunk_id": partition["chunk_id"],
+                                "paths": partition["paths"],
+                                "whole_repository_complete": False,
+                            }
+                        }
+                        if partition
+                        else {}
+                    ),
+                }
                 collection = "analyses"
                 artifact_key = f"projects/{run['project_id']}/analyses/{result_id}/bundle.json.gz"
             await asyncio.to_thread(self.artifacts.put, artifact_key, result)
@@ -672,6 +805,19 @@ class JobService:
                         "expires_at": run["expires_at"],
                         **({"status": "draft"} if ctx.proposing else {}),
                         **({"proposal_id": result_id} if ctx.proposing else {}),
+                        **(
+                            {
+                                "chunk_id": partition["chunk_id"],
+                                "chunk_fingerprint": partition["fingerprint"],
+                                "prompt_version": PROMPT_VERSION,
+                                "model_id": self.settings.gemini_model,
+                                "analysis_id": result_id,
+                                "inspected_units": result["map"]["coverage"]["inspected_units"],
+                                "unresolved_units": len(result["map"]["coverage"]["unresolved_unit_ids"]),
+                            }
+                            if partition and not base
+                            else {}
+                        ),
                     },
                 )
                 if ctx.proposing:
@@ -704,7 +850,7 @@ class JobService:
                         {
                             **target,
                             "latest_analysis_id": result_id,
-                            "status": "completed",
+                            "status": "partial" if partition else "completed",
                             "updated_at": time.time(),
                             **(
                                 {
@@ -726,7 +872,7 @@ class JobService:
                     {
                         **current,
                         "status": "partial"
-                        if not base and result["map"]["coverage"]["unresolved_unit_ids"]
+                        if not base and (partition or result["map"]["coverage"]["unresolved_unit_ids"])
                         else "completed",
                         "result_id": result_id,
                         "updated_at": time.time(),

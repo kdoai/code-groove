@@ -30,6 +30,16 @@ The Agent scope is an initial bounded case. It excludes request handlers and ser
 
 ## Remaining product work
 
+### R10 update — 2026-10-03
+
+The R9 limitations below describe the earlier checkpoint. R10 now indexes all63 Python methods and preserves873 total symbols, grouped into281 lexical owners and28 bounded analysis partitions. Static preparation of all51 sources/19,541 lines succeeds with zero parse errors; the two original dirty files remain unchanged. Dynamic password expressions and type annotations are preserved during secret projection, correcting the previous two false redactions.
+
+Authenticated local ingestion, whole inventory/unknown counts, range selection, saved playback with zero new model calls, and explicit continuation/retry are implemented. Use `--partitioned --prepare` to generate the full `629dbbb5d73e/import.json` under the same ignored revision directory. Upload it from the authenticated Repository dialog. It contains source code and remains private/local; it is not part of the public sample or this Git repository.
+
+The current UTC day has already consumed the three live analyses. No new Tsugiai Gemini result or music is claimed. API/model mock regressions and actual browser checks establish the implemented workflow, not actual Tsugiai semantic quality. Cross-partition meaning/motif reconciliation and aggregate playback remain unimplemented, even if each partition later has a saved result. Seven-day retention and three analyses/day may prevent completing all28 ranges in one project; choose useful scopes first. Details are in [Repository Agent R10](REPOSITORY_AGENT_R10.md).
+
+### Historical R9 remaining work
+
 This checkpoint prepares static input only. It does **not** integrate local snapshots into the authenticated web ingestion API, call Gemini, create a SemanticMap, generate music, replace the public sample or validate Tsugiai's runtime.
 
 For a whole-repository demonstration, improve Python method indexing and add bounded analysis partitions with a shared repository context, explicit unknowns and persistent caching. Do not just increase the function cap or send the whole repository on every question. Aggregate module listening and detailed file listening need a real semantic map and musical validation. Existing GCP capacity and AI quota controls remain in force.

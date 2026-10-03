@@ -63,11 +63,15 @@ def test_large_inventory_cannot_be_prepared_as_a_complete_examination(repository
     assert set(snapshot["sources"]) == {"src/small.py"}
 
 
-def test_unindexed_methods_and_git_symlinks_are_disclosed_and_rejected(repository):
+def test_indexed_methods_and_git_symlinks_are_disclosed(repository):
     commit(repository, {"src/store.py": "class Store:\n    def save(self):\n        return 1\n"})
-    blob = subprocess.check_output(
-        ["git", "-C", str(repository), "hash-object", "-w", "--stdin"], input=b"../outside.py"
-    ).decode().strip()
+    blob = (
+        subprocess.check_output(
+            ["git", "-C", str(repository), "hash-object", "-w", "--stdin"], input=b"../outside.py"
+        )
+        .decode()
+        .strip()
+    )
     subprocess.run(
         ["git", "-C", str(repository), "update-index", "--add", "--cacheinfo", f"120000,{blob},src/link.py"],
         check=True,
@@ -75,10 +79,23 @@ def test_unindexed_methods_and_git_symlinks_are_disclosed_and_rejected(repositor
     subprocess.run(["git", "-C", str(repository), "commit", "--quiet", "-m", "Link"], check=True)
     report, snapshot = assess(repository)
     assert not report["static_scope_accepted"]
-    assert report["selected"]["unindexed_class_methods"] == 1
-    assert "python_class_methods_not_indexed" in report["rejections"]
+    assert report["selected"]["unindexed_class_methods"] == 0
+    assert report["selected"]["indexed_functions"] == 1
+    assert "python_class_methods_not_indexed" not in report["rejections"]
     assert report["excluded"] == [{"path": "src/link.py", "reason": "link_or_special_file"}]
     assert "src/link.py" not in snapshot["sources"]
+
+
+def test_partitioned_preparation_preserves_every_symbol_and_exports_bounded_input(repository):
+    commit(
+        repository,
+        {"src/large.ts": "\n".join(f"export function f{i}() {{ return {i}; }}" for i in range(60))},
+    )
+    report, snapshot = assess(repository, partitioned=True)
+    assert report["static_scope_accepted"] and report["model_requests"] == 0
+    assert report["partitions"] == 4
+    ids = [uid for chunk in snapshot["repository_plan"]["chunks"] for uid in chunk["unit_ids"]]
+    assert len(set(ids)) == len(snapshot["index"]["units"]) == 60
 
 
 def test_redaction_is_visible_and_invalid_scope_cannot_select_outside_files(repository):

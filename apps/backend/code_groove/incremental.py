@@ -3,8 +3,8 @@ import hashlib
 
 from code_groove.schemas import Evidence
 
-PROMPT_VERSION = "conductor-system-v9"
-INDEX_VERSION = "typescript-6-python-3.13-v2"
+PROMPT_VERSION = "conductor-system-v10-partitions"
+INDEX_VERSION = "typescript-6-python-3.13-v3-methods"
 
 
 def compatible(base: dict, model_id: str) -> bool:

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { X, ArrowRight, Music2 } from 'lucide-react';
-import { api, currentUser, login } from '../api';
+import { api, currentUser, login, type ImportSnapshot } from '../api';
 import { useQuery } from '@tanstack/react-query';
 
 export function Dialog({
@@ -130,15 +130,18 @@ export function OpenDialog({
   close,
   openSample,
   openRepo,
+  openSnapshot,
   openProject,
   pending,
 }: {
   close: () => void;
   openSample: (id: string) => void;
   openRepo: (url: string, scope?: string) => void;
+  openSnapshot: (snapshot: ImportSnapshot) => void;
   openProject: (id: string) => void;
   pending: boolean;
 }) {
+  const [importError, setImportError] = useState('');
   const projects = useQuery({
     queryKey: ['saved-projects'],
     queryFn: () =>
@@ -176,13 +179,46 @@ export function OpenDialog({
           <small>指定フォルダーとルートの説明・設定を読みます。範囲外のコードは未検査です。</small>
         </details>
         <small className="dialog-footnote">
-          TypeScript / Python · 最大40ファイル / 6,000行 / 32関数。大きい場合は対象フォルダーを指定。
+          TypeScript / Python · 索引は400ファイル / 60,000行 / 4 MiB。大きい場合は分割し、未検査の範囲を保持。
         </small>
         <button className="primary wide" disabled={pending}>
           Agentで調査する
           <ArrowRight size={16} />
         </button>
       </form>
+      <details className="scope-options">
+        <summary>固定したローカルスナップショットを取り込む</summary>
+        <p>
+          準備ツールで作ったimport.jsonを選択します。公開してよいコードのみ。認証情報や業務データを含めないでください。
+        </p>
+        <label>
+          スナップショットJSON
+          <input
+            type="file"
+            accept=".json,application/json"
+            disabled={pending}
+            onChange={async (e) => {
+              const file = e.target.files?.[0];
+              if (!file) return;
+              try {
+                if (file.size > 8 * 1024 * 1024) throw new Error('JSONは8 MiB以内です。');
+                const snapshot = JSON.parse(await file.text()) as ImportSnapshot;
+                if (!snapshot.revision || !snapshot.sources)
+                  throw new Error('準備ツールのimport.jsonを選択してください。');
+                setImportError('');
+                openSnapshot(snapshot);
+              } catch (error) {
+                setImportError((error as Error).message);
+              }
+            }}
+          />
+        </label>
+        {importError && (
+          <p role="alert" className="error">
+            {importError}
+          </p>
+        )}
+      </details>
       {!!projects.data?.length && (
         <>
           <div className="section-label">YOUR SAVED WORK</div>
@@ -191,7 +227,7 @@ export function OpenDialog({
               <button key={project.project_id} onClick={() => openProject(project.project_id)}>
                 <span>
                   <strong>
-                    {project.source.sample_id ?? project.source.url?.split('/').at(-1) ?? 'Repository'}
+                    {project.source.sample_id ?? project.source.url?.split('/').at(-1) ?? 'Local snapshot'}
                   </strong>
                   <small>
                     {project.latest_analysis_id ? '保存済み実解析 · 再生はAI費用なし' : '処理の状態を確認'}

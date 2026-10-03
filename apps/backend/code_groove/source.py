@@ -39,7 +39,7 @@ EXCLUDED = {
     "venv",
     "__pycache__",
 }
-SECRET = re.compile(r"(?i)((?:api[_-]?key|password|secret|access[_-]?token)\s*[:=]\s*[\"']?)[^\s\"';,]+")
+SECRET = re.compile(r"(?i)((?:api[_-]?key|password|secret|access[_-]?token)[\"']?\s*[:=]\s*)([\"'])(?:\\.|(?!\2)[^\\\r\n])*\2")
 
 
 def sanitize(source: str) -> str:
@@ -49,7 +49,7 @@ def sanitize(source: str) -> str:
         source,
         flags=re.S,
     )
-    source = SECRET.sub(r"\1[REDACTED]", source)
+    source = SECRET.sub(lambda m: m.group(1) + m.group(2) + "[REDACTED]" + m.group(2), source)
     return re.sub(r"(?:AIza[\w-]{35}|gh[pousr]_[A-Za-z0-9]{20,}|sk-[A-Za-z0-9]{20,})", "[REDACTED]", source)
 
 
@@ -222,7 +222,7 @@ def run_node(name: str, payload: dict) -> dict:
         raise RuntimeError("Trusted Node runtime missing")
     result = subprocess.run(
         [node, "--max-old-space-size=128", str(ROOT / f"dist/tools/{name}.mjs")],
-        input=json.dumps(payload),
+        input=json.dumps(payload, ensure_ascii=False),
         text=True,
         encoding="utf-8",
         capture_output=True,
@@ -234,25 +234,25 @@ def run_node(name: str, payload: dict) -> dict:
     return json.loads(result.stdout)
 
 
-def build_index(snapshot_id: str, sources: dict[str, str]) -> dict:
+def build_index(snapshot_id: str, sources: dict[str, str], *, repository: bool = False) -> dict:
     eligible = {
         path: content
         for path, content in sources.items()
         if path.endswith((".ts", ".tsx", ".py"))
-        and not re.search(r"\.(test|spec)\.tsx?$|(^|/)test_[^/]+\.py$|^tests/", path)
+        and not re.search(r"\.(test|spec)\.tsx?$|(^|/)test_[^/]+\.py$|(^|/)tests?/", path)
     }
     if (
-        len(eligible) > 40
-        or sum(len(v.splitlines()) for v in eligible.values()) > 6000
-        or sum(len(v.encode()) for v in eligible.values()) > 1024 * 1024
+        len(eligible) > (400 if repository else 40)
+        or sum(len(v.splitlines()) for v in eligible.values()) > (60000 if repository else 6000)
+        or sum(len(v.encode()) for v in sources.values()) > (4 * 1024 * 1024 if repository else 1024 * 1024)
     ):
-        raise GrooveError("SCOPE_TOO_LARGE", "対象を40ファイル・6,000行・1 MiB以内へ縮小してください。")
+        raise GrooveError("SCOPE_TOO_LARGE", "静的索引の上限を超えています。対象フォルダーを指定してください。")
     index = run_node("repo-indexer", {"snapshot_id": snapshot_id, "sources": sources})
     if any(path.endswith(".py") for path in sources):
         try:
             parsed = subprocess.run(
                 [sys.executable, "-I", str(ROOT / "apps/backend/code_groove/python_indexer.py")],
-                input=json.dumps({"snapshot_id": snapshot_id, "sources": sources}),
+                input=json.dumps({"snapshot_id": snapshot_id, "sources": sources}, ensure_ascii=False),
                 capture_output=True,
                 text=True,
                 encoding="utf-8",
@@ -269,8 +269,8 @@ def build_index(snapshot_id: str, sources: dict[str, str]) -> dict:
         index["relations"].extend(python_index["relations"])
     for file in index["files"]:
         file["lines"] = len(sources[file["path"]].splitlines())
-    if len(index["units"]) > 32:
-        raise GrooveError("SCOPE_TOO_LARGE", "対象の実装単位が32を超えています。")
+    if len(index["units"]) > (4096 if repository else 32):
+        raise GrooveError("SCOPE_TOO_LARGE", f"静的索引の実装単位が{4096 if repository else 32}を超えています。")
     if any(f["parse_errors"] for f in index["files"] if f["is_source"]):
         raise GrooveError("SOURCE_PARSE_FAILED", "TypeScript / Pythonの構文を確認してください。")
     return index

@@ -16,7 +16,35 @@ export type Bundle = {
   sample_id?: string;
   investigation?: InvestigationResult;
   trace?: { seq: number; type: string; timestamp: string; payload: Record<string, any> }[];
+  repository?: RepositoryStatus;
+  partition?: { chunk_id: string; paths: string[]; whole_repository_complete: false };
 };
+export type RepositoryStatus = {
+  snapshot_id: string;
+  eligible_source_files: number;
+  source_lines: number;
+  indexed_symbols: number;
+  implementation_units: number;
+  analyzed_chunks: number;
+  inspected_units: number;
+  pending_units: number;
+  unresolved_units: number;
+  files_without_units: string[];
+  note: string;
+  cross_partition_review: 'not_run';
+  chunks: {
+    chunk_id: string;
+    label: string;
+    paths: string[];
+    units: number;
+    symbol_count: number;
+    status: 'pending' | 'partial' | 'analyzed';
+    analysis_id?: string;
+    inspected_units: number;
+    unresolved_units: number;
+  }[];
+};
+export type ImportSnapshot = { revision: string; label: string; sources: Record<string, string> };
 export type PublicConfig = {
   live_enabled: boolean;
   firebase: { apiKey: string; authDomain: string; projectId: string; appId: string };

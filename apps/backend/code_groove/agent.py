@@ -53,6 +53,7 @@ class SearchArgs(PurposeArgs):
 class RelationsArgs(PurposeArgs):
     unit_id: str
     direction: str = Field(pattern=r"^(callers|callees|tests)$")
+    cursor: int = Field(default=0, ge=0, strict=True)
 
 
 class HypothesisArgs(Contract):
@@ -83,6 +84,7 @@ class AgentContext:
     proposing: bool = False
     analysis_depth: Literal["overview", "focused"] = "overview"
     prior_motifs: list[dict] = field(default_factory=list)
+    repository_index: dict | None = None
     evidence: list[Evidence] = field(default_factory=list)
     hypotheses: list[Hypothesis] = field(default_factory=list)
     reads: Counter = field(default_factory=Counter)
@@ -105,6 +107,7 @@ class AgentContext:
 
 TOOL_ARGS: dict[str, type[Contract]] = {
     "list_units": ListArgs,
+    "list_repository_files": ListArgs,
     "read_code": ReadArgs,
     "search_code": SearchArgs,
     "inspect_relations": RelationsArgs,
@@ -199,7 +202,9 @@ def execute_tool(ctx: AgentContext, name: str, args: dict, event_id: str) -> Any
                 if not candidate.signal_ids or any(s not in signals for s in candidate.signal_ids):
                     raise GrooveError("INVALID_PROPOSAL", "既存の診断に結び付く改善案が必要です。")
                 changed = apply_edits(candidate, ctx.sources, ctx.evidence)
-                proposed_index = build_index(ctx.snapshot_id, changed)
+                proposed_index = build_index(
+                    ctx.snapshot_id, changed, repository=ctx.repository_index is not None
+                )
                 if any(
                     not item["resolved"] and item["module"].startswith(".")
                     for file in proposed_index["files"]
@@ -227,8 +232,18 @@ def execute_tool(ctx: AgentContext, name: str, args: dict, event_id: str) -> Any
     if name not in TOOL_ARGS:
         raise GrooveError("TOOL_NOT_ALLOWED", "許可されていないツールです。")
     parsed: Any = TOOL_ARGS[name].model_validate(args)
-    files = {f["file_id"]: f for f in ctx.index["files"]}
+    source_index = ctx.repository_index or ctx.index
+    files = {f["file_id"]: f for f in source_index["files"]}
     if isinstance(parsed, ListArgs):
+        if name == "list_repository_files":
+            rows = source_index["files"]
+            return {
+                "files": rows[parsed.cursor : parsed.cursor + parsed.limit],
+                "truncated": len(rows) > parsed.cursor + parsed.limit,
+                "next_cursor": parsed.cursor + parsed.limit
+                if len(rows) > parsed.cursor + parsed.limit
+                else None,
+            }
         return {
             "units": ctx.index["units"][parsed.cursor : parsed.cursor + parsed.limit],
             "files": ctx.index["files"],
@@ -265,9 +280,12 @@ def execute_tool(ctx: AgentContext, name: str, args: dict, event_id: str) -> Any
             ),
             projection_sha256=hashlib.sha256(source.encode()).hexdigest(),
             source_kind="test"
-            if ".test." in file["path"] or ".spec." in file["path"]
+            if ".test." in file["path"]
+            or ".spec." in file["path"]
+            or "/tests/" in f"/{file['path']}"
+            or file["path"].split("/")[-1].startswith("test_")
             else "code"
-            if file["path"].endswith((".ts", ".tsx"))
+            if file["path"].endswith((".ts", ".tsx", ".py"))
             else "document",
             observation=parsed.purpose,
             created_by_tool_event_id=event_id,
@@ -281,7 +299,7 @@ def execute_tool(ctx: AgentContext, name: str, args: dict, event_id: str) -> Any
         }
     if isinstance(parsed, SearchArgs):
         matches = []
-        for file in ctx.index["files"]:
+        for file in source_index["files"]:
             if not file["path"].startswith(parsed.path_prefix):
                 continue
             for line, content in enumerate(ctx.sources[file["path"]].splitlines(), 1):
@@ -306,26 +324,32 @@ def execute_tool(ctx: AgentContext, name: str, args: dict, event_id: str) -> Any
         if not unit:
             raise GrooveError("NOT_FOUND", "unitが存在しません。", 404)
         if parsed.direction == "tests":
+            candidates = [
+                f
+                for f in source_index["files"]
+                if (
+                    ".test." in f["path"]
+                    or ".spec." in f["path"]
+                    or f["path"].endswith(".py")
+                    and ("tests/" in f["path"] or f["path"].split("/")[-1].startswith("test_"))
+                )
+                and unit["label"].split(".")[-1] in ctx.sources[f["path"]]
+            ]
             return {
-                "candidates": [
-                    f
-                    for f in ctx.index["files"]
-                    if (
-                        ".test." in f["path"]
-                        or ".spec." in f["path"]
-                        or f["path"].endswith(".py")
-                        and ("tests/" in f["path"] or f["path"].split("/")[-1].startswith("test_"))
-                    )
-                    and unit["label"] in ctx.sources[f["path"]]
-                ][:20],
+                "candidates": candidates[parsed.cursor : parsed.cursor + 20],
+                "truncated": len(candidates) > parsed.cursor + 20,
+                "next_cursor": parsed.cursor + 20 if len(candidates) > parsed.cursor + 20 else None,
                 "resolved": False,
             }
+        rows = [
+            r
+            for r in ctx.index["relations"]
+            if r["caller" if parsed.direction == "callees" else "callee"] == parsed.unit_id
+        ]
         return {
-            "relations": [
-                r
-                for r in ctx.index["relations"]
-                if r["caller" if parsed.direction == "callees" else "callee"] == parsed.unit_id
-            ][:20]
+            "relations": rows[parsed.cursor : parsed.cursor + 20],
+            "truncated": len(rows) > parsed.cursor + 20,
+            "next_cursor": parsed.cursor + 20 if len(rows) > parsed.cursor + 20 else None,
         }
     if isinstance(parsed, HypothesisArgs):
         if any(e not in {p.evidence_id for p in ctx.evidence} for e in parsed.evidence_ids):
@@ -346,7 +370,12 @@ async def run_agent(ctx: AgentContext) -> Any:
     elif ctx.investigating:
         prompt += "\n" + (ROOT / "prompts/investigation-system-v1.txt").read_text(encoding="utf-8")
     payload = {
-        "index": ctx.index,
+        "index": {
+            **ctx.index,
+            "relations": {"count": len(ctx.index["relations"]), "retrieve": "inspect_relations"},
+        }
+        if ctx.repository_index
+        else ctx.index,
         "snapshot_id": ctx.snapshot_id,
         "analysis_depth": ctx.analysis_depth,
         "goal": "意味と所有境界を復元し、必要な反証を調べる",
@@ -357,6 +386,8 @@ async def run_agent(ctx: AgentContext) -> Any:
         "changes": ctx.changes,
         "prior_motif_assignments": ctx.prior_motifs,
     }
+    if ctx.repository_index:
+        prompt += "\nThis is a repository partition. Classify only the supplied units. Nested callbacks belong to their indexed lexical owner; use member_symbol_ids=[unit_id]. Repository context is static inventory, not a semantic verdict. Use list_repository_files/search_code/read_code to verify dependencies outside the partition. Do not claim cross-partition consistency or whole-repository completion. For long units read adjacent bounded ranges and cite all ranges covering the unit. Unit calls are paginated through inspect_relations."
     history = [types.Content(role="user", parts=[types.Part(text=json.dumps(payload, ensure_ascii=False))])]
     output_limit = 8192 if ctx.investigating else 16384
     max_input, max_output = (160000, 20000) if ctx.investigating else (400000, 48000)

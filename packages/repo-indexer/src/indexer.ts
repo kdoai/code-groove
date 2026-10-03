@@ -3,7 +3,14 @@ import { posix } from 'node:path';
 import ts from 'typescript';
 
 type Span = { file_id: string; path: string; start_line: number; end_line: number };
-type Unit = { unit_id: string; symbol_id: string; label: string; primary_span: Span; calls: string[] };
+type Unit = {
+  unit_id: string;
+  symbol_id: string;
+  label: string;
+  primary_span: Span;
+  calls: string[];
+  parent_unit_id?: string;
+};
 const id = (value: string) => createHash('sha256').update(value).digest('hex').slice(0, 16);
 
 export function indexSnapshot(input: { snapshot_id: string; sources: Record<string, string> }) {
@@ -66,12 +73,17 @@ export function indexSnapshot(input: { snapshot_id: string; sources: Record<stri
     ts.isFunctionExpression(node);
   for (const [path, source] of Object.entries(input.sources).sort()) {
     const fileId = `file_${id(path)}`;
-    const isSource = /\.tsx?$/.test(path) && !/\.(test|spec)\.tsx?$/.test(path);
+    const isSource = /\.tsx?$/.test(path) && !/\.(test|spec)\.tsx?$|(^|\/)tests?\//.test(path);
     const file = virtual.get(absolute(path));
     const imports =
       file?.statements.filter(ts.isImportDeclaration).map((node) => ({
         module: (node.moduleSpecifier as ts.StringLiteral).text,
         resolved: !!resolve((node.moduleSpecifier as ts.StringLiteral).text, file.fileName),
+        path:
+          resolve((node.moduleSpecifier as ts.StringLiteral).text, file.fileName)?.resolvedFileName.replace(
+            '/snapshot/',
+            '',
+          ) ?? null,
       })) ?? [];
     files.push({
       file_id: fileId,
@@ -84,21 +96,26 @@ export function indexSnapshot(input: { snapshot_id: string; sources: Record<stri
       imports,
     });
     if (!isSource || !file) continue;
-    function visit(node: ts.Node) {
+    function visit(node: ts.Node, parentUnitId?: string) {
+      let owner = parentUnitId;
       if (functionLike(node) && (node as ts.FunctionLikeDeclaration).body) {
         const start = file!.getLineAndCharacterOfPosition(node.getStart(file)).line + 1;
         const end = file!.getLineAndCharacterOfPosition(node.end).line + 1;
         const name =
           (node as ts.FunctionDeclaration).name?.getText(file) ??
           (ts.isVariableDeclaration(node.parent) ? node.parent.name.getText(file) : `anonymous_${start}`);
-        const unitId = `unit_${id(`${input.snapshot_id}:${path}:${node.kind}:${start}:${end}`)}`;
+        let unitId = `unit_${id(`${input.snapshot_id}:${path}:${node.kind}:${start}:${end}`)}`;
+        if (units.some((unit) => unit.unit_id === unitId))
+          unitId = `unit_${id(`${input.snapshot_id}:${path}:${node.kind}:${node.pos}:${node.end}`)}`;
         const unit: Unit = {
           unit_id: unitId,
           symbol_id: unitId,
           label: name,
           primary_span: { file_id: fileId, path, start_line: start, end_line: end },
           calls: [],
+          ...(parentUnitId ? { parent_unit_id: parentUnitId } : {}),
         };
+        owner = unitId;
         units.push(unit);
         nodes.set(node, unit);
         if (ts.isVariableDeclaration(node.parent)) nodes.set(node.parent, unit);
@@ -112,7 +129,7 @@ export function indexSnapshot(input: { snapshot_id: string; sources: Record<stri
         }
         ts.forEachChild(node, readCalls);
       }
-      ts.forEachChild(node, visit);
+      ts.forEachChild(node, (child) => visit(child, owner));
     }
     visit(file);
   }

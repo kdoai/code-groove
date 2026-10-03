@@ -11,12 +11,13 @@ class BodyLimitMiddleware:
             await self.app(scope, receive, send)
             return
         messages, size = [], 0
+        limit = 8 * 1024 * 1024 if scope.get("path") == "/api/v1/projects/import" else self.limit
         while True:
             message = await receive()
             if message["type"] == "http.disconnect":
                 return
             size += len(message.get("body", b""))
-            if size > self.limit:
+            if size > limit:
                 await JSONResponse(
                     {"error": {"code": "REQUEST_TOO_LARGE", "message": "入力が大きすぎます。"}},
                     status_code=413,

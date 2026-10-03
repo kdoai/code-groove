@@ -10,6 +10,26 @@ def contains(outer: Span, inner: Span) -> bool:
     )
 
 
+def covers(proofs: list[Evidence], span: Span, code_only: bool = False) -> bool:
+    ranges = sorted(
+        (p.span.start_line, p.span.end_line)
+        for p in proofs
+        if p.span.file_id == span.file_id
+        and p.span.path == span.path
+        and (not code_only or p.source_kind == "code")
+    )
+    cursor = span.start_line
+    for start, end in ranges:
+        if end < cursor:
+            continue
+        if start > cursor:
+            return False
+        cursor = max(cursor, end + 1)
+        if cursor > span.end_line:
+            return True
+    return False
+
+
 def validate_candidate(candidate: AnalysisCandidate, index: dict, evidence: list[Evidence]) -> None:
     known_units = {u["unit_id"]: u for u in index["units"]}
     known_files = {f["file_id"]: f for f in index["files"]}
@@ -42,8 +62,8 @@ def validate_candidate(candidate: AnalysisCandidate, index: dict, evidence: list
             if member in members or not target or callers != {unit.unit_id}:
                 errors.append("Helper must have one confirmed owner")
             members.add(member)
-        if unit.review_state == "inspected" and not any(
-            e in proofs and contains(proofs[e].span, unit.primary_span) for e in unit.evidence_ids
+        if unit.review_state == "inspected" and not covers(
+            [proofs[e] for e in unit.evidence_ids if e in proofs], unit.primary_span, True
         ):
             errors.append("Inspected unit requires covering read evidence")
     for obj in [*candidate.responsibilities, *candidate.units, *candidate.events, *candidate.hypotheses]:
@@ -108,9 +128,8 @@ def validate_candidate(candidate: AnalysisCandidate, index: dict, evidence: list
         if any(e not in proofs or e not in signal.evidence_ids for e in signal.alternative_evidence_ids):
             errors.append("Alternative evidence must be an actual read included in the signal")
         for unit_id in signal.unit_ids:
-            if unit_id in units and not any(
-                e in proofs and contains(proofs[e].span, units[unit_id].primary_span)
-                for e in signal.evidence_ids
+            if unit_id in units and not covers(
+                [proofs[e] for e in signal.evidence_ids if e in proofs], units[unit_id].primary_span, True
             ):
                 errors.append("Review signal requires evidence covering its selected units")
         if any(
@@ -149,11 +168,8 @@ def validate_investigation(candidate: InvestigationCandidate, evidence: list[Evi
         if not original:
             raise GrooveError("INVALID_ANALYSIS", "更新元の健診候補が見つかりません。")
         for uid in original["unit_ids"]:
-            if not any(
-                e.evidence_id in cited
-                and e.source_kind == "code"
-                and contains(e.span, Span(**units[uid]["primary_span"]))
-                for e in evidence
+            if not covers(
+                [e for e in evidence if e.evidence_id in cited], Span(**units[uid]["primary_span"]), True
             ):
                 raise GrooveError(
                     "INVALID_EVIDENCE", "候補の更新には元の対象関数すべての新しい読取根拠が必要です。"
@@ -193,11 +209,10 @@ def validate_investigation(candidate: InvestigationCandidate, evidence: list[Evi
                     "INVALID_ANALYSIS", "追加解釈には既存の意味イベントと確認した代案が必要です。"
                 )
             for uid in signal.unit_ids:
-                if not any(
-                    e.evidence_id in signal.evidence_ids
-                    and e.source_kind == "code"
-                    and contains(e.span, Span(**units[uid]["primary_span"]))
-                    for e in evidence
+                if not covers(
+                    [e for e in evidence if e.evidence_id in signal.evidence_ids],
+                    Span(**units[uid]["primary_span"]),
+                    True,
                 ):
                     raise GrooveError("INVALID_EVIDENCE", "追加解釈の対象関数を今回読み直してください。")
             if any(
