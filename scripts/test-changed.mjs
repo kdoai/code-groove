@@ -55,7 +55,16 @@ const contracts =
       path,
     ),
   );
-const backend = contracts || files.some((path) => /^(apps\/backend\/|tests\/test_|prompts\/)/.test(path));
+const backend =
+  contracts ||
+  files.some(
+    (path) =>
+      path !== 'tests/test_repository_preflight.py' &&
+      /^(apps\/backend\/|tests\/test_|prompts\/)/.test(path),
+  );
+const preflight =
+  all ||
+  files.some((path) => /^(scripts\/repository-preflight\.py|tests\/test_repository_preflight\.py)$/.test(path));
 const music =
   contracts ||
   files.some((path) =>
@@ -74,11 +83,11 @@ const sample =
       path,
     ),
   );
-console.log(JSON.stringify({ backend, music, web, sample, files: files.length }));
+console.log(JSON.stringify({ backend, music, web, sample, preflight, files: files.length }));
 if (process.argv.includes('--list')) process.exit(0);
 if (tooling && !backend) run('uv', ['run', 'ruff', 'check', 'infra', 'scripts']);
 if (tooling && !web) run('pnpm', ['exec', 'eslint', 'scripts/*.mjs']);
-if (backend || music || web) run('pnpm', ['build:tools']);
+if (backend || music || web || preflight) run('pnpm', ['build:tools']);
 if (backend) {
   run('uv', ['run', 'ruff', 'check', 'apps/backend', 'scripts', 'tests', 'infra']);
   run('uv', ['run', 'mypy', 'apps/backend']);
@@ -104,5 +113,6 @@ if (sample) {
   run('pnpm', ['test:sample']);
   run('node', ['--test', 'examples/checkout-lab/tests/store.test.mjs']);
 }
-if (!(backend || music || web || sample))
+if (preflight && !backend) run('uv', ['run', 'pytest', 'tests/test_repository_preflight.py', '-q']);
+if (!(backend || music || web || sample || preflight))
   console.log('Documentation/infrastructure-only change: application suites skipped.');
