@@ -53,3 +53,5 @@ uv run python scripts/repository-preflight.py 'C:\Users\kfkf1\Desktop\Zenn4å›žç›
 The current `firebase.json` names `tsugiaizenn004` as its Hosting site. Actual in-app browser access to `https://tsugiaizenn004.web.app/` returned **Site Not Found**. The project-default candidate `https://tsugiai.web.app/` also returned that page. This does not establish that all Tsugiai deployments are unavailable. A current URL is requested from the user; authenticated workflows and local runtime remain unverified.
 
 Four targeted preparation regressions pass: committed input despite a dirty worktree and executable top-level code; oversized full scope versus a smaller explicit scope; disclosure/refusal of Python methods and Git links; visible redaction and safe scope paths. Ruff passes. No web/API/music runtime code changed, so application E2E, paid tests, music suites and a GCP deployment were not rerun for this checkpoint.
+
+GitHub CI37109009803 passes for preparation commit `da73d83a1d79b7fb8f1243017dd4092a28de527b`: only the four preparation regressions run (4.35s), alongside parser build and static checks. The selector skips unchanged application suites.
