@@ -6,7 +6,7 @@ import time
 import uuid
 from collections import Counter
 from dataclasses import dataclass, field
-from typing import Any, Callable
+from typing import Any, Callable, Literal
 
 from google.genai import errors, types
 from pydantic import Field, ValidationError
@@ -81,6 +81,7 @@ class AgentContext:
     changes: dict | None = None
     selection: dict | None = None
     proposing: bool = False
+    analysis_depth: Literal["overview", "focused"] = "overview"
     prior_motifs: list[dict] = field(default_factory=list)
     evidence: list[Evidence] = field(default_factory=list)
     hypotheses: list[Hypothesis] = field(default_factory=list)
@@ -332,6 +333,7 @@ async def run_agent(ctx: AgentContext) -> Any:
     payload = {
         "index": ctx.index,
         "snapshot_id": ctx.snapshot_id,
+        "analysis_depth": ctx.analysis_depth,
         "goal": "意味と所有境界を復元し、必要な反証を調べる",
         "limits": {"responsibilities": 6, "events": 96},
         "base": ctx.base,

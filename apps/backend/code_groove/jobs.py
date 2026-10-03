@@ -527,6 +527,7 @@ class JobService:
                 evidence=cached_evidence,
                 selection=run["body"] if base else None,
                 proposing=run["kind"] == "proposal",
+                analysis_depth="focused" if base or run["body"].get("proposal_id") else "overview",
                 prior_motifs=[
                     {k: r[k] for k in ("responsibility_id", "label", "motif_id", "change_reason")}
                     for r in (prior_map or {}).get("responsibilities", [])
@@ -573,6 +574,7 @@ class JobService:
                     project_id=run["project_id"],
                     snapshot_id=ctx.snapshot_id,
                     origin="live",
+                    analysis_depth=ctx.analysis_depth,
                     evidence=ctx.evidence,
                     coverage=Coverage(
                         **{

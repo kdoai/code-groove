@@ -158,6 +158,7 @@ export async function compileGroove(map: SemanticMap, kitHash: string): Promise<
       })
       .sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b)));
   const semanticContent = {
+    analysis_depth: map.analysis_depth ?? 'focused',
     profile: map.profile,
     responsibilities: map.responsibilities.map((value) => ({
       ...value,

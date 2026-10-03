@@ -128,6 +128,7 @@ class SemanticMap(AnalysisCandidate):
     project_id: Id
     snapshot_id: Id
     parent_analysis_id: Id | None = None
+    analysis_depth: Literal["overview", "focused"] = "focused"
     origin: Literal["live", "recorded_live", "fixture"]
     evidence: list[Evidence]
     coverage: Coverage
@@ -211,6 +212,7 @@ class Reclassification(Contract):
 
 
 class InvestigationCandidate(Contract):
+    review_signals: list[ReviewSignal] = Field(default_factory=list, max_length=6)
     findings: list[Finding] = Field(min_length=1, max_length=3)
     hypotheses: list[Hypothesis] = Field(max_length=16)
     suggested_reclassification: list[Reclassification] = Field(default_factory=list, max_length=96)

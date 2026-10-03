@@ -132,6 +132,8 @@ def validate_investigation(candidate: InvestigationCandidate, evidence: list[Evi
     for finding in candidate.findings:
         if not finding.evidence_ids or any(e not in proofs for e in finding.evidence_ids):
             raise GrooveError("INVALID_EVIDENCE", "結論に有効な根拠が必要です。")
+    if not any(fresh.intersection(f.evidence_ids) for f in candidate.findings):
+        raise GrooveError("INVALID_EVIDENCE", "結論には今回読み直した根拠が必要です。")
     for item in candidate.suggested_reclassification:
         original = next((e for e in base["events"] if e["event_id"] == item.event_id), None)
         if (
@@ -140,3 +142,37 @@ def validate_investigation(candidate: InvestigationCandidate, evidence: list[Evi
             or any(e not in proofs for e in item.evidence_ids)
         ):
             raise GrooveError("INVALID_ANALYSIS", "再分類対象または根拠が不正です。")
+    if candidate.review_signals:
+        units = {u["unit_id"]: u for u in base["units"]}
+        events = {e["event_id"]: e for e in base["events"]}
+        if len({s.signal_id for s in candidate.review_signals}) != len(candidate.review_signals):
+            raise GrooveError("INVALID_ANALYSIS", "追加調査の解釈IDが重複しています。")
+        for signal in candidate.review_signals:
+            if (
+                not signal.unit_ids
+                or not signal.event_ids
+                or any(u not in units for u in signal.unit_ids)
+                or any(e not in events for e in signal.event_ids)
+                or any(e not in proofs for e in signal.evidence_ids)
+                or any(e not in signal.evidence_ids for e in signal.alternative_evidence_ids)
+                or (
+                    signal.verdict == "concern"
+                    and (not signal.change_scenario or not signal.alternative_evidence_ids)
+                )
+            ):
+                raise GrooveError(
+                    "INVALID_ANALYSIS", "追加解釈には既存の意味イベントと確認した代案が必要です。"
+                )
+            for uid in signal.unit_ids:
+                if not any(
+                    e.evidence_id in signal.evidence_ids
+                    and e.source_kind == "code"
+                    and contains(e.span, Span(**units[uid]["primary_span"]))
+                    for e in evidence
+                ):
+                    raise GrooveError("INVALID_EVIDENCE", "追加解釈の対象関数を今回読み直してください。")
+            if any(
+                events[e]["unit_id"] not in signal.unit_ids or events[e]["state"] != "grounded"
+                for e in signal.event_ids
+            ):
+                raise GrooveError("INVALID_ANALYSIS", "追加解釈のイベントと対象関数が一致しません。")

@@ -337,6 +337,7 @@ export type AnalysisId = string;
 export type ProjectId = string;
 export type SnapshotId = string;
 export type ParentAnalysisId = string | null;
+export type AnalysisDepth = "overview" | "focused";
 export type Origin = "live" | "recorded_live" | "fixture";
 export type EvidenceId = string;
 export type SnapshotId1 = string;
@@ -373,6 +374,7 @@ export interface SemanticMap {
   project_id: ProjectId;
   snapshot_id: SnapshotId;
   parent_analysis_id?: ParentAnalysisId;
+  analysis_depth?: AnalysisDepth;
   origin: Origin;
   evidence: Evidence;
   coverage: Coverage;

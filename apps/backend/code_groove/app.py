@@ -20,11 +20,18 @@ from code_groove.http_limits import BodyLimitMiddleware
 from code_groove.improvements import apply_edits, source_hash
 from code_groove.incremental import INDEX_VERSION
 from code_groove.jobs import JobService
-from code_groove.schemas import Contract, Evidence, Id, ImprovementProposal, SemanticMap
+from code_groove.schemas import (
+    Contract,
+    Evidence,
+    Id,
+    ImprovementProposal,
+    InvestigationCandidate,
+    SemanticMap,
+)
 from code_groove.settings import ROOT, Settings
 from code_groove.source import build_index, parse_github_url, run_node
 from code_groove.storage import ArtifactStore, MetadataStore, Transaction
-from code_groove.validation import validate_candidate
+from code_groove.validation import validate_candidate, validate_investigation
 
 SAMPLES = (
     "cohesive",
@@ -36,6 +43,8 @@ SAMPLES = (
     "recorded-justified",
     "recorded-returns-before",
     "recorded-returns-after",
+    "checkout-flow",
+    "recorded-checkout-flow",
 )
 
 
@@ -45,7 +54,14 @@ class Source(Contract):
     ref: str | None = Field(default=None, max_length=120, pattern=r"^[\w./-]+$")
     sample_id: (
         Literal[
-            "cohesive", "scattered", "mixed", "justified", "orchestrator", "returns-before", "returns-after"
+            "cohesive",
+            "scattered",
+            "mixed",
+            "justified",
+            "orchestrator",
+            "returns-before",
+            "returns-after",
+            "checkout-flow",
         ]
         | None
     ) = None
@@ -206,7 +222,21 @@ def create_app(settings: Settings | None = None, verifier: Callable[[str], str] 
 
     @app.get("/api/v1/samples")
     def samples() -> dict:
-        return {"data": [{"sample_id": name} for name in SAMPLES]}
+        return {
+            "data": [
+                {"sample_id": name}
+                for name in SAMPLES
+                if (
+                    ROOT
+                    / "fixtures"
+                    / (
+                        f"recorded-live/{name.removeprefix('recorded-')}.json"
+                        if name.startswith("recorded-")
+                        else f"{name}.json"
+                    )
+                ).is_file()
+            ]
+        }
 
     @app.get("/api/v1/samples/{sample_id}/bundle")
     def sample_bundle(sample_id: str) -> dict:
@@ -221,6 +251,8 @@ def create_app(settings: Settings | None = None, verifier: Callable[[str], str] 
                 else f"{sample_id}.json"
             )
         )
+        if not file.is_file():
+            raise GrooveError("NOT_FOUND", "保存済みサンプルはまだありません。", 404)
         bundle = json.loads(file.read_text(encoding="utf-8"))
         if bundle["score"]["scenes"][0]["repo"]["grammar_version"] != "groove-chamber-v5":
             kit = json.loads((ROOT / "apps/web/public/audio/midnight-jazz-v3/manifest.json").read_text())
@@ -237,9 +269,11 @@ def create_app(settings: Settings | None = None, verifier: Callable[[str], str] 
             raise GrooveError("INVALID_SOURCE", "内蔵サンプルを指定してください。")
         return {"data": jobs.create(user, body.model_dump(mode="json"), key)}
 
-    @app.post("/api/v1/samples/recorded-returns-before/projects", status_code=201)
-    def adopt_recorded_sample(user: User, key: Key) -> dict:
-        idem_id = hashlib.sha256(f"{user}:adopt:{key}".encode()).hexdigest()
+    @app.post("/api/v1/samples/{sample_id}/projects", status_code=201)
+    def adopt_recorded_sample(sample_id: str, user: User, key: Key) -> dict:
+        if sample_id not in ("recorded-returns-before", "recorded-checkout-flow"):
+            raise GrooveError("INVALID_SOURCE", "保存済み実解析を選択してください。")
+        idem_id = hashlib.sha256(f"{user}:adopt:{sample_id}:{key}".encode()).hexdigest()
         previous = store.get("idempotency", idem_id)
         if previous and previous["expires_at"] > time.time():
             project = own("projects", previous["project_id"], user)
@@ -257,7 +291,7 @@ def create_app(settings: Settings | None = None, verifier: Callable[[str], str] 
             >= 20
         ):
             raise GrooveError("PROJECT_LIMIT", "保存数の上限です。不要な作業を削除してください。", 429)
-        bundle = sample_bundle("recorded-returns-before")["data"]
+        bundle = sample_bundle(sample_id)["data"]
         project_id, analysis_id = f"p_{uuid.uuid4().hex}", f"analysis_{uuid.uuid4().hex}"
         bundle["map"].update(project_id=project_id, analysis_id=analysis_id)
         bundle["score"]["analysis_id"] = analysis_id
@@ -272,7 +306,9 @@ def create_app(settings: Settings | None = None, verifier: Callable[[str], str] 
             "index": build_index(snapshot_id, bundle["sources"]),
         }
         artifacts.put(snapshot_key, snapshot)
-        artifacts.put(artifact_key, {"map": bundle["map"], "score": bundle["score"]})
+        artifacts.put(
+            artifact_key, {"map": bundle["map"], "score": bundle["score"], "trace": bundle.get("trace", [])}
+        )
         now = time.time()
         common = {
             "owner_uid": user,
@@ -294,7 +330,7 @@ def create_app(settings: Settings | None = None, verifier: Callable[[str], str] 
                 {
                     **common,
                     "status": "completed",
-                    "source": {"kind": "sample", "sample_id": "returns-before"},
+                    "source": {"kind": "sample", "sample_id": sample_id.removeprefix("recorded-")},
                     "latest_analysis_id": analysis_id,
                     "run_id": "",
                     "working_copy": True,
@@ -434,6 +470,10 @@ def create_app(settings: Settings | None = None, verifier: Callable[[str], str] 
         analysis = own("analyses", analysis_id, user)
         project = own("projects", analysis["project_id"], user)
         base = artifacts.get(analysis["artifact_key"])["map"]
+        if base.get("analysis_depth", "focused") != "focused":
+            raise GrooveError(
+                "FOCUSED_REVIEW_REQUIRED", "選択区間を追加調査し、結果を確認してください。", 409
+            )
         signal = next(
             (
                 s
@@ -516,11 +556,20 @@ def create_app(settings: Settings | None = None, verifier: Callable[[str], str] 
         result = artifacts.get(meta["artifact_key"])
         project = own("projects", meta["project_id"], user)
         previous = result["base_analysis_id"]
+        base_meta = own("analyses", previous, user)
         if project.get("latest_analysis_id") != previous:
             raise GrooveError("STALE_BASE_ANALYSIS", "解釈が更新されています。", 409)
-        if not result["suggested_reclassification"]:
-            raise GrooveError("NO_RECLASSIFICATION", "公開する再分類提案がありません。", 409)
+        if not result["suggested_reclassification"] and not result.get("review_signals"):
+            raise GrooveError("NO_RECLASSIFICATION", "反映する解釈の更新がありません。", 409)
         semantic = copy.deepcopy(bundle_for(previous, user)["map"])
+        candidate = InvestigationCandidate.model_validate(
+            {k: result[k] for k in InvestigationCandidate.model_fields if k in result}
+        )
+        validate_investigation(candidate, [Evidence(**e) for e in result["evidence"]], semantic)
+        updates = {s["signal_id"]: s for s in result.get("review_signals", [])}
+        semantic["review_signals"] = [
+            s for s in semantic.get("review_signals", []) if s["signal_id"] not in updates
+        ] + list(updates.values())
         semantic["responsibilities"].extend(result["new_responsibilities"])
         semantic["evidence"].extend(result["evidence"])
         by_id = {e["event_id"]: e for e in semantic["events"]}
@@ -537,11 +586,16 @@ def create_app(settings: Settings | None = None, verifier: Callable[[str], str] 
             orders[rid] = event["semantic_order"] + 1
         identifier = f"analysis_{uuid.uuid4().hex}"
         semantic.update(
-            analysis_id=identifier, parent_analysis_id=previous, created_at=datetime.now(UTC).isoformat()
+            analysis_id=identifier,
+            parent_analysis_id=previous,
+            analysis_depth="focused",
+            created_at=datetime.now(UTC).isoformat(),
         )
         model = SemanticMap.model_validate(semantic)
         validate_candidate(
-            model, snapshot_for(project)["index"], [Evidence(**e) for e in semantic["evidence"]]
+            model,
+            artifacts.get(base_meta["snapshot_key"])["index"],
+            [Evidence(**e) for e in semantic["evidence"]],
         )
         kit = json.loads((ROOT / "apps/web/public/audio/midnight-jazz-v3/manifest.json").read_text())
         score = run_node("groove-core", {"map": semantic, "kit_hash": kit["kit_hash"]})

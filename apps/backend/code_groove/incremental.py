@@ -3,7 +3,7 @@ import hashlib
 
 from code_groove.schemas import Evidence
 
-PROMPT_VERSION = "conductor-system-v5"
+PROMPT_VERSION = "conductor-system-v6"
 INDEX_VERSION = "typescript-6-python-3.13-v2"
 
 

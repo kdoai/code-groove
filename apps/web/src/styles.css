@@ -2062,3 +2062,38 @@ a {
   color: #e7ebff;
   box-shadow: inset 0 0 0 1px #6979bd;
 }
+.health-stage {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  padding: 8px 0 12px;
+  color: var(--muted);
+  font-size: 11px;
+}
+.health-stage b {
+  color: var(--text);
+}
+.motif-map {
+  border-left: 2px solid var(--accent);
+  padding: 8px 12px;
+  margin: 12px 0;
+}
+.motif-map small,
+.initial-notes small {
+  display: block;
+  color: var(--muted);
+  line-height: 1.6;
+}
+.initial-notes {
+  margin: 14px 0;
+  font-size: 12px;
+  line-height: 1.65;
+}
+.initial-notes summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.initial-notes > div {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+}

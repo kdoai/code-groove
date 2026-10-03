@@ -672,6 +672,15 @@
       "default": null,
       "title": "Parent Analysis Id"
     },
+    "analysis_depth": {
+      "default": "focused",
+      "enum": [
+        "overview",
+        "focused"
+      ],
+      "title": "Analysis Depth",
+      "type": "string"
+    },
     "origin": {
       "enum": [
         "live",

@@ -106,9 +106,9 @@ export function AuthDialog({ close, done }: { close: () => void; done: () => voi
 }
 export const sampleLabels = [
   {
-    id: 'recorded-returns-before',
-    label: '設計レビューの実例 / TypeScript',
-    detail: '長い実例 · Agentが共有ポリシーの散在を調査',
+    id: 'checkout-flow',
+    label: 'コードの健康診断 / TypeScript',
+    detail: '動く購入機能の全体像 · 聴いて選び、境界を精密検査',
   },
   {
     id: 'recorded-scattered',
@@ -223,9 +223,9 @@ export function Onboarding({ close, loadSample }: { close: () => void; loadSampl
       <div className="guide-invitation">
         <Music2 size={32} />
         <span className="eyebrow">LISTEN. LOCATE. ASK.</span>
-        <h2>設計の違いを、聴いてみよう。</h2>
-        <p>実際の画面を動かす短い案内です。設計を聴き、音の根拠を開き、Agentへの依頼と採用の手順を見ます。</p>
-        <small>保存したGemini調査を使用 · 新しいAI費用なし</small>
+        <h2>コードの健康状態を、聴いてみよう。</h2>
+        <p>実際の画面を動かす短い案内です。責務の配置を聴き、区間を選んで、Agentと将来の負担を考えます。</p>
+        <small>保存済みの譜面を使用 · 案内で新しいAI費用は発生しません</small>
       </div>
       <label className="checkbox">
         <input type="checkbox" checked={hide} onChange={(e) => setHide(e.target.checked)} />

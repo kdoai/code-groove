@@ -106,6 +106,7 @@ export function arrangeJazz(plan: ScorePlan, map: SemanticMap) {
     });
   }
   for (const signal of map.review_signals ?? []) {
+    if (map.analysis_depth === 'overview') continue;
     if (signal.verdict !== 'concern') continue;
     for (const target of plan.mode === 'repo' ? signal.unit_ids : [undefined]) {
       const signalEvents = plan.notes.filter(

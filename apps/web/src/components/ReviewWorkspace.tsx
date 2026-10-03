@@ -9,7 +9,7 @@ const CodePanel = lazy(() => import('./CodePanel').then((module) => ({ default: 
 export function SampleSwitch({ openSample }: { openSample: (id: string) => void }) {
   return (
     <div className="sample-switch">
-      <button data-tour="album" onClick={() => openSample('recorded-returns-before')}>
+      <button data-tour="album" onClick={() => openSample('checkout-flow')}>
         サンプルを開く
       </button>
     </div>
@@ -292,7 +292,9 @@ function Arrangement({
     return () => cancelAnimationFrame(frame);
   }, [plan, following, ws.instrumentMutes, ws.focusEvidence, ws.pulseMuted]);
   async function audition() {
-    const cue = musical.find((n) => n.kind === 'cue' && n.signal_id === signal?.signal_id);
+    const cue =
+      musical.find((n) => n.kind === 'cue' && n.signal_id === signal?.signal_id) ??
+      musical.find((n) => n.event_id && n.unit_id === ws.unitId);
     if (!cue) return;
     select(cue, false);
     followPlayback();
@@ -304,6 +306,13 @@ function Arrangement({
     } catch {
       setAudioError('音源の読込に失敗しました。');
     }
+  }
+  function markPassage() {
+    const note = current?.event_id ? current : musical.find((n) => n.event_id && n.unit_id === ws.unitId);
+    if (!note) return;
+    engine.pause();
+    setActive([]);
+    select(note);
   }
   const current =
     active.find((n) => n.kind === 'cue') ??
@@ -569,10 +578,15 @@ function Arrangement({
                 ? '発音中：共通伴奏（コード根拠なし）'
                 : 'ノートを選ぶと、その音の根拠へ移動')}
         </span>
-        {signal && (
+        {ws.unitId && (
           <button className="audition" data-tour="audition" onClick={() => void audition()}>
             <Play size={12} />
-            懸念の前後を聴く
+            この区間を聴く
+          </button>
+        )}
+        {ws.unitId && (
+          <button data-tour="mark" onClick={markPassage}>
+            この区間を選ぶ
           </button>
         )}
       </div>
@@ -581,10 +595,12 @@ function Arrangement({
           <i className="semantic-key" />
           判断と旋律
         </span>
-        <span>
-          <i className="concern-key" />
-          懸念の応答
-        </span>
+        {bundle.map.analysis_depth !== 'overview' && (
+          <span>
+            <i className="concern-key" />
+            精密検査の応答
+          </span>
+        )}
         <span>
           <i className="backing-key" />
           共通伴奏

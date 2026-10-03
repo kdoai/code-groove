@@ -1,0 +1,143 @@
+import copy
+import json
+
+import pytest
+from code_groove.agent import AgentContext, execute_tool
+from code_groove.app import create_app
+from code_groove.errors import GrooveError
+from code_groove.schemas import InvestigationCandidate
+from code_groove.settings import ROOT, Settings
+from code_groove.source import build_index
+from code_groove.validation import validate_investigation
+from fastapi.testclient import TestClient
+
+
+def fresh_review(base, sources):
+    ctx = AgentContext(
+        Settings(),
+        base["project_id"],
+        base["snapshot_id"],
+        sources,
+        build_index(base["snapshot_id"], sources),
+        lambda *_: None,
+        lambda: None,
+        lambda _: None,
+        base=base,
+    )
+    signal = copy.deepcopy(next(s for s in base["review_signals"] if s["verdict"] == "concern"))
+    paths = {u["primary_span"]["path"] for u in base["units"] if u["unit_id"] in signal["unit_ids"]}
+    for path in paths:
+        file = next(f for f in ctx.index["files"] if f["path"] == path)
+        execute_tool(
+            ctx,
+            "read_code",
+            {
+                "file_id": file["file_id"],
+                "start_line": 1,
+                "end_line": len(sources[path].splitlines()),
+                "purpose": "Recheck selected boundary",
+            },
+            f"read_{len(ctx.evidence)}",
+        )
+    signal["evidence_ids"] = [e.evidence_id for e in ctx.evidence]
+    signal["alternative_evidence_ids"] = signal["evidence_ids"]
+    return ctx, InvestigationCandidate(
+        review_signals=[signal],
+        findings=[
+            {
+                "finding_id": "finding_health",
+                "verdict": "concern",
+                "summary": "Future coordination needs a human decision",
+                "justification": "Freshly checked the related source boundary",
+                "evidence_ids": signal["evidence_ids"],
+            }
+        ],
+        hypotheses=[],
+    )
+
+
+def test_initial_detection_is_preserved_but_proposal_requires_focused_confirmation(tmp_path):
+    settings = Settings(local_data_dir=tmp_path, enable_live_analysis=True, model_mode="live")
+    app = create_app(settings, verifier=lambda token: token)
+    app.state.store.put("accounts", "alice", {"enabled": True})
+    app.state.store.put("accounts", "bob", {"enabled": True})
+    client = TestClient(app)
+    headers = {"Authorization": "Bearer alice", "Idempotency-Key": "health-copy"}
+    copied = client.post("/api/v1/samples/recorded-returns-before/projects", json={}, headers=headers).json()[
+        "data"
+    ]
+    meta = app.state.store.get("analyses", copied["analysis_id"])
+    bundle = app.state.artifacts.get(meta["artifact_key"])
+    bundle["map"]["analysis_depth"] = "overview"
+    meta = {**meta, "artifact_key": "health/overview"}
+    app.state.store.update("analyses", copied["analysis_id"], {"artifact_key": meta["artifact_key"]})
+    app.state.artifacts.put(meta["artifact_key"], bundle)
+    snapshot = app.state.artifacts.get(meta["snapshot_key"])
+    ctx, candidate = fresh_review(bundle["map"], snapshot["sources"])
+    signal_id = candidate.review_signals[0].signal_id
+    assert (
+        client.post(
+            f"/api/v1/analyses/{copied['analysis_id']}/proposals",
+            json={"signal_id": signal_id},
+            headers=headers,
+        ).status_code
+        == 409
+    )
+    assert client.get(f"/api/v1/projects/{copied['project_id']}/bundle", headers=headers).json()["data"][
+        "map"
+    ]["review_signals"]
+    validate_investigation(candidate, ctx.evidence, bundle["map"])
+    result = {
+        **candidate.model_dump(mode="json"),
+        "base_analysis_id": copied["analysis_id"],
+        "evidence": [e.model_dump(mode="json") for e in ctx.evidence],
+    }
+    app.state.artifacts.put("health/result", result)
+    app.state.store.put("investigations", "inv_health", {**meta, "artifact_key": "health/result"})
+    assert (
+        client.post(
+            "/api/v1/investigations/inv_health/publish-interpretation",
+            json={},
+            headers={"Authorization": "Bearer bob"},
+        ).status_code
+        == 404
+    )
+    published = client.post(
+        "/api/v1/investigations/inv_health/publish-interpretation", json={}, headers=headers
+    )
+    assert published.status_code == 200, published.text
+    next_id = published.json()["data"]["analysis_id"]
+    current = client.get(f"/api/v1/projects/{copied['project_id']}/bundle", headers=headers).json()["data"]
+    assert current["map"]["analysis_depth"] == "focused"
+    assert current["map"]["parent_analysis_id"] == copied["analysis_id"]
+    assert current["sources"] == snapshot["sources"]
+    assert app.state.artifacts.get(meta["artifact_key"])["map"]["analysis_depth"] == "overview"
+    assert not app.state.store.list("runs")
+    assert (
+        client.post(
+            "/api/v1/investigations/inv_health/publish-interpretation", json={}, headers=headers
+        ).status_code
+        == 409
+    )
+    assert (
+        client.post(
+            f"/api/v1/analyses/{next_id}/proposals",
+            json={"signal_id": signal_id},
+            headers={**headers, "Idempotency-Key": "health-proposal"},
+        ).status_code
+        == 202
+    )
+
+
+def test_focused_signals_require_fresh_covering_reads_and_existing_events():
+    bundle = json.loads((ROOT / "fixtures/recorded-live/returns-before.json").read_text(encoding="utf-8"))
+    ctx, candidate = fresh_review(bundle["map"], bundle["sources"])
+    validate_investigation(candidate, ctx.evidence, bundle["map"])
+    stale = copy.deepcopy(candidate)
+    stale.review_signals[0].evidence_ids = bundle["map"]["review_signals"][0]["evidence_ids"]
+    stale.review_signals[0].alternative_evidence_ids = stale.review_signals[0].evidence_ids
+    with pytest.raises(GrooveError, match="INVALID_EVIDENCE"):
+        validate_investigation(stale, ctx.evidence, bundle["map"])
+    candidate.review_signals[0].event_ids = ["invented_event"]
+    with pytest.raises(GrooveError, match="INVALID_ANALYSIS"):
+        validate_investigation(candidate, ctx.evidence, bundle["map"])

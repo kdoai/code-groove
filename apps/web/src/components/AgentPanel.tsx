@@ -47,6 +47,9 @@ export function AgentPanel({
       );
   const fixture = bundle.map.origin === 'fixture';
   const recorded = bundle.map.origin === 'recorded_live' && !!ws.sampleId;
+  const overview = bundle.map.analysis_depth === 'overview';
+  const role = bundle.map.responsibilities.find((r) => r.responsibility_id === event?.responsibility_id);
+  const related = role ? bundle.map.events.filter((e) => e.responsibility_id === role.responsibility_id) : [];
   return (
     <section className="agent-panel">
       <div className="panel-heading">
@@ -69,9 +72,15 @@ export function AgentPanel({
         <div className="selected-file">
           {ws.codeSpan?.path ?? event?.span.path ?? unit?.primary_span.path}
         </div>
-        {!selectedSignal && (
+        {overview && (
+          <div className="health-stage">
+            <b>全体健診</b>
+            <span>聴く → 区間を選ぶ → 精密検査</span>
+          </div>
+        )}
+        {(!selectedSignal || overview) && (
           <>
-            <h3>{supportingFile ? '関連資料・型定義' : 'この箇所の判断'}</h3>
+            <h3>{supportingFile ? '関連資料・型定義' : overview ? 'この音が表す役割' : 'この箇所の判断'}</h3>
             <p>
               {supportingFile
                 ? 'このファイルに直接の発音イベントはありません。Agentが実装の意味を判断する際の関連資料として確認できます。'
@@ -79,7 +88,56 @@ export function AgentPanel({
             </p>
           </>
         )}
-        {selectedSignal && (
+        {overview && role && (
+          <div className="motif-map" data-tour="investigate">
+            <div className="section-label">
+              {role.motif_id} / {role.label}
+            </div>
+            <p>
+              この旋律は {new Set(related.map((e) => e.span.path)).size}{' '}
+              ファイルに現れます。配置は事実、良し悪しは設計理由によります。
+            </p>
+            {[...new Map(related.map((e) => [e.span.path, e])).values()].map((e) => (
+              <button
+                className="evidence-link"
+                key={e.event_id}
+                onClick={() => ws.set({ unitId: e.unit_id, eventId: e.event_id, codeSpan: null })}
+              >
+                {e.span.path}:{e.span.start_line}
+                <ArrowUpRight size={14} />
+              </button>
+            ))}
+            <small>同じ役割 → 同じ旋律・リズム。伴奏は品質の点数ではありません。</small>
+          </div>
+        )}
+        {overview && !!bundle.map.review_signals?.length && (
+          <details className="initial-notes">
+            <summary>初回健診で見つけた点 · {bundle.map.review_signals.length}</summary>
+            {bundle.map.review_signals.map((s) => (
+              <div key={s.signal_id}>
+                <b>
+                  {s.verdict === 'concern'
+                    ? '将来の負担候補'
+                    : s.verdict === 'justified'
+                      ? '境界の理由'
+                      : '要確認'}{' '}
+                  / {s.label}
+                </b>
+                <p>{s.explanation}</p>
+                <small>{s.alternative}</small>
+              </div>
+            ))}
+          </details>
+        )}
+        {overview && !!bundle.map.profile.unknowns.length && (
+          <details className="initial-notes">
+            <summary>未確認・前提の限界</summary>
+            {bundle.map.profile.unknowns.map((v) => (
+              <p key={v}>{v}</p>
+            ))}
+          </details>
+        )}
+        {selectedSignal && !overview && (
           <div className={`structural-finding ${selectedSignal.verdict}`}>
             <div className="finding-label">
               {selectedSignal.verdict === 'concern'
@@ -136,7 +194,7 @@ export function AgentPanel({
             })}
           </div>
         )}
-        {selectedSignal?.verdict === 'concern' && !fixture && (
+        {selectedSignal?.verdict === 'concern' && !fixture && !overview && (
           <div className="improvement-action" data-tour="improve">
             <button
               className="primary wide"
@@ -171,7 +229,7 @@ export function AgentPanel({
         )}
         {fixture || recorded ? (
           <>
-            {selectedSignal?.verdict === 'concern' && (
+            {selectedSignal?.verdict === 'concern' && !overview && (
               <p className="rhythm-explanation">
                 {selectedSignal.category === 'data_flow_opacity'
                   ? '応答が途切れる = 処理を追うために判断をまたぐ箇所。'
@@ -206,7 +264,7 @@ export function AgentPanel({
             <p className="limit-note">
               {fixture
                 ? 'この説明は模擬データです。Agentの実調査ログではありません。'
-                : '保存した実解析の再生です。追加調査は「このサンプルを実解析」から始められます。'}
+                : '保存した全体健診です。新しい精密検査はログイン後に開始できます。'}
             </p>
           </>
         ) : (
@@ -218,9 +276,9 @@ export function AgentPanel({
               </p>
             )}
             <FindingCards result={result} map={bundle.map} />
-            {result?.suggested_reclassification?.length ? (
+            {result && (result.suggested_reclassification?.length || result.review_signals?.length) ? (
               <button className="primary wide" onClick={publish}>
-                解釈を更新して再生
+                調査結果を演奏に反映
                 <ArrowUpRight size={15} />
               </button>
             ) : null}
@@ -277,12 +335,15 @@ export function AgentPanel({
               bundle.map.review_signals?.find((s) => s.unit_ids.includes(ws.unitId)) ??
               bundle.map.review_signals?.[0];
             setSavedAnswer(
-              signal
+              signal && !overview
                 ? `${signal.explanation} ${signal.verdict === 'concern' ? '同じ判断の管理が重なるため、同じ旋律の応答を重ねて表しています。根拠のファイル行から確認できます。' : '独立した変更理由が確認されているため、懸念のリズムは追加していません。'}`
                 : `${event?.meaning ?? unit?.boundary_reason ?? bundle.map.profile.purpose} 保存された範囲を超える質問には、新しいAgent調査が必要です。`,
             );
           } else
-            investigate(question || 'ここの設計判断と、この音になった理由を根拠付きで説明してください。');
+            investigate(
+              question ||
+                'この旋律が複数箇所で戻る理由と、将来の変更・理解の負担を調べてください。分離を保つ正当な理由も確認し、経過観察かリファクタリング候補かを説明してください。',
+            );
           setQuestion('');
         }}
       >
@@ -290,16 +351,24 @@ export function AgentPanel({
           <button
             type="button"
             disabled={pending || proposing}
-            onClick={() => setQuestion('このファイルのどこを確認すべきですか？')}
+            onClick={() =>
+              setQuestion(
+                'この旋律が別のファイルでも戻るのはなぜ？関連する処理を読み直し、将来の負担と分離を保つ理由を調べてください。',
+              )
+            }
           >
-            どこを確認する？
+            この旋律の関係は？
           </button>
           <button
             type="button"
             disabled={pending || proposing}
-            onClick={() => setQuestion('理由のある例外はありますか？')}
+            onClick={() =>
+              setQuestion(
+                '今は正常に動く前提で、ここの書き方・処理の流れが将来の変更や理解の負担になる可能性は？抽出による複雑化も含めて検討してください。',
+              )
+            }
           >
-            例外はある？
+            将来の負担は？
           </button>
         </div>
         <div>
@@ -308,7 +377,7 @@ export function AgentPanel({
             maxLength={1000}
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
-            placeholder="ここの何が、こんな音になるの？"
+            placeholder="聴いて気になった関係を質問…"
           />
           <button aria-label="質問を送信" disabled={pending || proposing}>
             <Send size={16} />
@@ -321,7 +390,7 @@ export function AgentPanel({
         </small>
         {(fixture || recorded) && (
           <button type="button" className="live-question" onClick={activateLive}>
-            Agentに新しく質問する
+            この記録を保存して精密検査
           </button>
         )}
       </form>

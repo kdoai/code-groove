@@ -287,6 +287,23 @@ export default function App() {
       setStarting(false);
     }
   }
+  async function activateSample() {
+    if (!currentUser) {
+      setModal('auth');
+      return;
+    }
+    if (ws.sampleId === 'recorded-checkout-flow') {
+      try {
+        const saved = await api<{ project_id: string; analysis_id: string }>(
+          `/samples/${ws.sampleId}/projects`,
+          {},
+        );
+        ws.set({ projectId: saved.project_id, sampleId: '', analysisId: saved.analysis_id });
+      } catch (e) {
+        setInvestigationError((e as Error).message);
+      }
+    } else await openRepo();
+  }
   async function investigate(question: string) {
     if (!bundle.data || ws.sampleId || bundle.data.map.origin === 'fixture') return;
     setInvestigationError('');
@@ -294,23 +311,7 @@ export default function App() {
     try {
       const run = await api<{ run_id: string }>(`/analyses/${bundle.data.map.analysis_id}/investigations`, {
         scene_id: bundle.data.score.scenes[ws.scene].scene_id,
-        unit_ids: ws.unitId
-          ? bundle.data.map.units
-              .filter(
-                (u) =>
-                  u.review_state === 'inspected' &&
-                  bundle.data!.score.scenes[ws.scene].unit_ids.includes(u.unit_id) &&
-                  u.primary_span.path ===
-                    (ws.codeSpan?.path ??
-                      bundle.data!.map.units.find((selected) => selected.unit_id === ws.unitId)?.primary_span
-                        .path),
-              )
-              .slice(0, 12)
-              .map((u) => u.unit_id)
-          : [
-              bundle.data.map.review_signals?.[0]?.unit_ids[0] ??
-                bundle.data.map.units.find((u) => u.review_state === 'inspected')!.unit_id,
-            ],
+        unit_ids: [ws.unitId || bundle.data.map.units.find((u) => u.review_state === 'inspected')!.unit_id],
         event_ids: ws.eventId ? [ws.eventId] : [],
         question,
       });
@@ -346,10 +347,10 @@ export default function App() {
     try {
       let analysisId = bundle.data.map.analysis_id;
       if (ws.sampleId) {
-        if (ws.sampleId !== 'recorded-returns-before')
+        if (!['recorded-returns-before', 'recorded-checkout-flow'].includes(ws.sampleId))
           throw new Error('改善案はRepositoryの実解析、または返品サンプルから始めてください。');
         const saved = await api<{ project_id: string; analysis_id: string }>(
-          '/samples/recorded-returns-before/projects',
+          `/samples/${ws.sampleId}/projects`,
           {},
         );
         ws.set({ projectId: saved.project_id, sampleId: '', analysisId: saved.analysis_id });
@@ -412,7 +413,10 @@ export default function App() {
   );
   useEffect(() => {
     if (!data || ws.unitId || ws.codeSpan) return;
-    const signal = data.map.review_signals?.find((s) => s.verdict === 'concern');
+    const signal =
+      data.map.analysis_depth === 'overview'
+        ? undefined
+        : data.map.review_signals?.find((s) => s.verdict === 'concern');
     const target = data.map.units.find((u) => u.unit_id === signal?.unit_ids[0]) ?? data.map.units[0];
     const event = data.map.events.find((e) => e.unit_id === target.unit_id);
     ws.set({ unitId: target.unit_id, eventId: event?.event_id ?? '', codeSpan: null });
@@ -435,7 +439,7 @@ export default function App() {
           </span>
           Code Groove
         </a>
-        <span className="product-purpose">コードの設計を、リズムで確認</span>
+        <span className="product-purpose">コードの健康状態を、聴く</span>
         <SampleSwitch openSample={openSample} />
         {project.data?.previous_analysis_id && (
           <div className="sample-switch" aria-label="採用した変更の比較">
@@ -576,7 +580,7 @@ export default function App() {
               void api(`/runs/${proposalRunId}/cancel`, {}).catch((e) => setInvestigationError(e.message))
             }
             investigate={(q) => void investigate(q)}
-            activateLive={() => void openRepo()}
+            activateLive={() => void activateSample()}
             error={investigationError}
             publish={() => {
               if (result)
@@ -586,6 +590,7 @@ export default function App() {
                 )
                   .then((next) => {
                     ws.set({ analysisId: next.analysis_id });
+                    void cache.invalidateQueries({ queryKey: ['project', ws.projectId] });
                     setResult(undefined);
                   })
                   .catch((e) => setInvestigationError(e.message));
@@ -601,7 +606,7 @@ export default function App() {
             <br />
             Agentに、その判断の理由を聞けます。
           </p>
-          <button className="primary" onClick={() => openSample('recorded-returns-before')}>
+          <button className="primary" onClick={() => openSample('checkout-flow')}>
             比較サンプルを開く
             <ArrowRight size={15} />
           </button>
@@ -641,7 +646,7 @@ export default function App() {
           close={() => setModal('')}
           loadSample={() => {
             ws.set({ mode: 'repo', wholeWork: true, loop: false, pulseMuted: true });
-            openSample('recorded-returns-before');
+            openSample('checkout-flow');
             setTour(true);
           }}
         />

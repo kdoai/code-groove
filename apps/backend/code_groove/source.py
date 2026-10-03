@@ -25,6 +25,7 @@ SAMPLE_IDS = (
     "orchestrator",
     "returns-before",
     "returns-after",
+    "checkout-flow",
 )
 EXCLUDED = {
     "node_modules",
