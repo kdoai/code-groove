@@ -13,8 +13,9 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def main():
-    recording = json.loads((ROOT / ".local/deployed-r5-video.json").read_text())
+    recording = json.loads((ROOT / ".local/deployed-r5-video.json").read_text(encoding="utf-8"))
     times = recording["timings"]
+    video_offset = recording.get("video_offset_seconds", 0)
     required = ["requested", "proposal_ready", "accepted", "analysis_ready", "after_pause"]
     if any(k not in times for k in required):
         raise ValueError(
@@ -44,7 +45,7 @@ def main():
             hold += remainder
         duration = (b - a) * speed + hold
         filters.append(
-            f"[0:v]trim=start={a:.6f}:end={b:.6f},setpts={speed:.9f}*(PTS-STARTPTS),fps=30,tpad=stop_mode=clone:stop_duration={hold:.6f},setsar=1[v{i}]"
+            f"[0:v]trim=start={a + video_offset:.6f}:end={b + video_offset:.6f},setpts={speed:.9f}*(PTS-STARTPTS),fps=30,tpad=stop_mode=clone:stop_duration={hold:.6f},setsar=1[v{i}]"
         )
         segments.append(
             {
@@ -172,6 +173,8 @@ def main():
         "origin": "actual deployed health browser workflow",
         "model_requests_for_edit": 0,
         "login_omitted": True,
+        "video_offset_seconds": video_offset,
+        "resumed_saved_investigation": recording.get("resumed_saved_investigation", False),
         "wait_speed_factor": factor,
         "audio": "same saved PCM notes at actual playback timing; no sound speedup",
         "pcm_peak": float(np.max(np.abs(pcm))),

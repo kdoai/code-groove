@@ -26,13 +26,19 @@ URL: [Code Groove](https://code-groove-web-a5ygiois2a-an.a.run.app)。審査メ�
 
 構成図は `artifacts/architecture.png`。編集元、技術スタック、シーケンス、DFD、音楽化、HITL、健康診断の図は `docs/TECHNICAL_GUIDE.md`。検証結果は `EXECUTION_PLAN.md` と `docs/acceptance.md` に記録します。
 
-3分デモは `artifacts/code-groove-demo.mp4`。再収録は費用とクォータを使うため明示的なopt-inです。審査アカウントの保存済み初回健診から新しい精密検査を１回行い、懸念が残る場合は実際の差分生成・テスト承認・独立した再健診を記録します。ログインは除外し、待機だけ短縮します。音はその保存楽譜と同じPCMを実際の再生時刻に合わせて再構成し、音楽を速めません。生動画・資格情報はGit管理しません。未実施の操作を動画で作りません。
+3分デモは `artifacts/code-groove-demo.mp4`（180秒、1440×980、H.264/AAC）。今回の収録は、実際に完了した精密検査を保存結果から再開し、新しい差分生成・テストでの明示的採用・独立した再健診を記録しています。精密検査を新たに実行したようには見せません。実検査は5モデル呼出し・10ツール調査、提案は8呼出し・7調査、再健診は6呼出し・10調査で完了しました。採用はpricing.tsとrewards.tsの2ファイルを変更し、元スナップショットを保持しました。再健診は14/14関数を読み、M0〜M4の役割を引き継ぎました。オフライン試算とサーバー確定計算の重複候補は1件残り、正当な分離の理由も示しています。採用しただけで「健康」と判定する仕組みにはしません。
+
+ログインは除外し、待機だけ短縮します。音はその保存楽譜と同じPCMを実際の再生時刻に合わせて再構成し、音楽を速めません。生動画・資格情報はGit管理しません。未実施の操作を動画で作りません。採用後の同一ソースの更新は、モデル呼出し・入出力トークンがすべて0で同じ結果に戻ることを確認しました。
+
+再収録は費用とクォータを使うため明示的なopt-inです。現在の検証プロジェクトは既に採用後です。新しい収録には、ログインして公開の初回記録を保存する操作（AI呼出し0件）から作った、未変更のoverviewプロジェクトIDを指定してください。通常CIは有料ケースをスキップします。保存済み精密検査の再開モードは、同じ所有者・元の健診・保存結果が一致する検証用の復旧手段です。
 
 ```powershell
 $env:E2E_LIVE_HEALTH='1'
+$env:E2E_HEALTH_PROJECT='<未変更の初回健診プロジェクトID>'
 node scripts/capture-demo.mjs
-.venv/Scripts/python.exe scripts/assemble-demo.py
+uv run --with imageio-ffmpeg python scripts/assemble-demo.py
 Remove-Item Env:E2E_LIVE_HEALTH
+Remove-Item Env:E2E_HEALTH_PROJECT
 ```
 
 収録にはPlaywright Chromiumと管理者のSecret Managerアクセスが必要です。改善を選ばない結果では観察のみの動画として編集します。動画編集は追加モデル呼出し0件。字幕と時刻は `docs/demo-subtitles.srt` と `artifacts/demo-timing.json` に保存します。

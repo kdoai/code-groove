@@ -13,8 +13,11 @@ from infra.gcp import ROOT, STATE, cloud
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--refresh", action="store_true", help="Verify identical refresh uses no model")
+    parser.add_argument("--proof", default="artifacts/deployed-r4-hitl.json")
+    parser.add_argument("--original", default="fixtures/recorded-live/returns-before.json")
+    parser.add_argument("--report", default="artifacts/deployed-r4-replay.json")
     args = parser.parse_args()
-    proof = json.loads((ROOT / "artifacts/deployed-r4-hitl.json").read_text(encoding="utf-8"))
+    proof = json.loads((ROOT / args.proof).read_text(encoding="utf-8"))
     state = json.loads(STATE.read_text())
     password = cloud("secrets", "versions", "access", "latest", "--secret=reviewer-password-placeholder")
     login = httpx.post(
@@ -44,9 +47,7 @@ def main():
         project = proof["project_id"]
         current = api(f"/projects/{project}/bundle")
         base = api(f"/projects/{project}/bundle?analysis={proof['before_analysis_id']}")
-        original = json.loads(
-            (ROOT / "fixtures/recorded-live/returns-before.json").read_text(encoding="utf-8")
-        )
+        original = json.loads((ROOT / args.original).read_text(encoding="utf-8"))
         checks = {
             "approved_result_current": current["map"]["analysis_id"] == proof["after_analysis_id"],
             "base_source_immutable": base["sources"] == original["sources"],
@@ -74,9 +75,7 @@ def main():
                 for k in ("run_id", "status", "result_id", "model_requests", "input_tokens", "output_tokens")
             }
         report["status"] = "PASS" if all(checks.values()) else "FAIL"
-        (ROOT / "artifacts/deployed-r4-replay.json").write_text(
-            json.dumps(report, indent=2), encoding="utf-8"
-        )
+        (ROOT / args.report).write_text(json.dumps(report, indent=2), encoding="utf-8")
         print(json.dumps(report))
         if report["status"] != "PASS":
             raise RuntimeError("Approved replay verification failed")

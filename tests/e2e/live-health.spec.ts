@@ -15,6 +15,8 @@ test.use({ trace: 'off', video: { mode: 'on', size: { width: 1440, height: 900 }
 test('paid whole-health passage investigation and optional human-approved refactoring', async ({ page }) => {
   test.skip(process.env.E2E_LIVE_HEALTH !== '1', 'Paid health workflow is explicitly opt-in.');
   test.setTimeout(900000);
+  const started = Date.now(),
+    time = () => (Date.now() - started) / 1000;
   const resume = process.env.E2E_HEALTH_RESUME === '1';
   const priorRuns = resume ? JSON.parse(readFileSync('.local/deployed-r5-runs.json', 'utf8')) : {};
   const projectId =
@@ -32,8 +34,6 @@ test('paid whole-health passage investigation and optional human-approved refact
     ],
     { encoding: 'utf8', shell: process.platform === 'win32' },
   ).trim();
-  const started = Date.now(),
-    time = () => (Date.now() - started) / 1000;
   const timings: Record<string, number> = {};
   const runs: Record<string, any> = { ...priorRuns },
     bundles: any[] = [],
@@ -83,7 +83,7 @@ test('paid whole-health passage investigation and optional human-approved refact
     ? JSON.parse(readFileSync('.local/deployed-r5-bundle.json', 'utf8'))
     : bundles.find((b) => b.map.project_id === projectId && b.map.analysis_depth === 'overview');
   expect(initial).toBeTruthy();
-  expect(initial.map.origin).toBe('live');
+  expect(['live', 'recorded_live']).toContain(initial.map.origin);
   timings.login_complete = time();
   await page.getByRole('button', { name: 'pricing.ts', exact: true }).click();
   const selectedUnit = new URL(page.url()).searchParams.get('unit');
