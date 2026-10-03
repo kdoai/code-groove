@@ -18,7 +18,9 @@
     "lint": "eslint apps/web/src packages scripts/*.mjs",
     "test": "vitest run",
     "test:e2e": "playwright test",
-    "test:changed": "node scripts/test-changed.mjs"
+    "test:changed": "node scripts/test-changed.mjs",
+    "sample:checkout": "node examples/checkout-lab/runner.mjs",
+    "test:sample": "playwright test --config examples/checkout-lab/playwright.config.ts"
   },
   "dependencies": {
     "@monaco-editor/react": "4.7.0",
