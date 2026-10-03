@@ -19,6 +19,10 @@ test('one-screen drumless review and tour without preset B or paid automation', 
   await page.getByRole('button', { name: '次へ', exact: true }).click();
   await expect(page.locator('.finding-label').first()).toHaveText('同じ変更で、一緒に直す箇所');
   await expect(page.locator('.code-concern').first()).toBeVisible();
+  await expect(page.getByRole('button', { name: '演奏に追従', exact: true })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
   await page.screenshot({ path: 'artifacts/rhythm-tour-evidence.png' });
   await page.getByRole('button', { name: '次へ', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Geminiに改善案を依頼', exact: true })).toBeVisible();

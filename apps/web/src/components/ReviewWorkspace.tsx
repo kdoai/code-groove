@@ -189,7 +189,13 @@ export function ReviewWorkspace({
         </div>
       </aside>
       <main className="review-center">
-        <Arrangement bundle={bundle} plan={plan} following={following} select={select} />
+        <Arrangement
+          bundle={bundle}
+          plan={plan}
+          following={following}
+          select={select}
+          followPlayback={() => setFollowing(true)}
+        />
         <div className="code-toolbar">
           <span>
             選択した音の根拠 <b>{selectedPath}</b>
@@ -216,11 +222,13 @@ function Arrangement({
   plan,
   following,
   select,
+  followPlayback,
 }: {
   bundle: Bundle;
   plan: ScorePlan;
   following: boolean;
   select: (note: ScheduledNote, seek?: boolean) => void;
+  followPlayback: () => void;
 }) {
   const ws = useWorkspace();
   const [active, setActive] = useState<ScheduledNote[]>([]),
@@ -287,6 +295,7 @@ function Arrangement({
     const cue = musical.find((n) => n.kind === 'cue' && n.signal_id === signal?.signal_id);
     if (!cue) return;
     select(cue, false);
+    followPlayback();
     engine.stop();
     engine.seek(Math.max(0, cue.tick - 1920));
     try {
