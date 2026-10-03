@@ -713,6 +713,73 @@ a {
   margin-bottom: 22px;
   overflow-wrap: anywhere;
 }
+.case-study,
+.evidence-trail {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 18px;
+  background: var(--surface, #fafbfe);
+}
+.case-study summary,
+.evidence-trail summary {
+  cursor: pointer;
+  font-size: 11px;
+  line-height: 1.8;
+}
+.case-study summary strong,
+.case-study summary small {
+  display: block;
+}
+.case-study .eyebrow {
+  font-size: 8px;
+  letter-spacing: 1px;
+}
+.case-study dl {
+  display: grid;
+  grid-template-columns: 110px minmax(0, 1fr);
+  font-size: 10px;
+  gap: 6px;
+}
+.case-study dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.case-study a {
+  font-size: 11px;
+  color: var(--accent);
+}
+.evidence-trail > small,
+.evidence-proof small {
+  display: block;
+  color: var(--muted);
+  font-size: 10px;
+}
+.evidence-proof {
+  border-top: 1px solid var(--line);
+  margin-top: 12px;
+  padding-top: 12px;
+}
+.evidence-proof p {
+  font-size: 11px;
+}
+.proof-hash {
+  margin-top: 6px;
+  overflow-wrap: anywhere;
+}
+.sample-menu > details {
+  border-top: 1px solid var(--line);
+  margin-top: 16px;
+  padding-top: 10px;
+}
+.tree-file .source-context-badge {
+  flex: none;
+  font-size: 8px;
+  color: var(--muted);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  padding: 1px 3px;
+}
 .agent-content h3 {
   font-size: 14px;
   font-weight: 500;
@@ -999,6 +1066,18 @@ a {
 .dialog-intro {
   font-size: 12px;
   color: var(--muted);
+}
+.analysis-budget {
+  font-size: 11px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--muted);
+}
+.analysis-budget small {
+  display: block;
+  margin-top: 5px;
+  font-size: 10px;
 }
 .dialog label:not(.checkbox) {
   display: block;
@@ -2434,9 +2513,33 @@ html[data-theme='dark'] .agent-toggle[aria-expanded='true'] {
   color: var(--text);
   border-color: var(--line);
 }
-.repository-chunks { max-height: 40vh; overflow: auto; margin: 18px 0; }
-.repository-chunk { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
-.repository-chunk span { min-width: 0; }
-.repository-chunk strong, .repository-chunk small { display: block; overflow-wrap: anywhere; }
-.repository-chunk button { flex-shrink: 0; }
-.repository-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.repository-chunks {
+  max-height: 40vh;
+  overflow: auto;
+  margin: 18px 0;
+}
+.repository-chunk {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+}
+.repository-chunk span {
+  min-width: 0;
+}
+.repository-chunk strong,
+.repository-chunk small {
+  display: block;
+  overflow-wrap: anywhere;
+}
+.repository-chunk button {
+  flex-shrink: 0;
+}
+.repository-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}

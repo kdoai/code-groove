@@ -1,5 +1,19 @@
 # Tsugiai as the real-project demonstration
 
+## Current R12 — real recorded scope, 2026-10-03
+
+The primary public sample is now `recorded-tsugiai-agents`, saved from an actual deployed Gemini run against committed SHA35a951488d7b00518e7e73a329d46713cbeacbe8. Preparation reads committed Git blobs; original dirty files remain untouched and target code is never executed. The MIT notice is retained in `fixtures/licenses/tsugiai-LICENSE.txt`. Reviewed source for the 11-file Agent/type scope is included in the recorded bundle; no credentials, reviewer UID or production records are published.
+
+The imported scope has18 indexed implementation units and3 partitions. **Only Checkout Agent's9 units in the first partition have been examined**, with related reads of checklist contracts and prompts. Handover/template partitions are pending. The whole original51-file repository and cross-partition semantic integration remain unexamined. A9/9 result is local coverage of that partition, not whole-repository completeness or proof of runtime correctness.
+
+Actual run `run_0b2b2af63e22469e89cdc82815aaeda0` returns `partial` for the repository:12 model requests,160,198 input tokens,35,784 output tokens,13 tool calls and a real504 retry. Nine units are inspected, zero unresolved within the selected partition, and nine remain pending elsewhere. Findings are model interpretations: prompt construction mixed into the Agent factory, and shared module-level session context. Request handlers, service implementations and concurrency tests are outside this scope; an actual race is not demonstrated.
+
+The UI exposes source revision, date, scope, pending ranges, model and license. Selected notes link to read spans, corresponding real tool receipts and projection hashes. Authenticated adoption preserves the first partition's fingerprint and remaining pending ranges without a new run or quota consumption. Public playback, provenance and evidence browsing make zero paid requests. Repeat execution of the recording command is guarded against an additional import.
+
+Both file-order and responsibility-order PCM renders are finite/non-silent and do not clip: peaks0.0539/0.0578,28.5 seconds including the audio tail. This is signal validation, not a human listening evaluation. See `artifacts/tsugiai-r12-live.json`, `tsugiai-r12-audio.json` and the actual source-bearing trace in `fixtures/recorded-live/tsugiai-agents.json`. Historical R9/R10 preparation records below remain versioned evidence.
+
+## Historical R9 preparation
+
 2026-10-03: use the existing Tsugiai implementation as the principal demonstration candidate. The checkout shop remains a small development fixture; it does not establish usefulness on a real repository.
 
 ## Verified input

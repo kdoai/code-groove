@@ -231,7 +231,8 @@
             "groove-arrangement-v4",
             "groove-chamber-v5",
             "groove-chamber-v6",
-            "groove-chamber-v7"
+            "groove-chamber-v7",
+            "groove-chamber-v8"
           ],
           "title": "Grammar Version",
           "type": "string"

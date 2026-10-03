@@ -4,6 +4,43 @@ import type { InvestigationResult, SemanticMap } from '../../../../packages/cont
 import type { Bundle } from '../api';
 import { useWorkspace } from '../state';
 export type TraceEvent = { seq: number; type: string; timestamp: string; payload: Record<string, any> };
+
+function EvidenceTrail({ bundle, evidenceIds }: { bundle: Bundle; evidenceIds: string[] }) {
+  const ws = useWorkspace();
+  const evidence = bundle.map.evidence.filter((proof) => evidenceIds.includes(proof.evidence_id));
+  if (!evidence.length) return null;
+  return (
+    <details className="evidence-trail" key={evidenceIds.join(',')} data-testid="selected-evidence">
+      <summary>この音の根拠 · {evidence.length} 件の読取範囲</summary>
+      <small>音の意味はGeminiの解釈です。確認したソース行へ戻って判断できます。</small>
+      {evidence.map((proof) => {
+        const receipt = bundle.trace?.find(
+          (e) => e.type === 'tool_completed' && e.payload.evidence_ids?.includes(proof.evidence_id),
+        );
+        return (
+          <div className="evidence-proof" key={proof.evidence_id}>
+            <button
+              className="evidence-link"
+              onClick={() => ws.set({ codeSpan: proof.span, screen: 'inspect' })}
+            >
+              {proof.span.path}:{proof.span.start_line}–{proof.span.end_line}
+              <ArrowUpRight size={14} />
+            </button>
+            <p>{proof.observation}</p>
+            {receipt && (
+              <small>
+                Agentの読取記録 #{receipt.seq} · {receipt.payload.purpose}
+              </small>
+            )}
+            <small className="proof-hash" title={proof.projection_sha256}>
+              確認した内容のSHA-256: {proof.projection_sha256.slice(0, 12)}
+            </small>
+          </div>
+        );
+      })}
+    </details>
+  );
+}
 export function AgentPanel({
   bundle,
   result,
@@ -68,6 +105,49 @@ export function AgentPanel({
         </span>
       </div>
       <div className="agent-content">
+        {bundle.case_study && (
+          <details className="case-study" data-testid="case-provenance">
+            <summary>
+              <span className="eyebrow">REAL CODE / SAVED GEMINI REVIEW</span>
+              <strong>{bundle.case_study.title}</strong>
+              <small>
+                {bundle.map.coverage.inspected_units}/{bundle.map.coverage.indexed_units} 実装を確認 ·
+                この検査範囲
+              </small>
+              {bundle.repository && (
+                <small>
+                  {bundle.repository.analyzed_chunks}/{bundle.repository.chunks.length} 範囲に保存結果 ·
+                  残りは未検査
+                </small>
+              )}
+            </summary>
+            <p>{bundle.case_study.context}</p>
+            <p>{bundle.case_study.scope}</p>
+            <p>
+              元の{bundle.case_study.repository_source_files}
+              実装ファイルのうち、11ファイルを取り込み。範囲間の統合判定と実行動作は未検証です。
+            </p>
+            <dl>
+              <dt>元コードの確定版</dt>
+              <dd>
+                <code>{bundle.case_study.revision.slice(0, 12)}</code>
+              </dd>
+              <dt>解析の記録日</dt>
+              <dd>
+                {new Date(bundle.case_study.recorded_at).toLocaleDateString('ja-JP', {
+                  timeZone: 'Asia/Tokyo',
+                })}
+              </dd>
+              <dt>解析モデル</dt>
+              <dd>{bundle.map.model_id}</dd>
+              <dt>コードのライセンス</dt>
+              <dd>{bundle.case_study.license}</dd>
+            </dl>
+            <a href={bundle.case_study.repository_url} target="_blank" rel="noreferrer">
+              この確定版の元コードを読む ↗
+            </a>
+          </details>
+        )}
         <div className="selected-file">
           {ws.codeSpan?.path ?? event?.span.path ?? unit?.primary_span.path}
         </div>
@@ -80,6 +160,9 @@ export function AgentPanel({
                 : (event?.meaning ?? unit?.boundary_reason)}
             </p>
           </>
+        )}
+        {!supportingFile && (
+          <EvidenceTrail bundle={bundle} evidenceIds={event?.evidence_ids ?? unit.evidence_ids} />
         )}
         {overview && role && (
           <div className="motif-map" data-tour="investigate">
@@ -118,6 +201,25 @@ export function AgentPanel({
                 </b>
                 <p>{s.explanation}</p>
                 <small>{s.alternative}</small>
+                <button
+                  className="evidence-link"
+                  onClick={() => {
+                    const target = bundle.map.events.find((e) => s.event_ids.includes(e.event_id));
+                    if (target)
+                      ws.set({
+                        unitId: target.unit_id,
+                        eventId: target.event_id,
+                        codeSpan: null,
+                        screen: 'inspect',
+                        scene: Math.max(
+                          0,
+                          bundle.score.scenes.findIndex((scene) => scene.unit_ids.includes(target.unit_id)),
+                        ),
+                      });
+                  }}
+                >
+                  判断のある実装を選ぶ <ArrowUpRight size={14} />
+                </button>
               </div>
             ))}
           </details>
@@ -257,7 +359,9 @@ export function AgentPanel({
             <p className="limit-note">
               {fixture
                 ? 'この説明は模擬データです。Agentの実調査ログではありません。'
-                : '保存した全体健診です。新しい精密検査はログイン後に開始できます。'}
+                : bundle.partition
+                  ? 'この検査範囲の保存済み実解析です。追加調査や未検査範囲の続きはログイン後に開始できます。'
+                  : '保存した全体健診です。新しい精密検査はログイン後に開始できます。'}
             </p>
           </>
         ) : (

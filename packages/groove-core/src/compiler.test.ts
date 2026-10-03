@@ -43,6 +43,24 @@ describe('deterministic musical invariants', () => {
     const b = await compileGroove({ ...map, analysis_id: 'another', created_at: 'tomorrow' }, 'kit');
     expect(a.score_hash).toBe(b.score_hash);
   });
+  it('preserves the hash across storage key ordering in real multi-span evidence', async () => {
+    const map = load('recorded-live/tsugiai-agents');
+    const reorderKeys = (value: unknown): unknown => {
+      if (Array.isArray(value)) return value.map(reorderKeys);
+      if (value && typeof value === 'object')
+        return Object.fromEntries(
+          Object.entries(value)
+            .reverse()
+            .map(([key, item]) => [key, reorderKeys(item)]),
+        );
+      return value;
+    };
+    const reversed = reorderKeys(map) as typeof map;
+    const one = await compileGroove(map, 'kit'),
+      two = await compileGroove(reversed, 'kit');
+    expect(one.scenes).toEqual(two.scenes);
+    expect(one.score_hash).toBe(two.score_hash);
+  });
   it('rejects ungrounded-only material and duplicate semantic order', async () => {
     const map = load('mixed');
     await expect(

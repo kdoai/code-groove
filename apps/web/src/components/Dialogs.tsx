@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { X, ArrowRight, Music2 } from 'lucide-react';
-import { api, currentUser, login, type ImportSnapshot } from '../api';
+import { api, currentUser, login, type ImportSnapshot, type PublicConfig } from '../api';
 import { useQuery } from '@tanstack/react-query';
 
 export function Dialog({
@@ -37,12 +37,24 @@ export function Dialog({
         onKeyDown={(e) => {
           if (e.key !== 'Tab') return;
           const nodes = Array.from(
-            e.currentTarget.querySelectorAll<HTMLElement>('button,input,textarea,[tabindex="0"]'),
-          ).filter((el) => !(el as HTMLButtonElement).disabled);
-          if (e.shiftKey && document.activeElement === nodes[0]) {
+            e.currentTarget.querySelectorAll<HTMLElement>(
+              'button,input,textarea,select,a[href],[tabindex="0"]',
+            ),
+          ).filter((el) => !(el as HTMLButtonElement).disabled && el.getClientRects().length > 0);
+          if (!nodes.length) {
+            e.preventDefault();
+            return;
+          }
+          if (
+            e.shiftKey &&
+            (document.activeElement === nodes[0] || document.activeElement === e.currentTarget)
+          ) {
             e.preventDefault();
             nodes.at(-1)?.focus();
-          } else if (!e.shiftKey && document.activeElement === nodes.at(-1)) {
+          } else if (
+            !e.shiftKey &&
+            (document.activeElement === nodes.at(-1) || document.activeElement === e.currentTarget)
+          ) {
             e.preventDefault();
             nodes[0]?.focus();
           }
@@ -106,9 +118,14 @@ export function AuthDialog({ close, done }: { close: () => void; done: () => voi
 }
 export const sampleLabels = [
   {
+    id: 'recorded-tsugiai-agents',
+    label: 'Tsugiai / 実在するAgentの引き継ぎ',
+    detail: 'Python・TypeScript · Checkout Agentの9実装 · 保存済みGemini実解析',
+  },
+  {
     id: 'recorded-checkout-flow',
-    label: 'コードの健康診断 / TypeScript',
-    detail: '動く購入機能の全体像 · 聴いて選び、境界を精密検査',
+    label: 'Checkout Lab / 小さな教材',
+    detail: 'TypeScript · 購入ロジックの保存済み実解析',
   },
   {
     id: 'recorded-scattered',
@@ -142,6 +159,11 @@ export function OpenDialog({
   pending: boolean;
 }) {
   const [importError, setImportError] = useState('');
+  const config = useQuery({
+    queryKey: ['config'],
+    queryFn: () => api<PublicConfig>('/config'),
+    staleTime: Infinity,
+  });
   const projects = useQuery({
     queryKey: ['saved-projects'],
     queryFn: () =>
@@ -149,7 +171,7 @@ export function OpenDialog({
         {
           project_id: string;
           latest_analysis_id?: string;
-          source: { url?: string; sample_id?: string };
+          source: { url?: string; sample_id?: string; label?: string };
           status: string;
         }[]
       >('/projects'),
@@ -159,6 +181,12 @@ export function OpenDialog({
   return (
     <Dialog title="Repositoryを開く" close={close}>
       <p className="dialog-intro">公開コードを読み込み、設計をGrooveにします。</p>
+      {config.data?.daily_analysis_limit && (
+        <p className="analysis-budget" data-testid="analysis-budget">
+          AI解析は1ユーザー1日{config.data.daily_analysis_limit}回 · 日本時間09:00に切替
+          <small>新規解析・未検査範囲・変更後の再解析が対象。保存済みの再生は回数を使いません。</small>
+        </p>
+      )}
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -227,7 +255,10 @@ export function OpenDialog({
               <button key={project.project_id} onClick={() => openProject(project.project_id)}>
                 <span>
                   <strong>
-                    {project.source.sample_id ?? project.source.url?.split('/').at(-1) ?? 'Local snapshot'}
+                    {project.source.label ??
+                      project.source.sample_id ??
+                      project.source.url?.split('/').at(-1) ??
+                      'Local snapshot'}
                   </strong>
                   <small>
                     {project.latest_analysis_id ? '保存済み実解析 · 再生はAI費用なし' : '処理の状態を確認'}
@@ -268,8 +299,10 @@ export function Onboarding({ close, loadSample }: { close: () => void; loadSampl
       <div className="guide-invitation">
         <Music2 size={32} />
         <span className="eyebrow">LISTEN. LOCATE. ASK.</span>
-        <h2>コードの健康状態を、聴いてみよう。</h2>
-        <p>実際の画面を動かす短い案内です。責務の配置を聴き、区間を選んで、Agentと将来の負担を考えます。</p>
+        <h2>引き継いだコードの、設計を聴こう。</h2>
+        <p>
+          実在するTsugiaiのAgent実装を使います。役割の配置を聴き、音を選んで、判断を支えるコードへ戻る短い案内です。
+        </p>
         <small>保存済みの譜面を使用 · 案内で新しいAI費用は発生しません</small>
       </div>
       <label className="checkbox">

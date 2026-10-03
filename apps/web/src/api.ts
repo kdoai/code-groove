@@ -14,6 +14,17 @@ export type Bundle = {
   score: ScoreBundle;
   sources: Record<string, string>;
   sample_id?: string;
+  case_study?: {
+    title: string;
+    context: string;
+    scope: string;
+    repository_url: string;
+    revision: string;
+    recorded_at: string;
+    repository_source_files: number;
+    runtime_verification: 'not_run';
+    license: string;
+  };
   investigation?: InvestigationResult;
   trace?: { seq: number; type: string; timestamp: string; payload: Record<string, any> }[];
   repository?: RepositoryStatus;
@@ -46,6 +57,7 @@ export type RepositoryStatus = {
 };
 export type ImportSnapshot = { revision: string; label: string; sources: Record<string, string> };
 export type PublicConfig = {
+  daily_analysis_limit: number;
   live_enabled: boolean;
   firebase: { apiKey: string; authDomain: string; projectId: string; appId: string };
   model_id: string;

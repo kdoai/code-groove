@@ -174,6 +174,7 @@ class ScorePlan(Contract):
         "groove-chamber-v5",
         "groove-chamber-v6",
         "groove-chamber-v7",
+        "groove-chamber-v8",
     ]
     kit_id: Literal["paper-studio-v1", "midnight-jazz-v2", "midnight-jazz-v3", "midnight-jazz-v4"]
     kit_hash: str

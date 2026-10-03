@@ -780,7 +780,7 @@
         "repo": {
           "beats_per_bar": 4,
           "bpm": 96,
-          "grammar_version": "groove-chamber-v7",
+          "grammar_version": "groove-chamber-v8",
           "kit_hash": "a302b56825512936a014a556a88819affd50de65c9d68ff3acb544702dc919f7",
           "kit_id": "midnight-jazz-v4",
           "mode": "repo",
@@ -4059,7 +4059,7 @@
         "theme": {
           "beats_per_bar": 4,
           "bpm": 96,
-          "grammar_version": "groove-chamber-v7",
+          "grammar_version": "groove-chamber-v8",
           "kit_hash": "a302b56825512936a014a556a88819affd50de65c9d68ff3acb544702dc919f7",
           "kit_id": "midnight-jazz-v4",
           "mode": "theme",
@@ -7318,7 +7318,7 @@
         ]
       }
     ],
-    "score_hash": "2512306186bb977476d6515bc251e98727550cb6fcaa5c31a242ae5a1ca65fd7"
+    "score_hash": "145b65bd3b9b526d9ddda84cb68d46e41517ba67a61368e3c1cb1a3cacfdadef"
   },
   "sources": {
     "README.md": "# Checkout feature snapshot\n\nAn AI-assisted change adds coupon preview, server pricing, loyalty accrual and checkout persistence to a small shop. All amounts are integer cents. The supported policy is a percentage coupon on non-gift merchandise above its minimum, capped at its configured limit. Delivery is not discounted. Loyalty earns one point per 100 paid merchandise cents. Guest checkout is supported; member checkout earns points.\n\nThe browser preview must work offline with its last downloaded campaign. Its result is advisory: the server rechecks campaign validity using the submission time. Pricing and loyalty currently use the same campaign rules; preview, invoice and rewards expose different representations. The checkout service receives an injected persistence adapter and never trusts the browser total. The code works for these contracts; no failing bug has been planted.\n\nThe team expects campaign rules to evolve but has not decided who should own the cross-layer calculation. Read the arrangement as a map of roles, then select a passage to investigate whether local reasoning or a shared decision model fits better. More centralization is not automatically better. No corrected version is provided.\n\nSource: an authored, trusted demonstration snapshot, not a claim about a real customer repository. Code Groove itself never executes imported repositories. Only this bundled fixture is exercised by its own behavior-contract test.\n",

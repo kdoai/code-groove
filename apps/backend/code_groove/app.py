@@ -21,7 +21,7 @@ from code_groove.http_limits import BodyLimitMiddleware
 from code_groove.improvements import apply_edits, source_hash
 from code_groove.incremental import INDEX_VERSION
 from code_groove.jobs import DAILY_ANALYSIS_LIMIT, JobService
-from code_groove.repository import repository_status, validate_local_sources
+from code_groove.repository import plan_repository, repository_status, validate_local_sources
 from code_groove.schemas import (
     Contract,
     Evidence,
@@ -47,6 +47,7 @@ SAMPLES = (
     "recorded-returns-after",
     "checkout-flow",
     "recorded-checkout-flow",
+    "recorded-tsugiai-agents",
 )
 
 
@@ -57,7 +58,7 @@ def studio_score(serialized_map: str, kit_hash: str) -> dict:
 
 def current_music(bundle: dict) -> dict:
     plan = bundle["score"]["scenes"][0]["repo"]
-    if plan["kit_id"] == "midnight-jazz-v4" and plan["grammar_version"] == "groove-chamber-v7":
+    if plan["kit_id"] == "midnight-jazz-v4" and plan["grammar_version"] == "groove-chamber-v8":
         return bundle
     kit = json.loads(
         (ROOT / "apps/web/public/audio/midnight-jazz-v4/manifest.json").read_text(encoding="utf-8")
@@ -315,7 +316,7 @@ def create_app(settings: Settings | None = None, verifier: Callable[[str], str] 
 
     @app.post("/api/v1/samples/{sample_id}/projects", status_code=201)
     def adopt_recorded_sample(sample_id: str, user: User, key: Key) -> dict:
-        if sample_id not in ("recorded-returns-before", "recorded-checkout-flow"):
+        if sample_id not in ("recorded-returns-before", "recorded-checkout-flow", "recorded-tsugiai-agents"):
             raise GrooveError("INVALID_SOURCE", "保存済み実解析を選択してください。")
         idem_id = hashlib.sha256(f"{user}:adopt:{sample_id}:{key}".encode()).hexdigest()
         previous = store.get("idempotency", idem_id)
@@ -347,11 +348,34 @@ def create_app(settings: Settings | None = None, verifier: Callable[[str], str] 
             "sources": bundle["sources"],
             "sha": source_hash(bundle["sources"]),
             "index_version": INDEX_VERSION,
-            "index": build_index(snapshot_id, bundle["sources"]),
+            "index": build_index(snapshot_id, bundle["sources"], repository=bool(bundle.get("partition"))),
         }
+        chunk_metadata = {}
+        if bundle.get("partition"):
+            snapshot["repository_plan"] = plan_repository(snapshot["index"], snapshot["sources"])
+            chunk = next(
+                c
+                for c in snapshot["repository_plan"]["chunks"]
+                if c["chunk_id"] == bundle["partition"]["chunk_id"]
+            )
+            chunk_metadata = {
+                "chunk_id": chunk["chunk_id"],
+                "chunk_fingerprint": chunk["fingerprint"],
+                "model_id": bundle["map"]["model_id"],
+                "prompt_version": bundle["map"]["prompt_version"],
+                "inspected_units": bundle["map"]["coverage"]["inspected_units"],
+                "unresolved_units": len(bundle["map"]["coverage"]["unresolved_unit_ids"]),
+            }
         artifacts.put(snapshot_key, snapshot)
         artifacts.put(
-            artifact_key, {"map": bundle["map"], "score": bundle["score"], "trace": bundle.get("trace", [])}
+            artifact_key,
+            {
+                "map": bundle["map"],
+                "score": bundle["score"],
+                "trace": bundle.get("trace", []),
+                **({"case_study": bundle["case_study"]} if bundle.get("case_study") else {}),
+                **({"partition": bundle["partition"]} if bundle.get("partition") else {}),
+            },
         )
         now = time.time()
         common = {
@@ -373,15 +397,29 @@ def create_app(settings: Settings | None = None, verifier: Callable[[str], str] 
                 project_id,
                 {
                     **common,
-                    "status": "completed",
-                    "source": {"kind": "sample", "sample_id": sample_id.removeprefix("recorded-")},
+                    "status": "partial" if chunk_metadata else "completed",
+                    "source": (
+                        {
+                            "kind": "local_snapshot",
+                            "label": bundle["case_study"]["title"],
+                            "revision": bundle["case_study"]["revision"],
+                            "source_hash": snapshot["sha"],
+                            "provenance": "recorded_committed_scope",
+                        }
+                        if bundle.get("case_study")
+                        else {"kind": "sample", "sample_id": sample_id.removeprefix("recorded-")}
+                    ),
                     "latest_analysis_id": analysis_id,
                     "run_id": "",
                     "working_copy": True,
                     "sha": snapshot["sha"],
                 },
             )
-            tx.put("analyses", analysis_id, {**common, "artifact_key": artifact_key})
+            tx.put(
+                "analyses",
+                analysis_id,
+                {**common, "analysis_id": analysis_id, "artifact_key": artifact_key, **chunk_metadata},
+            )
             tx.put("idempotency", idem_id, {**common, "analysis_id": analysis_id, "expires_at": now + 86400})
             return project_id, analysis_id
 

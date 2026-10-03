@@ -60,6 +60,47 @@ def test_idempotency_single_active_and_cancel_quota(setup):
     assert create(client, key="request003").status_code == 202
 
 
+def test_tsugiai_recording_adoption_preserves_partition_and_never_runs_model(setup, monkeypatch):
+    client, state = setup
+
+    def forbidden(*args, **kwargs):
+        raise AssertionError("Recorded replay must not call Gemini")
+
+    monkeypatch.setattr("code_groove.jobs.run_agent", forbidden)
+    public = client.get("/api/v1/samples/recorded-tsugiai-agents/bundle").json()["data"]
+    assert public["map"]["origin"] == "recorded_live"
+    assert public["map"]["coverage"]["inspected_units"] == 9
+    assert public["repository"]["pending_units"] == 9
+    headers = {"Authorization": "Bearer alice", "Idempotency-Key": "tsugiai-copy-001"}
+    copied = client.post("/api/v1/samples/recorded-tsugiai-agents/projects", json={}, headers=headers)
+    assert copied.status_code == 201
+    ids = copied.json()["data"]
+    assert (
+        client.post("/api/v1/samples/recorded-tsugiai-agents/projects", json={}, headers=headers).json()[
+            "data"
+        ]
+        == ids
+    )
+    path = f"/api/v1/projects/{ids['project_id']}"
+    bundle = client.get(path + "/bundle", headers=headers).json()["data"]
+    status = client.get(path + "/repository", headers=headers).json()["data"]
+    assert bundle["map"]["analysis_id"] == ids["analysis_id"]
+    assert bundle["score"]["analysis_id"] == ids["analysis_id"]
+    assert bundle["score"]["score_hash"] == public["score"]["score_hash"]
+    assert bundle["score"]["scenes"][0]["repo"]["notes"] == public["score"]["scenes"][0]["repo"]["notes"]
+    assert bundle["partition"] == public["partition"]
+    assert bundle["case_study"] == public["case_study"]
+    assert bundle["sources"] == public["sources"]
+    assert status["analyzed_chunks"] == 1
+    assert status["chunks"][0]["analysis_id"] == ids["analysis_id"]
+    assert status["pending_units"] == 9
+    assert status["cross_partition_review"] == "not_run"
+    assert state.store.get("projects", ids["project_id"])["status"] == "partial"
+    assert client.get(path + "/bundle", headers={"Authorization": "Bearer bob"}).status_code == 404
+    assert state.store.list("runs") == []
+    assert state.store.list("daily_quotas") == []
+
+
 def test_ten_daily_analyses_per_user_preserve_global_token_budget(setup):
     client, state = setup
     assert client.get("/api/v1/config").json()["data"]["daily_analysis_limit"] == 10

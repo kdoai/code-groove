@@ -5,8 +5,8 @@ import { engine } from '../audio/engine';
 const steps = [
   {
     target: 'album',
-    title: '01 / 動くコードの健康診断',
-    copy: 'プレビュー、請求、ポイント、注文にまたがる機能。今は正常に動きます。全体を聴き、将来の変更や理解の負担を確かめる入口です。',
+    title: '01 / 実在するAgentの設計を引き継ぐ',
+    copy: 'TsugiaiのCheckout Agentの9実装を確認した、保存済みGemini解析です。関連資料も含む11ファイルを表示しています。残り2範囲・リポジトリ全体・実行動作は未検証です。',
   },
   {
     target: 'play',

@@ -168,7 +168,7 @@ export default function App() {
     cache.invalidateQueries({ queryKey: ['project', ws.projectId] });
   }, [proposalRun.data]);
   const bundle = useQuery({
-    queryKey: ['bundle', ws.projectId, ws.analysisId, 'groove-chamber-v7'],
+    queryKey: ['bundle', ws.projectId, ws.analysisId, 'groove-chamber-v8'],
     queryFn: () =>
       api<Bundle>(
         ws.sampleId
@@ -379,7 +379,9 @@ export default function App() {
       setModal('auth');
       return;
     }
-    if (['recorded-checkout-flow', 'recorded-returns-before'].includes(ws.sampleId)) {
+    if (
+      ['recorded-checkout-flow', 'recorded-returns-before', 'recorded-tsugiai-agents'].includes(ws.sampleId)
+    ) {
       try {
         const saved = await api<{ project_id: string; analysis_id: string }>(
           `/samples/${ws.sampleId}/projects`,
@@ -434,8 +436,12 @@ export default function App() {
     try {
       let analysisId = bundle.data.map.analysis_id;
       if (ws.sampleId) {
-        if (!['recorded-returns-before', 'recorded-checkout-flow'].includes(ws.sampleId))
-          throw new Error('改善案はRepositoryの実解析、または返品サンプルから始めてください。');
+        if (
+          !['recorded-returns-before', 'recorded-checkout-flow', 'recorded-tsugiai-agents'].includes(
+            ws.sampleId,
+          )
+        )
+          throw new Error('改善案はRepositoryの実解析、または実解析サンプルから始めてください。');
         const saved = await api<{ project_id: string; analysis_id: string }>(
           `/samples/${ws.sampleId}/projects`,
           {},
@@ -543,7 +549,7 @@ export default function App() {
           </span>
           Code Groove
         </a>
-        <span className="product-purpose">コードの健康状態を、聴く</span>
+        <span className="product-purpose">設計を聴いて、根拠へ戻る</span>
         <SampleSwitch openSample={openSample} />
         {project.data?.previous_analysis_id && (
           <div className="sample-switch" aria-label="採用した変更の比較">
@@ -694,6 +700,12 @@ export default function App() {
             調査を停止
           </button>
         </main>
+      ) : ws.projectId && bundle.isPending && (ws.sampleId || user) ? (
+        <main className="analysis-progress" role="status">
+          <span className="spinner" />
+          <h2>保存した演奏とコードを読み込んでいます</h2>
+          <p>保存済み結果の表示で、新しいAI解析は始まりません。</p>
+        </main>
       ) : data && plan ? (
         <ReviewWorkspace bundle={data} plan={plan}>
           <AgentPanel
@@ -735,17 +747,17 @@ export default function App() {
       ) : (
         <main className="start-review">
           <span className="eyebrow">LISTEN. LOCATE. ASK.</span>
-          <h1>コードの違和感を、聴いて見つける。</h1>
+          <h1>知らないコードの設計を、聴いてたどる。</h1>
           <p>
-            ファイルのリズムを聴き、気になる箇所をコードで確認。
+            引き継いだコードで、同じ役割がどこに現れるか。
             <br />
-            Agentに、その判断の理由を聞けます。
+            音から実装を選び、Geminiの根拠行と設計理由を確かめます。
           </p>
-          <button className="primary" onClick={() => openSample('recorded-checkout-flow')}>
-            比較サンプルを開く
+          <button className="primary" onClick={() => openSample('recorded-tsugiai-agents')}>
+            Tsugiaiの実コードを聴く
             <ArrowRight size={15} />
           </button>
-          <small>保存したGemini調査を聴く · 改善案の作成はログイン後にあなたが依頼</small>
+          <small>Checkout Agentの9実装 · 保存済み実解析 · ログイン不要・追加AI費用なし</small>
         </main>
       )}
       {modal === 'open' && (
@@ -781,7 +793,7 @@ export default function App() {
           close={() => setModal('')}
           loadSample={() => {
             ws.set({ mode: 'repo', wholeWork: true, loop: false, pulseMuted: true, agentVisible: true });
-            openSample('recorded-checkout-flow');
+            openSample('recorded-tsugiai-agents');
             setTour(true);
           }}
         />

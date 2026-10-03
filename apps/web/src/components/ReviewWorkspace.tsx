@@ -12,29 +12,50 @@ export function SampleSwitch({ openSample }: { openSample: (id: string) => void 
     <details className="sample-switch">
       <summary data-tour="album">サンプル</summary>
       <div className="sample-menu">
-        <strong>Checkout Lab</strong>
-        <p>カート・クーポン・注文履歴が動く、小さなショップ。決済ロジックの保存済みGemini解析を聴けます。</p>
+        <strong>Tsugiai / Agentの引き継ぎ</strong>
+        <p>実在するADK実装をGeminiが調査。対話を構成する処理と、セッションを更新する処理の配置を聴けます。</p>
         <button
           onClick={(event) => {
             event.currentTarget.closest('details')?.removeAttribute('open');
-            openSample('recorded-checkout-flow');
+            openSample('recorded-tsugiai-agents');
           }}
         >
-          サンプルを開く
+          実コードのサンプルを開く
         </button>
-        <a href="/samples/checkout-lab.zip" download>
-          動くプロジェクトをダウンロード
+        <small>
+          Checkout Agentの9実装を検査。取り込んだ11ファイルの残り2範囲と、リポジトリ全体は未判定です。
+        </small>
+        <a
+          href="https://github.com/kdoai/tsugiai/tree/35a951488d7b00518e7e73a329d46713cbeacbe8/agents/checkout_agent"
+          target="_blank"
+          rel="noreferrer"
+        >
+          元のコードを読む ↗
         </a>
-        <small>ZIPを展開し、Node.js 22以上で起動</small>
-        <code>
-          npm ci
-          <br />
-          npm start
-        </code>
-        <a href="http://127.0.0.1:4174" target="_blank" rel="noreferrer">
-          起動したローカルデモを開く ↗
-        </a>
-        <small>検査対象は src の13関数。画面・起動用サーバーは保存済み解析の対象外です。</small>
+        <details>
+          <summary>小さな教材も試す / Checkout Lab</summary>
+          <button
+            onClick={(event) => {
+              event.currentTarget.closest('.sample-switch')?.removeAttribute('open');
+              openSample('recorded-checkout-flow');
+            }}
+          >
+            教材サンプルを開く
+          </button>
+          <a href="/samples/checkout-lab.zip" download>
+            動くプロジェクトをダウンロード
+          </a>
+          <small>ZIPを展開し、Node.js 22以上で起動</small>
+          <code>
+            npm ci
+            <br />
+            npm start
+          </code>
+          <a href="http://127.0.0.1:4174" target="_blank" rel="noreferrer">
+            起動したローカルデモを開く ↗
+          </a>
+          <small>検査対象は src の13関数。画面・起動用サーバーは保存済み解析の対象外です。</small>
+        </details>
       </div>
     </details>
   );
@@ -63,12 +84,14 @@ function DirectoryTree({
   selected,
   select,
   concernPaths,
+  inspectedPaths,
   depth = 0,
 }: {
   nodes: TreeNode[];
   selected: string;
   select: (path: string) => void;
   concernPaths: Set<string>;
+  inspectedPaths?: Set<string>;
   depth?: number;
 }) {
   const [collapsed, setCollapsed] = useState<string[]>([]);
@@ -100,6 +123,7 @@ function DirectoryTree({
                   selected={selected}
                   select={select}
                   concernPaths={concernPaths}
+                  inspectedPaths={inspectedPaths}
                   depth={depth + 1}
                 />
               )}
@@ -108,11 +132,16 @@ function DirectoryTree({
             <button
               className={`tree-file ${node.path === selected ? 'selected' : ''}`}
               style={{ paddingLeft: 25 + depth * 12 }}
-              title={node.path}
+              title={`${node.path}${inspectedPaths && !inspectedPaths.has(node.path) ? ' · 演奏対象外の参考コード' : ''}`}
               onClick={() => select(node.path)}
             >
               <FileCode2 size={13} />
               <span>{node.name}</span>
+              {inspectedPaths && !inspectedPaths.has(node.path) && (
+                <span className="source-context-badge" aria-hidden="true">
+                  参考
+                </span>
+              )}
               {concernPaths.has(node.path) && <i className="concern-dot" />}
             </button>
           )}
@@ -196,11 +225,12 @@ export function ReviewWorkspace({
             selected={selectedPath}
             select={selectFile}
             concernPaths={concernPaths}
+            inspectedPaths={bundle.partition ? new Set(bundle.partition.paths) : undefined}
           />
         </div>
         <details className="file-scope">
           <summary>
-            解析済み {bundle.map.coverage.inspected_units}/{bundle.map.coverage.indexed_units} 関数
+            解析済み {bundle.map.coverage.inspected_units}/{bundle.map.coverage.indexed_units} 実装
             <small data-testid="analysis-origin">
               {bundle.map.origin === 'fixture'
                 ? '模擬サンプル'
@@ -211,6 +241,11 @@ export function ReviewWorkspace({
           </summary>
           <div>
             <p>分母は対象の関数数、分子は確認できた数です。READMEと型定義もファイル一覧に含みます。</p>
+            {bundle.partition && (
+              <p>
+                分母は表示中の検査範囲の実装数です。「参考」のファイルは演奏対象外で、残りの範囲の検査完了を意味しません。
+              </p>
+            )}
             {bundle.map.coverage.unresolved_unit_ids.length > 0 && (
               <p>
                 未確認: {bundle.map.coverage.unresolved_unit_ids.length}{' '}

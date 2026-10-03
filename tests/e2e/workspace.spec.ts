@@ -11,9 +11,10 @@ test('whole-health listening and real-screen tour keep investigation human-direc
   await page.goto('/');
   await page.getByRole('checkbox', { name: '今後このメッセージを表示しない', exact: true }).check();
   await page.getByRole('button', { name: '実画面のデモを見る', exact: true }).click();
+  await expect(page.getByTestId('analysis-origin')).toContainText('保存済み実解析', { timeout: 20000 });
   await expect(page.locator('.spotlight-window')).toBeVisible();
   await expect(page.locator('.monaco-editor')).toBeVisible({ timeout: 20000 });
-  await expect(page.locator('.file-list')).toContainText('pricing.ts');
+  await expect(page.locator('.file-list')).toContainText('tools.py');
   await expect(page.getByRole('button', { name: 'Geminiに改善案を依頼', exact: true })).toHaveCount(0);
   await page.getByRole('button', { name: '次へ', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Pause', exact: true })).toBeVisible();
@@ -34,10 +35,10 @@ test('whole-health listening and real-screen tour keep investigation human-direc
   await expect(page.getByRole('button', { name: '採用後', exact: true })).toHaveCount(0);
   await expect(page.getByTestId('cue-note')).toHaveCount(0);
   await page.getByText('旋律と色の凡例', { exact: true }).click();
-  await expect(page.locator('.motif-legend button')).toHaveCount(4);
+  await expect(page.locator('.motif-legend button')).toHaveCount(5);
   await page.getByText('旋律と色の凡例', { exact: true }).click();
-  await page.getByRole('button', { name: 'contracts.ts', exact: true }).click();
-  await expect(page.locator('.code-panel .panel-heading')).toContainText('src/contracts.ts');
+  await page.getByRole('button', { name: 'checklist.py', exact: true }).click();
+  await expect(page.locator('.code-panel .panel-heading')).toContainText('agents/models/checklist.py');
   await page.getByTestId('data-note').first().click();
   await expect(page.locator('.agent-panel')).toContainText('この音が表す役割');
   await page.getByRole('textbox', { name: '選択した範囲への質問' }).fill('この旋律が戻る理由は？');
@@ -68,7 +69,7 @@ test('whole-health listening and real-screen tour keep investigation human-direc
     ]);
     expect(size[0]).toBe(size[1]);
     expect(size[2]).toBe(size[3]);
-    await page.screenshot({ path: `artifacts/workspace-r8-${viewport.width}.png` });
+    await page.screenshot({ path: `artifacts/workspace-r12-${viewport.width}.png` });
   }
   expect(
     await page.locator('.review-code').evaluate((e) => e.getBoundingClientRect().height),
@@ -129,7 +130,7 @@ test('selected-file listening, supporting files and theme switching preserve the
   await page.getByRole('button', { name: 'ライトモードに切り替え', exact: true }).click();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
   await expect(page.locator('footer.statusbar')).toHaveCount(0);
-  await expect(page.locator('.file-scope summary')).toContainText('解析済み 13/13 関数');
+  await expect(page.locator('.file-scope summary')).toContainText('解析済み 13/13 実装');
   const width = await page.locator('.review-center').evaluate((e) => e.getBoundingClientRect().width);
   const question = page.getByRole('textbox', { name: '選択した範囲への質問' });
   await question.fill('この境界を保つ理由は？');
