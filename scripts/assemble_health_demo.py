@@ -69,7 +69,14 @@ def main():
     for i, name in passages:
         offset = times[f"{name}_offset_seconds"]
         bundle = json.loads((ROOT / f".local/deployed-r5-{name}-bundle.json").read_text(encoding="utf-8"))
-        rendered = render_plan(bundle["score"]["scenes"][0]["repo"])
+        plans = [scene["repo"] for scene in bundle["score"]["scenes"]]
+        whole = {**plans[0], "total_bars": 0, "notes": []}
+        for plan in plans:
+            whole["notes"].extend(
+                {**note, "tick": note["tick"] + whole["total_bars"] * 1920} for note in plan["notes"]
+            )
+            whole["total_bars"] += plan["total_bars"]
+        rendered = render_plan(whole)
         segment = segments[i]
         a, b = (
             max(times[f"{name}_play"], segment["source_start"]),
@@ -94,6 +101,11 @@ def main():
         "採用後に初めて聴き比べる。意味が同じ旋律は保持し、変わった配置と残る候補を確認。",
         "実際の採用後画面を静止表示。音は理解の入口であり、正しさや健康の保証ではありません。",
     ]
+    if recording.get("resumed_saved_investigation"):
+        texts[1] = "完了した本番Gemini精密検査から再開。ここでの検査再実行は0回。保存した根拠・役割を確認。"
+        texts[2] = (
+            "精密検査で確認した変更負担・正当な境界・M4の再分類を試聴。演奏への反映は済み、コードは未変更。"
+        )
     captions = [
         "[Script Info]",
         "ScriptType: v4.00+",

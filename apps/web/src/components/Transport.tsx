@@ -96,7 +96,7 @@ export function Transport({ score, onError }: { score?: ScoreBundle; onError: (m
         <b>{clock(seconds)}</b>
         <small>/ {clock(plan ? plan.total_bars * 2.5 : 0)}</small>
       </div>
-      <span className="playback-hint">聴く → オレンジの区間を選ぶ → コードとAgentの理由を見る</span>
+      <span className="playback-hint">聴く → 気になった区間を選ぶ → Agentが精密検査</span>
       <button
         className="evidence-solo"
         aria-pressed={ws.focusEvidence}
