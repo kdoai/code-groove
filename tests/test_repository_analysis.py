@@ -228,6 +228,12 @@ def test_import_chunk_save_resume_and_cache_are_owned_and_quota_bounded(setup, m
         ).status_code
         == 400
     )
+    # Seven earlier analyses in this UTC day; the final pending range is the tenth.
+    state.store.update(
+        "daily_quotas",
+        state.store.get("runs", retried["run_id"])["quota_id"],
+        {"analyses": 9},
+    )
     for i, chunk in enumerate(c for c in overview["chunks"] if c["status"] == "pending"):
         created = client.post(
             path + "/chunks",
@@ -235,7 +241,7 @@ def test_import_chunk_save_resume_and_cache_are_owned_and_quota_bounded(setup, m
             headers={**headers, "Idempotency-Key": f"next-chunk-{i:03d}"},
         ).json()["data"]
         asyncio.run(state.jobs.handle(created["run_id"]))
-    assert len(seen) == 3 and state.store.list("daily_quotas")[0]["analyses"] == 3
+    assert len(seen) == 3 and state.store.list("daily_quotas")[0]["analyses"] == 10
     denied_writes = []
     monkeypatch.setattr(state.artifacts, "put", lambda *args: denied_writes.append(args))
     assert (

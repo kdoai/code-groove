@@ -1,6 +1,6 @@
 # Cost envelope (infrastructure only)
 
-Target ¥6,000/month, excluding AI. Small hackathon traffic: 2 reviewer users, 3 analyses + 10 investigations each per day, ~90s/30s average. No minimum instances, no GPU, SQL instance, Redis, NAT or load balancer. Firestore/GCS are usage based. Artifacts expire after 7 days (API) and 14 days (physical cleanup).
+Target ¥6,000/month, excluding AI. R11 raises the user daily analysis ceiling to10 at the user's explicit request. The original sizing example below assumes2 reviewer users,3 analyses +10 investigations each per day, ~90s/30s average; it is not a new estimate for full use of the ten-analysis cap. Global token reservations and infrastructure capacity remain unchanged. No minimum instances, no GPU, SQL instance, Redis, NAT or load balancer. Firestore/GCS are usage based. Artifacts expire after7 days (API) and14 days (physical cleanup).
 
 Cloud Run: web 1 vCPU / 512 MiB, max 2; worker 1 vCPU / 1 GiB, max 1. Cloud Tasks concurrent dispatch 1. This deliberately reduces the specification's CPU/instance settings to respect the user's cost requirement. Increase explicit limits after observing latency and billing; the architecture already supports scaling.
 

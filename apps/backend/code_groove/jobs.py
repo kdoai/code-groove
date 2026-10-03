@@ -20,6 +20,7 @@ from code_groove.source import build_index, github_snapshot, run_node, sample_sn
 from code_groove.storage import ArtifactStore, MetadataStore, Transaction
 
 TERMINAL = {"completed", "partial", "failed", "cancelled"}
+DAILY_ANALYSIS_LIMIT = 10
 
 
 class JobService:
@@ -108,9 +109,11 @@ class JobService:
                 else "analyses"
             )
             user_quota.setdefault("refreshes", 0)
-            if user_quota[counter] >= (10 if refresh or kind in ("investigation", "proposal") else 3):
+            if user_quota[counter] >= (
+                10 if refresh or kind in ("investigation", "proposal") else DAILY_ANALYSIS_LIMIT
+            ):
                 raise GrooveError("DAILY_QUOTA", "本日（UTC）の実解析上限に達しました。", 429)
-            if body.get("proposal_id") and user_quota["analyses"] >= 3:
+            if body.get("proposal_id") and user_quota["analyses"] >= DAILY_ANALYSIS_LIMIT:
                 raise GrooveError(
                     "DAILY_QUOTA", "改善後の実解析を予約できません。本日（UTC）の上限に達しました。", 429
                 )
@@ -638,7 +641,7 @@ class JobService:
                     quota = tx.get("daily_quotas", run["quota_id"])
                     if current.get("analysis_counted"):
                         return
-                    if quota["analyses"] >= 3:
+                    if quota["analyses"] >= DAILY_ANALYSIS_LIMIT:
                         raise GrooveError(
                             "DAILY_QUOTA", "変更あり。本日（UTC）のAI解析上限に達しました。", 429
                         )

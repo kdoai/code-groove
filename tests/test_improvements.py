@@ -127,15 +127,23 @@ async def test_rejected_and_stale_proposals_cannot_change_code(workspace, monkey
 
 
 @pytest.mark.asyncio
-async def test_acceptance_with_exhausted_analysis_quota_keeps_draft(workspace, monkeypatch):
+@pytest.mark.parametrize("used, expected", [(9, 202), (10, 429)])
+async def test_acceptance_analysis_quota_boundary_preserves_draft_on_rejection(
+    workspace, monkeypatch, used, expected
+):
     client, state, headers, _ = workspace
     proposal_id, _ = await create_proposal(workspace, monkeypatch)
     run = state.store.list("runs")[0]
-    state.store.update("daily_quotas", run["quota_id"], {"analyses": 3})
+    state.store.update("daily_quotas", run["quota_id"], {"analyses": used})
     result = client.post(f"/api/v1/proposals/{proposal_id}/accept", json={}, headers=headers)
-    assert result.status_code == 429 and result.json()["error"]["code"] == "DAILY_QUOTA"
-    assert state.store.get("proposals", proposal_id)["status"] == "draft"
-    assert len(state.store.list("runs")) == 1
+    assert result.status_code == expected
+    if expected == 429:
+        assert result.json()["error"]["code"] == "DAILY_QUOTA"
+        assert state.store.get("proposals", proposal_id)["status"] == "draft"
+        assert len(state.store.list("runs")) == 1
+    else:
+        assert state.store.get("proposals", proposal_id)["status"] == "accepted"
+        assert state.store.list("daily_quotas")[0]["analyses"] == 10
 
 
 def test_exact_edits_require_read_evidence_and_safe_paths(workspace):

@@ -1607,7 +1607,7 @@ JSON structured logに `trace_id`, `run_id`, `project_id_hash`, `attempt_id`, `e
 
 ### 18.3 費用上限
 
-P0既定値：1userあたり初回解析3件/日、追加調査10件/日、同時run1件。全体のmodel input token上限3,000,000/日、output token上限300,000/日。UTC日付で統一する。
+R11（2026-10-03、ユーザー明示依頼）既定値：1userあたり実解析10件/日、追加調査10件/日、同時run1件。初回・分割継続・未解決の再検査・採用後の再解析を実解析枠へ数える。全体のmodel input token上限3,000,000/日、output token上限300,000/日。UTC日付で統一する。既存の消費・予約回数はリセットしない。GET /configのdaily_analysis_limitで実解析上限を確認できる。
 
 run開始時に最大予算をtransactionで予約し、終了時に未消費分を解放する。status確認や再生はモデル予算を消費しない。token残量によって件数上限に達する前に止まる場合もUIで理由を表示する。
 

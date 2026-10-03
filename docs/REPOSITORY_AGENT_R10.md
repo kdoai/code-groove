@@ -19,10 +19,10 @@
 | 静的索引 | 実装400ファイル、60,000行、全投影4 MiB、4,096シンボル |
 | ローカル取り込み | 文書/設定込み500ファイル、1ファイル200 KiB、本文合計4 MiB、JSONリクエスト8 MiB |
 | Gemini analysis run | 既存18モデルrequest / 48tool / 入力400,000token / 出力48,000token / 480秒を維持 |
-| 実解析 | 3件/ユーザー/UTC日。分割の続き・未解決の再検査も1件と数える |
+| 実解析 | R11でユーザー依頼により10件/ユーザー/UTC日へ変更。分割の続き・未解決の再検査も1件と数える |
 | 再取得・キャッシュ照合 | 10件/UTC日の既存refresh枠。保存結果のGETはモデルを呼ばない |
 | 保存 | 既存7日。全範囲を期限内に終えられる保証はない。必要な範囲を優先する |
-| GCP | Tokyo、web min0/max2、worker min0/max1、Tasks concurrency1。新サービス・容量・IAM・日次枠を追加しない |
+| GCP | Tokyo、web min0/max2、worker min0/max1、Tasks concurrency1。新サービス・容量・IAMを追加しない |
 
 裏で全範囲を有料検査する動作はない。トークン事前計数、予約/消費、取消、attempt guardを既存経路に保持する。受け入れ拒否された取り込みはartifactを作らず、ソース本文はFirestoreへ入れない。
 
@@ -47,7 +47,7 @@ CLIはコミット済みGit blobだけを読み、ignored `.local/repository-pre
 
 所有権・取り込み・依存変更・長い証拠範囲・キャッシュ・実解析3件枠・未解決の明示再検査を、mock modelと本物のparser/譜面compilerで検証した。Playwrightでも取り込み→範囲表示→保存再生（追加POSTなし）→続き→未解決の再検査をmock APIで確認した。`artifacts/repository-r10-mock.png` は模擬API画面でありTsugiaiのGemini結果ではない。
 
-本日の実解析枠は既存3件で消費済み。Tsugiaiの新規Gemini解析、全範囲の実モデル品質・音楽、実モデルの1,219行関数検査は未検証。増枠・返金・別アカウントによる回避はしていない。
+R10検証時点では旧上限3件を消費済みだった。R11でユーザーの明示依頼により上限だけを10件へ変更し、過去の消費・予約は保持する。この上限変更で新しい有料解析は実行しない。Tsugiaiの新規Gemini解析、全範囲の実モデル品質・音楽、実モデルの1,219行関数検査は引き続き未検証。
 
 配備済みruntimeは `808ee3e44cc9fecb1a97d18a0b9071aee4112ae0`。CIはbackend71 / indexer・music23 / E2E7成功、有料3件skip。GCP配備は成功した同一SHAのCIを再利用した。本番の認証境界・保存済み採用結果の再生・選択ファイルのブラウザE2Eが成功し、実IABで新しい取り込み上限と既存録音サンプルの再生進行を確認した。インフラ容量は従来のまま。詳細はEXECUTION_PLAN.mdとsource-free `artifacts/deployed-r10-*.json` に保存している。
 

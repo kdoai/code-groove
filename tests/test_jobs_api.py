@@ -60,6 +60,32 @@ def test_idempotency_single_active_and_cancel_quota(setup):
     assert create(client, key="request003").status_code == 202
 
 
+def test_ten_daily_analyses_per_user_preserve_global_token_budget(setup):
+    client, state = setup
+    assert client.get("/api/v1/config").json()["data"]["daily_analysis_limit"] == 10
+    for i in range(10):
+        response = create(client, key=f"daily-limit-{i:03d}")
+        assert response.status_code == 202
+        run_id = response.json()["data"]["run_id"]
+        state.store.update("runs", run_id, {"status": "cancelled"})
+        state.jobs.settle_quota(run_id)
+        assert state.store.list("daily_quotas")[0]["analyses"] == i + 1
+    denied = create(client, key="daily-limit-011")
+    assert denied.status_code == 429 and denied.json()["error"]["code"] == "DAILY_QUOTA"
+    assert len(state.store.list("runs")) == 10
+    other = create(client, key="other-user-001", user="bob")
+    assert other.status_code == 202
+    run_id = other.json()["data"]["run_id"]
+    state.store.update("runs", run_id, {"status": "cancelled"})
+    state.jobs.settle_quota(run_id)
+    state.store.update(
+        "global_quotas", state.store.get("runs", run_id)["quota_date"], {"consumed_input": 2700000}
+    )
+    denied = create(client, key="global-budget-001", user="bob")
+    assert denied.status_code == 429 and denied.json()["error"]["code"] == "GLOBAL_QUOTA"
+    assert state.store.list("global_quotas")[0]["reserved_input"] == 0
+
+
 def test_account_activity_is_owned_bounded_and_hides_terminal_runs(setup):
     client, state = setup
     path = "/api/v1/account/activity"

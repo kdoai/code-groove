@@ -60,7 +60,7 @@ uv run python scripts/release.py --revision <40桁のGitコミットSHA>
 
 通常の配備は GitHub Actions の **Deploy verified revision** を手動実行します。main の検証済みコードだけを対象にし、Workload Identity Federation をリポジトリの数値ID・所有者ID・main・production 環境に限定します。サービスアカウント鍵は作りません。基盤の IAM と Firebase 設定を変更する権限は CI に付与しません。
 
-インフラは min instances 0、web 最大２・worker 最大１、キュー同時実行１。常時稼働の DB / VM / Redis は使いません。各利用者は１実行同時、UTC日次３解析・10追加調査・10更新。全体で日次入力300万 / 出力30万トークンの予約上限。保存結果の再生は AI を呼びません。更新では変更された関数と影響する呼び出し元を再調査し、変更がなく索引・モデル・プロンプトも一致する場合は解析結果を再利用します。詳細は [差分解析](docs/INCREMENTAL.md)、[費用設計](docs/cost-plan.md) と [運用手順](docs/runbook.md)。
+インフラは min instances 0、web 最大２・worker 最大１、キュー同時実行１。常時稼働の DB / VM / Redis は使いません。各利用者は１実行同時、UTC日次10解析・10追加調査・10更新。全体で日次入力300万 / 出力30万トークンの予約上限。保存結果の再生は AI を呼びません。更新では変更された関数と影響する呼び出し元を再調査し、変更がなく索引・モデル・プロンプトも一致する場合は解析結果を再利用します。詳細は [差分解析](docs/INCREMENTAL.md)、[費用設計](docs/cost-plan.md) と [運用手順](docs/runbook.md)。
 
 ## 構成と成果物
 

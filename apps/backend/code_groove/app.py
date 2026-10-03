@@ -20,7 +20,7 @@ from code_groove.errors import GrooveError
 from code_groove.http_limits import BodyLimitMiddleware
 from code_groove.improvements import apply_edits, source_hash
 from code_groove.incremental import INDEX_VERSION
-from code_groove.jobs import JobService
+from code_groove.jobs import DAILY_ANALYSIS_LIMIT, JobService
 from code_groove.repository import repository_status, validate_local_sources
 from code_groove.schemas import (
     Contract,
@@ -244,6 +244,7 @@ def create_app(settings: Settings | None = None, verifier: Callable[[str], str] 
             "data": {
                 "live_enabled": settings.enable_live_analysis,
                 "model_id": settings.gemini_model,
+                "daily_analysis_limit": DAILY_ANALYSIS_LIMIT,
                 "firebase": {
                     "apiKey": settings.firebase_api_key,
                     "authDomain": settings.firebase_auth_domain,
