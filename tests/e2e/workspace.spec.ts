@@ -68,7 +68,7 @@ test('whole-health listening and real-screen tour keep investigation human-direc
     ]);
     expect(size[0]).toBe(size[1]);
     expect(size[2]).toBe(size[3]);
-    await page.screenshot({ path: `artifacts/workspace-r7-${viewport.width}.png` });
+    await page.screenshot({ path: `artifacts/workspace-r8-${viewport.width}.png` });
   }
   expect(
     await page.locator('.review-code').evaluate((e) => e.getBoundingClientRect().height),
@@ -123,11 +123,33 @@ test('selected-file listening, supporting files and theme switching preserve the
   await expect(page.locator('.time-display small')).toHaveText(fullLength);
   await page.getByRole('button', { name: 'ダークモードに切り替え', exact: true }).click();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
-  await page.screenshot({ path: 'artifacts/workspace-r7-dark.png' });
+  await page.screenshot({ path: 'artifacts/workspace-r8-dark.png' });
   await page.reload();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
   await page.getByRole('button', { name: 'ライトモードに切り替え', exact: true }).click();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+  await expect(page.locator('footer.statusbar')).toHaveCount(0);
+  await expect(page.locator('.file-scope summary')).toContainText('解析済み 13/13 関数');
+  const width = await page.locator('.review-center').evaluate((e) => e.getBoundingClientRect().width);
+  const question = page.getByRole('textbox', { name: '選択した範囲への質問' });
+  await question.fill('この境界を保つ理由は？');
+  await page.getByRole('button', { name: 'Agentを閉じる', exact: true }).click();
+  await expect(question).toBeHidden();
+  expect(
+    await page.locator('.review-center').evaluate((e) => e.getBoundingClientRect().width),
+  ).toBeGreaterThan(width + 250);
+  await page.getByRole('button', { name: 'Agentを開く', exact: true }).press('Space');
+  await expect(question).toHaveValue('この境界を保つ理由は？');
+  await expect(page.getByRole('button', { name: 'Play', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Agentを閉じる', exact: true }).click();
+  await page.reload();
+  await expect(question).toBeHidden();
+  await page.getByRole('button', { name: 'Agentを開く', exact: true }).click();
+  await page.getByText('サンプル', { exact: true }).click();
+  await expect(page.locator('.sample-menu')).toContainText('対象外');
+  const download = await page.request.get('/samples/checkout-lab.zip');
+  expect(download.status()).toBe(200);
+  expect((await download.body()).subarray(0, 2).toString()).toBe('PK');
   expect(errors).toEqual([]);
 });
 

@@ -42,9 +42,8 @@ export function AgentPanel({
     !!ws.codeSpan && !bundle.map.units.some((u) => u.primary_span.path === ws.codeSpan?.path);
   const selectedSignal = supportingFile
     ? undefined
-    : bundle.map.review_signals?.find(
-        (s) => s.event_ids.includes(ws.eventId) || s.unit_ids.includes(unit.unit_id),
-      );
+    : (bundle.map.review_signals?.find((s) => s.event_ids.includes(ws.eventId)) ??
+      bundle.map.review_signals?.find((s) => s.unit_ids.includes(unit.unit_id)));
   const fixture = bundle.map.origin === 'fixture';
   const recorded = bundle.map.origin === 'recorded_live' && !!ws.sampleId;
   const overview = bundle.map.analysis_depth === 'overview';
@@ -72,12 +71,6 @@ export function AgentPanel({
         <div className="selected-file">
           {ws.codeSpan?.path ?? event?.span.path ?? unit?.primary_span.path}
         </div>
-        {overview && (
-          <div className="health-stage">
-            <b>全体健診</b>
-            <span>聴く → 区間を選ぶ → 精密検査</span>
-          </div>
-        )}
         {(!selectedSignal || overview) && (
           <>
             <h3>{supportingFile ? '関連資料・型定義' : overview ? 'この音が表す役割' : 'この箇所の判断'}</h3>
@@ -350,7 +343,8 @@ export function AgentPanel({
           setQuestion('');
         }}
       >
-        <div className="question-presets">
+        <details className="question-presets">
+          <summary>質問の例</summary>
           <button
             type="button"
             disabled={pending || proposing}
@@ -373,7 +367,7 @@ export function AgentPanel({
           >
             将来の負担は？
           </button>
-        </div>
+        </details>
         <div>
           <input
             aria-label="選択した範囲への質問"

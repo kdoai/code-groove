@@ -23,6 +23,7 @@ type Workspace = {
   playbackFile: string;
   showBacking: boolean;
   theme: 'light' | 'dark';
+  agentVisible: boolean;
   set: (values: Partial<Omit<Workspace, 'set'>>) => void;
 };
 export const useWorkspace = create<Workspace>()(
@@ -48,6 +49,7 @@ export const useWorkspace = create<Workspace>()(
       playbackFile: '',
       showBacking: false,
       theme: 'light',
+      agentVisible: true,
       set: (values) => set(values),
     }),
     { name: 'code-groove-workspace-v1' },

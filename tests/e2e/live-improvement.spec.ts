@@ -81,7 +81,7 @@ test('paid deployed Gemini proposal, explicit approval, fresh analysis and prese
   expect(after).toBeTruthy();
   await page.getByRole('button', { name: '変更前', exact: true }).click();
   await page.waitForTimeout(5000);
-  await expect(page.locator('.statusbar')).toContainText('保存済み実解析');
+  await expect(page.getByTestId('analysis-origin')).toContainText('保存済み実解析');
   const before = bundles.find((b) => b.map.analysis_id === created.analysis_id);
   expect(before).toBeTruthy();
   expect(after.map.parent_analysis_id).toBe(before.map.analysis_id);
@@ -93,7 +93,7 @@ test('paid deployed Gemini proposal, explicit approval, fresh analysis and prese
   expect(common.length).toBeGreaterThan(0);
   expect(common.every((r: any) => r.before === r.after)).toBe(true);
   await page.getByRole('button', { name: '採用後', exact: true }).click();
-  await expect(page.locator('.statusbar')).toContainText('実解析');
+  await expect(page.getByTestId('analysis-origin')).toContainText('実解析');
   await page.getByRole('button', { name: 'Play', exact: true }).click();
   timings.after_play = time();
   await expect(page.getByRole('button', { name: 'Pause', exact: true })).toBeVisible();

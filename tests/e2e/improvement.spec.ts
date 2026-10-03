@@ -185,7 +185,7 @@ test('human approval gates source changes and after comparison (mock API, no pai
   await expect(page.getByRole('dialog', { name: '改善案を確認' })).toBeVisible({ timeout: 15000 });
   expect(approved).toBe(false);
   await expect(page.getByRole('button', { name: '採用後', exact: true })).toHaveCount(0);
-  await page.screenshot({ path: 'artifacts/improvement-diff-mock.png' });
+  await page.screenshot({ path: 'artifacts/improvement-diff-r8-mock.png' });
   await page.getByRole('button', { name: '差分を閉じる', exact: true }).click();
   expect(approved).toBe(false);
   await page.getByRole('button', { name: '差分を確認：E2Eの差分案', exact: true }).click();
@@ -197,9 +197,9 @@ test('human approval gates source changes and after comparison (mock API, no pai
     { timeout: 15000 },
   );
   await page.getByRole('button', { name: '変更前', exact: true }).click();
-  await expect(page.locator('.statusbar')).toContainText('保存済み実解析');
+  await expect(page.getByTestId('analysis-origin')).toContainText('保存済み実解析');
   await page.getByRole('button', { name: '採用後', exact: true }).click();
-  await expect(page.locator('.statusbar')).toContainText('実解析');
+  await expect(page.getByTestId('analysis-origin')).toContainText('実解析');
   await expect(page.getByText('Agentの実行記録 · 1回のツール調査')).toBeVisible();
   await expect(page.getByText(/追加調査の記録/)).toHaveCount(0);
   expect(calls).toEqual([

@@ -26,7 +26,7 @@ describe('meaningful jazz arrangements', () => {
     expect(new Set(cueBar.map((n) => n.voice))).toEqual(new Set(['piano', 'vibes']));
     const diagnosticBar = Math.floor(a.notes.find((n) => n.kind === 'cue')!.tick / 1920);
     const chord = (bar: number) => a.notes.find((n) => n.note_id.includes(`chord_${bar}_0_0`))!;
-    expect(chord(diagnosticBar).velocity).toBeCloseTo(chord(diagnosticBar - 1).velocity * 0.3);
+    expect(chord(diagnosticBar).velocity).toBeCloseTo(chord(diagnosticBar - 1).velocity * 0.8);
     expect(
       a.notes.some((n) => ['kick', 'snare', 'hat', 'wood'].includes(n.voice) || n.kind === 'pulse'),
     ).toBe(false);
@@ -81,5 +81,26 @@ describe('meaningful jazz arrangements', () => {
     expect(plan.notes.filter((n) => n.kind === 'data').map((n) => n.event_id)).toEqual(
       expect.arrayContaining(map.events.map((e) => e.event_id)),
     );
+  });
+  it('does not stack candidate signals into louder or longer warning passages', async () => {
+    const map = load('before');
+    const original = (await compileGroove(map, 'kit')).scenes[0].repo;
+    map.review_signals = [
+      ...(map.review_signals ?? []),
+      { ...structuredClone(map.review_signals![0]!), signal_id: 'zz_duplicate' },
+    ] as SemanticMap['review_signals'];
+    const repeated = (await compileGroove(map, 'kit')).scenes[0].repo;
+    expect(repeated.notes).toEqual(original.notes);
+    expect(repeated.total_bars).toBe(original.total_bars);
+    for (const phrase of repeated.phrases) {
+      const response = repeated.notes.filter(
+        (n) =>
+          n.kind === 'cue' &&
+          n.tick >= phrase.start_bar * 1920 &&
+          n.tick < (phrase.start_bar + phrase.bar_count) * 1920,
+      );
+      expect(new Set(response.map((n) => Math.floor(n.tick / 1920))).size).toBeLessThanOrEqual(1);
+      expect(response.every((n) => n.velocity <= 0.44)).toBe(true);
+    }
   });
 });

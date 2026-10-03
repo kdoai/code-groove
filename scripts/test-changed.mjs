@@ -26,12 +26,21 @@ const backend = contracts || files.some((path) => /^(apps\/backend\/|tests\/test
 const music =
   contracts ||
   files.some((path) =>
-    /^(packages\/(groove-core|repo-indexer)\/|fixtures\/|apps\/web\/public\/audio\/|assets\/audio-source\/|tests\/.*\.test\.ts|scripts\/(build-clean-kit|audio_render))/.test(path),
+    /^(packages\/(groove-core|repo-indexer)\/|fixtures\/|apps\/web\/public\/audio\/|assets\/audio-source\/|tests\/.*\.test\.ts|scripts\/(build-clean-kit|audio_render))/.test(
+      path,
+    ),
   );
 const web =
   contracts || music || files.some((path) => /^(apps\/web\/|tests\/e2e\/|playwright.config)/.test(path));
 const tooling = files.some((path) => /^(infra\/|scripts\/|\.github\/)/.test(path));
-console.log(JSON.stringify({ backend, music, web, files: files.length }));
+const sample =
+  all ||
+  files.some((path) =>
+    /^(examples\/checkout-lab\/|fixtures\/repos\/checkout-flow\/|apps\/web\/public\/samples\/|scripts\/build-sample)/.test(
+      path,
+    ),
+  );
+console.log(JSON.stringify({ backend, music, web, sample, files: files.length }));
 if (tooling && !backend) run('uv', ['run', 'ruff', 'check', 'infra', 'scripts']);
 if (tooling && !web) run('pnpm', ['exec', 'eslint', 'scripts/*.mjs']);
 if (backend || music || web) run('pnpm', ['build:tools']);
@@ -52,6 +61,13 @@ if (web) {
   run('pnpm', ['lint']);
   run('pnpm', ['build']);
   run('pnpm', ['test:e2e']);
+}
+if (sample) {
+  run('uv', ['run', 'python', 'scripts/build-sample.py', '--check']);
+  run('pnpm', ['exec', 'tsc', '--noEmit', '-p', 'examples/checkout-lab']);
+  run('pnpm', ['exec', 'eslint', 'examples/checkout-lab/*.ts']);
+  run('pnpm', ['test:sample']);
+  run('node', ['--test', 'examples/checkout-lab/tests/store.test.mjs']);
 }
 if (!(backend || music || web))
   console.log('Documentation/infrastructure-only change: application suites skipped.');

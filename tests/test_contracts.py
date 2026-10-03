@@ -41,5 +41,5 @@ def test_saved_grammar_upgrade_preserves_examination_and_never_calls_agent(monke
     assert {key: value for key, value in upgraded.items() if key != "score"} == {
         key: value for key, value in saved.items() if key != "score"
     }
-    assert all(s["repo"]["grammar_version"] == "groove-chamber-v6" for s in upgraded["score"]["scenes"])
+    assert all(s["repo"]["grammar_version"] == "groove-chamber-v7" for s in upgraded["score"]["scenes"])
     assert current_music(bundle)["score"]["score_hash"] == upgraded["score"]["score_hash"]

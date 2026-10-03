@@ -504,7 +504,7 @@
   },
   "score": {
     "analysis_id": "analysis_0b3f110823ea46329a60bc4416ca8f59",
-    "score_hash": "5a683e8146f07cf2a36d0ecacbad29e6ff730661d3b028f3d2736f9dc3a96bba",
+    "score_hash": "4f37ff677b05ca610e322cd407a846da0e5d5096cad21151714a8a508fd15cdb",
     "scenes": [
       {
         "scene_id": "scene_1",
@@ -516,7 +516,7 @@
         ],
         "theme": {
           "scene_id": "scene_1",
-          "grammar_version": "groove-chamber-v6",
+          "grammar_version": "groove-chamber-v7",
           "kit_id": "midnight-jazz-v4",
           "kit_hash": "a302b56825512936a014a556a88819affd50de65c9d68ff3acb544702dc919f7",
           "bpm": 96,
@@ -644,9 +644,21 @@
               "evidence_ids": []
             },
             {
+              "note_id": "bass_0_1",
+              "kind": "accompaniment",
+              "tick": 480,
+              "voice": "bass",
+              "midi": 40,
+              "variant": 0,
+              "velocity": 0.42,
+              "duration_ms": 510,
+              "pan": -0.12,
+              "evidence_ids": []
+            },
+            {
               "note_id": "melody_0_resp_return_policy_1",
               "kind": "accompaniment",
-              "tick": 320,
+              "tick": 480,
               "voice": "piano",
               "midi": 76,
               "variant": 0,
@@ -661,21 +673,9 @@
               "unit_id": "unit_61d06d578c6a45bf"
             },
             {
-              "note_id": "bass_0_1",
-              "kind": "accompaniment",
-              "tick": 480,
-              "voice": "bass",
-              "midi": 40,
-              "variant": 0,
-              "velocity": 0.42,
-              "duration_ms": 510,
-              "pan": -0.12,
-              "evidence_ids": []
-            },
-            {
               "note_id": "melody_0_resp_return_policy_2",
               "kind": "accompaniment",
-              "tick": 720,
+              "tick": 800,
               "voice": "piano",
               "midi": 79,
               "variant": 0,
@@ -702,45 +702,28 @@
               "evidence_ids": []
             },
             {
-              "note_id": "melody_0_resp_return_policy_3",
-              "kind": "accompaniment",
-              "tick": 960,
-              "voice": "piano",
-              "midi": 81,
-              "variant": 0,
-              "velocity": 0.2,
-              "duration_ms": 620,
-              "pan": 0.12,
-              "evidence_ids": [
-                "ev_9cf0df475a22478b9b2e60a13452ca80"
-              ],
-              "responsibility_id": "resp_return_policy",
-              "event_id": "evt_policy_fee_calculation",
-              "unit_id": "unit_61d06d578c6a45bf"
-            },
-            {
               "note_id": "chord_0_10_0",
               "kind": "accompaniment",
               "tick": 1200,
+              "voice": "piano",
+              "midi": 52,
+              "variant": 0,
+              "velocity": 0.19,
+              "duration_ms": 1500,
+              "pan": 0.12,
+              "evidence_ids": []
+            },
+            {
+              "note_id": "chord_0_10_1",
+              "kind": "accompaniment",
+              "tick": 1207,
               "duration_ms": 1500,
               "voice": "piano",
               "variant": 0,
               "velocity": 0.19,
               "pan": 0.12,
               "evidence_ids": [],
-              "midi": 52
-            },
-            {
-              "note_id": "chord_0_10_1",
-              "kind": "accompaniment",
-              "tick": 1207,
-              "voice": "piano",
-              "midi": 59,
-              "variant": 0,
-              "velocity": 0.19,
-              "duration_ms": 1500,
-              "pan": 0.12,
-              "evidence_ids": []
+              "midi": 59
             },
             {
               "note_id": "chord_0_10_2",
@@ -779,11 +762,11 @@
               "evidence_ids": []
             },
             {
-              "note_id": "melody_0_resp_return_policy_4",
+              "note_id": "melody_0_resp_return_policy_3",
               "kind": "accompaniment",
               "tick": 1440,
               "voice": "piano",
-              "midi": 79,
+              "midi": 81,
               "variant": 0,
               "velocity": 0.2,
               "duration_ms": 620,
@@ -792,7 +775,7 @@
                 "ev_9cf0df475a22478b9b2e60a13452ca80"
               ],
               "responsibility_id": "resp_return_policy",
-              "event_id": "evt_policy_expires_calculation",
+              "event_id": "evt_policy_fee_calculation",
               "unit_id": "unit_61d06d578c6a45bf"
             },
             {
@@ -823,15 +806,15 @@
               "note_id": "melody_1_resp_return_policy_0",
               "kind": "accompaniment",
               "tick": 1920,
-              "duration_ms": 620,
               "voice": "piano",
+              "midi": 79,
               "variant": 0,
               "velocity": 0.28,
+              "duration_ms": 620,
               "pan": 0.12,
               "evidence_ids": [
                 "ev_9cf0df475a22478b9b2e60a13452ca80"
               ],
-              "midi": 79,
               "responsibility_id": "resp_return_policy",
               "event_id": "evt_policy_expires_calculation",
               "unit_id": "unit_61d06d578c6a45bf"
@@ -840,17 +823,17 @@
               "note_id": "note_evt_policy_lines_evaluation",
               "kind": "data",
               "tick": 1920,
+              "duration_ms": 540,
               "voice": "piano",
-              "midi": 79,
               "variant": 0,
               "velocity": 0.55,
-              "duration_ms": 540,
               "pan": -0.25,
               "evidence_ids": [
                 "ev_9cf0df475a22478b9b2e60a13452ca80"
               ],
-              "event_id": "evt_policy_lines_evaluation",
+              "midi": 79,
               "responsibility_id": "resp_return_policy",
+              "event_id": "evt_policy_lines_evaluation",
               "unit_id": "unit_61d06d578c6a45bf"
             },
             {
@@ -939,27 +922,27 @@
               "note_id": "bass_1_2",
               "kind": "accompaniment",
               "tick": 2880,
-              "duration_ms": 510,
               "voice": "bass",
+              "midi": 40,
               "variant": 0,
               "velocity": 0.42,
+              "duration_ms": 510,
               "pan": -0.12,
-              "evidence_ids": [],
-              "midi": 40
+              "evidence_ids": []
             },
             {
               "note_id": "note_evt_policy_expires_calculation",
               "kind": "data",
               "tick": 2880,
+              "duration_ms": 580,
               "voice": "piano",
-              "midi": 79,
               "variant": 0,
               "velocity": 0.52,
-              "duration_ms": 580,
               "pan": -0.25,
               "evidence_ids": [
                 "ev_9cf0df475a22478b9b2e60a13452ca80"
               ],
+              "midi": 79,
               "event_id": "evt_policy_expires_calculation",
               "responsibility_id": "resp_return_policy",
               "unit_id": "unit_61d06d578c6a45bf"
@@ -1013,9 +996,21 @@
               "evidence_ids": []
             },
             {
+              "note_id": "bass_1_3",
+              "kind": "accompaniment",
+              "tick": 3360,
+              "voice": "bass",
+              "midi": 37,
+              "variant": 0,
+              "velocity": 0.42,
+              "duration_ms": 510,
+              "pan": -0.12,
+              "evidence_ids": []
+            },
+            {
               "note_id": "melody_1_resp_return_policy_3",
               "kind": "accompaniment",
-              "tick": 3200,
+              "tick": 3360,
               "voice": "piano",
               "midi": 72,
               "variant": 0,
@@ -1030,11 +1025,11 @@
               "unit_id": "unit_61d06d578c6a45bf"
             },
             {
-              "note_id": "bass_1_3",
+              "note_id": "bass_2_0",
               "kind": "accompaniment",
-              "tick": 3360,
+              "tick": 3840,
               "voice": "bass",
-              "midi": 37,
+              "midi": 38,
               "variant": 0,
               "velocity": 0.42,
               "duration_ms": 510,
@@ -1042,42 +1037,30 @@
               "evidence_ids": []
             },
             {
-              "note_id": "bass_2_0",
-              "kind": "accompaniment",
-              "duration_ms": 510,
-              "voice": "bass",
-              "midi": 38,
-              "variant": 0,
-              "velocity": 0.42,
-              "pan": -0.12,
-              "evidence_ids": [],
-              "tick": 3840
-            },
-            {
               "note_id": "chord_2_0_0",
               "kind": "accompaniment",
-              "tick": 3840,
               "duration_ms": 1500,
               "voice": "piano",
+              "midi": 53,
               "variant": 0,
               "velocity": 0.19,
               "pan": 0.12,
               "evidence_ids": [],
-              "midi": 53
+              "tick": 3840
             },
             {
               "note_id": "melody_2_resp_return_policy_0",
               "kind": "accompaniment",
               "tick": 3840,
+              "duration_ms": 620,
               "voice": "piano",
-              "midi": 72,
               "variant": 0,
               "velocity": 0.28,
-              "duration_ms": 620,
               "pan": 0.12,
               "evidence_ids": [
                 "ev_9cf0df475a22478b9b2e60a13452ca80"
               ],
+              "midi": 72,
               "responsibility_id": "resp_return_policy",
               "event_id": "evt_policy_fee_calculation",
               "unit_id": "unit_61d06d578c6a45bf"
@@ -1095,8 +1078,8 @@
               "evidence_ids": [
                 "ev_9cf0df475a22478b9b2e60a13452ca80"
               ],
-              "event_id": "evt_policy_receipt_check",
               "responsibility_id": "resp_return_policy",
+              "event_id": "evt_policy_receipt_check",
               "unit_id": "unit_61d06d578c6a45bf"
             },
             {
@@ -1136,9 +1119,21 @@
               "evidence_ids": []
             },
             {
+              "note_id": "bass_2_1",
+              "kind": "accompaniment",
+              "tick": 4320,
+              "voice": "bass",
+              "midi": 41,
+              "variant": 0,
+              "velocity": 0.42,
+              "duration_ms": 510,
+              "pan": -0.12,
+              "evidence_ids": []
+            },
+            {
               "note_id": "melody_2_resp_return_policy_1",
               "kind": "accompaniment",
-              "tick": 4160,
+              "tick": 4320,
               "voice": "piano",
               "midi": 76,
               "variant": 0,
@@ -1153,30 +1148,18 @@
               "unit_id": "unit_61d06d578c6a45bf"
             },
             {
-              "note_id": "bass_2_1",
-              "kind": "accompaniment",
-              "tick": 4320,
-              "duration_ms": 510,
-              "voice": "bass",
-              "variant": 0,
-              "velocity": 0.42,
-              "pan": -0.12,
-              "evidence_ids": [],
-              "midi": 41
-            },
-            {
               "note_id": "melody_2_resp_return_policy_2",
               "kind": "accompaniment",
-              "tick": 4560,
+              "tick": 4640,
+              "duration_ms": 620,
               "voice": "piano",
-              "midi": 79,
               "variant": 0,
               "velocity": 0.2,
-              "duration_ms": 620,
               "pan": 0.12,
               "evidence_ids": [
                 "ev_9cf0df475a22478b9b2e60a13452ca80"
               ],
+              "midi": 79,
               "responsibility_id": "resp_return_policy",
               "event_id": "evt_policy_window_check",
               "unit_id": "unit_61d06d578c6a45bf"
@@ -1192,23 +1175,6 @@
               "duration_ms": 510,
               "pan": -0.12,
               "evidence_ids": []
-            },
-            {
-              "note_id": "melody_2_resp_return_policy_3",
-              "kind": "accompaniment",
-              "tick": 4960,
-              "voice": "piano",
-              "midi": 81,
-              "variant": 0,
-              "velocity": 0.2,
-              "duration_ms": 620,
-              "pan": 0.12,
-              "evidence_ids": [
-                "ev_9cf0df475a22478b9b2e60a13452ca80"
-              ],
-              "responsibility_id": "resp_return_policy",
-              "event_id": "evt_policy_receipt_check",
-              "unit_id": "unit_61d06d578c6a45bf"
             },
             {
               "note_id": "chord_2_10_0",
@@ -1249,55 +1215,55 @@
             {
               "note_id": "chord_2_10_3",
               "kind": "accompaniment",
-              "duration_ms": 1500,
+              "tick": 5061,
               "voice": "piano",
               "midi": 69,
               "variant": 0,
               "velocity": 0.19,
+              "duration_ms": 1500,
               "pan": 0.12,
-              "evidence_ids": [],
-              "tick": 5061
+              "evidence_ids": []
             },
             {
               "note_id": "bass_2_3",
               "kind": "accompaniment",
               "tick": 5280,
-              "duration_ms": 510,
               "voice": "bass",
+              "midi": 42,
               "variant": 0,
               "velocity": 0.42,
+              "duration_ms": 510,
               "pan": -0.12,
-              "evidence_ids": [],
-              "midi": 42
+              "evidence_ids": []
             },
             {
-              "note_id": "melody_2_resp_return_policy_4",
+              "note_id": "melody_2_resp_return_policy_3",
               "kind": "accompaniment",
-              "tick": 5440,
+              "duration_ms": 620,
               "voice": "piano",
-              "midi": 79,
+              "midi": 81,
               "variant": 0,
               "velocity": 0.2,
-              "duration_ms": 620,
               "pan": 0.12,
               "evidence_ids": [
                 "ev_9cf0df475a22478b9b2e60a13452ca80"
               ],
+              "tick": 5280,
               "responsibility_id": "resp_return_policy",
-              "event_id": "evt_policy_lines_evaluation",
+              "event_id": "evt_policy_receipt_check",
               "unit_id": "unit_61d06d578c6a45bf"
             },
             {
               "note_id": "bass_3_0",
               "kind": "accompaniment",
               "tick": 5760,
+              "duration_ms": 510,
               "voice": "bass",
-              "midi": 31,
               "variant": 0,
               "velocity": 0.42,
-              "duration_ms": 510,
               "pan": -0.12,
-              "evidence_ids": []
+              "evidence_ids": [],
+              "midi": 31
             },
             {
               "note_id": "chord_3_0_0",
@@ -1373,13 +1339,13 @@
               "note_id": "chord_3_0_3",
               "kind": "accompaniment",
               "tick": 5781,
-              "duration_ms": 1500,
               "voice": "piano",
+              "midi": 69,
               "variant": 0,
               "velocity": 0.19,
+              "duration_ms": 1500,
               "pan": 0.12,
-              "evidence_ids": [],
-              "midi": 69
+              "evidence_ids": []
             },
             {
               "note_id": "bass_3_1",
@@ -1396,18 +1362,35 @@
             {
               "note_id": "melody_3_resp_return_policy_1",
               "kind": "accompaniment",
-              "tick": 6400,
+              "tick": 6240,
+              "duration_ms": 620,
               "voice": "piano",
-              "midi": 76,
               "variant": 0,
               "velocity": 0.2,
-              "duration_ms": 620,
+              "pan": 0.12,
+              "evidence_ids": [
+                "ev_9cf0df475a22478b9b2e60a13452ca80"
+              ],
+              "midi": 76,
+              "responsibility_id": "resp_return_policy",
+              "event_id": "evt_policy_fee_calculation",
+              "unit_id": "unit_61d06d578c6a45bf"
+            },
+            {
+              "note_id": "melody_3_resp_return_policy_2",
+              "kind": "accompaniment",
+              "tick": 6560,
+              "voice": "piano",
+              "midi": 74,
+              "variant": 0,
+              "velocity": 0.2,
+              "duration_ms": 1000,
               "pan": 0.12,
               "evidence_ids": [
                 "ev_9cf0df475a22478b9b2e60a13452ca80"
               ],
               "responsibility_id": "resp_return_policy",
-              "event_id": "evt_policy_fee_calculation",
+              "event_id": "evt_policy_expires_calculation",
               "unit_id": "unit_61d06d578c6a45bf"
             },
             {
@@ -1421,23 +1404,6 @@
               "duration_ms": 510,
               "pan": -0.12,
               "evidence_ids": []
-            },
-            {
-              "note_id": "melody_3_resp_return_policy_2",
-              "kind": "accompaniment",
-              "tick": 6720,
-              "voice": "piano",
-              "midi": 74,
-              "variant": 0,
-              "velocity": 0.2,
-              "duration_ms": 1000,
-              "pan": 0.12,
-              "evidence_ids": [
-                "ev_9cf0df475a22478b9b2e60a13452ca80"
-              ],
-              "responsibility_id": "resp_return_policy",
-              "event_id": "evt_policy_expires_calculation",
-              "unit_id": "unit_61d06d578c6a45bf"
             },
             {
               "note_id": "chord_3_10_0",
@@ -1478,38 +1444,55 @@
             {
               "note_id": "chord_3_10_3",
               "kind": "accompaniment",
-              "duration_ms": 910,
+              "tick": 6981,
               "voice": "piano",
               "midi": 69,
               "variant": 0,
               "velocity": 0.19,
+              "duration_ms": 910,
               "pan": 0.12,
-              "evidence_ids": [],
-              "tick": 6981
+              "evidence_ids": []
             },
             {
               "note_id": "bass_3_3",
               "kind": "accompaniment",
               "tick": 7200,
+              "voice": "bass",
+              "midi": 35,
+              "variant": 0,
+              "velocity": 0.42,
+              "duration_ms": 510,
+              "pan": -0.12,
+              "evidence_ids": []
+            },
+            {
+              "note_id": "melody_3_resp_return_policy_3",
+              "kind": "accompaniment",
+              "duration_ms": 620,
+              "voice": "piano",
+              "midi": 72,
+              "variant": 0,
+              "velocity": 0.2,
+              "pan": 0.12,
+              "evidence_ids": [
+                "ev_9cf0df475a22478b9b2e60a13452ca80"
+              ],
+              "tick": 7200,
+              "responsibility_id": "resp_return_policy",
+              "event_id": "evt_policy_window_check",
+              "unit_id": "unit_61d06d578c6a45bf"
+            },
+            {
+              "note_id": "bass_4_0",
+              "kind": "accompaniment",
+              "tick": 7680,
               "duration_ms": 510,
               "voice": "bass",
               "variant": 0,
               "velocity": 0.42,
               "pan": -0.12,
               "evidence_ids": [],
-              "midi": 35
-            },
-            {
-              "note_id": "bass_4_0",
-              "kind": "accompaniment",
-              "tick": 7680,
-              "voice": "bass",
-              "midi": 36,
-              "variant": 0,
-              "velocity": 0.42,
-              "duration_ms": 510,
-              "pan": -0.12,
-              "evidence_ids": []
+              "midi": 36
             },
             {
               "note_id": "chord_4_0_0",
@@ -1553,8 +1536,8 @@
               "evidence_ids": [
                 "ev_b47a14b8bed24cdc85dcb5fa74faf005"
               ],
-              "event_id": "evt_web_save_quote",
               "responsibility_id": "resp_channel_adapters",
+              "event_id": "evt_web_save_quote",
               "unit_id": "unit_abde290f8eb1c352"
             },
             {
@@ -1585,27 +1568,27 @@
               "note_id": "chord_4_0_3",
               "kind": "accompaniment",
               "tick": 7701,
-              "duration_ms": 1500,
               "voice": "piano",
+              "midi": 67,
               "variant": 0,
               "velocity": 0.19,
+              "duration_ms": 1500,
               "pan": 0.12,
-              "evidence_ids": [],
-              "midi": 67
+              "evidence_ids": []
             },
             {
               "note_id": "melody_4_resp_channel_adapters_1",
               "kind": "accompaniment",
               "tick": 8000,
+              "duration_ms": 620,
               "voice": "vibes",
-              "midi": 69,
               "variant": 1,
               "velocity": 0.2,
-              "duration_ms": 620,
               "pan": 0.12,
               "evidence_ids": [
                 "ev_b47a14b8bed24cdc85dcb5fa74faf005"
               ],
+              "midi": 69,
               "responsibility_id": "resp_channel_adapters",
               "event_id": "evt_web_record_audit",
               "unit_id": "unit_abde290f8eb1c352"
@@ -1623,23 +1606,6 @@
               "evidence_ids": []
             },
             {
-              "note_id": "melody_4_resp_channel_adapters_2",
-              "kind": "accompaniment",
-              "tick": 8400,
-              "voice": "vibes",
-              "midi": 72,
-              "variant": 1,
-              "velocity": 0.2,
-              "duration_ms": 620,
-              "pan": 0.12,
-              "evidence_ids": [
-                "ev_b47a14b8bed24cdc85dcb5fa74faf005"
-              ],
-              "responsibility_id": "resp_channel_adapters",
-              "event_id": "evt_store_save_quote",
-              "unit_id": "unit_80cdf1ba31960a68"
-            },
-            {
               "note_id": "bass_4_2",
               "kind": "accompaniment",
               "tick": 8640,
@@ -1652,11 +1618,11 @@
               "evidence_ids": []
             },
             {
-              "note_id": "melody_4_resp_channel_adapters_3",
+              "note_id": "melody_4_resp_channel_adapters_2",
               "kind": "accompaniment",
               "tick": 8640,
               "voice": "vibes",
-              "midi": 76,
+              "midi": 72,
               "variant": 1,
               "velocity": 0.2,
               "duration_ms": 620,
@@ -1665,7 +1631,7 @@
                 "ev_b47a14b8bed24cdc85dcb5fa74faf005"
               ],
               "responsibility_id": "resp_channel_adapters",
-              "event_id": "evt_store_record_audit",
+              "event_id": "evt_store_save_quote",
               "unit_id": "unit_80cdf1ba31960a68"
             },
             {
@@ -1684,13 +1650,13 @@
               "note_id": "chord_4_10_1",
               "kind": "accompaniment",
               "tick": 8887,
-              "duration_ms": 1500,
               "voice": "piano",
+              "midi": 59,
               "variant": 0,
               "velocity": 0.19,
+              "duration_ms": 1500,
               "pan": 0.12,
-              "evidence_ids": [],
-              "midi": 59
+              "evidence_ids": []
             },
             {
               "note_id": "chord_4_10_2",
@@ -1708,13 +1674,30 @@
               "note_id": "chord_4_10_3",
               "kind": "accompaniment",
               "tick": 8901,
+              "duration_ms": 1500,
               "voice": "piano",
-              "midi": 67,
               "variant": 0,
               "velocity": 0.19,
-              "duration_ms": 1500,
               "pan": 0.12,
-              "evidence_ids": []
+              "evidence_ids": [],
+              "midi": 67
+            },
+            {
+              "note_id": "melody_4_resp_channel_adapters_3",
+              "kind": "accompaniment",
+              "tick": 8960,
+              "voice": "vibes",
+              "midi": 76,
+              "variant": 1,
+              "velocity": 0.2,
+              "duration_ms": 620,
+              "pan": 0.12,
+              "evidence_ids": [
+                "ev_b47a14b8bed24cdc85dcb5fa74faf005"
+              ],
+              "responsibility_id": "resp_channel_adapters",
+              "event_id": "evt_store_record_audit",
+              "unit_id": "unit_80cdf1ba31960a68"
             },
             {
               "note_id": "bass_4_3",
@@ -1727,23 +1710,6 @@
               "duration_ms": 510,
               "pan": -0.12,
               "evidence_ids": []
-            },
-            {
-              "note_id": "melody_4_resp_channel_adapters_4",
-              "kind": "accompaniment",
-              "tick": 9120,
-              "voice": "vibes",
-              "midi": 74,
-              "variant": 1,
-              "velocity": 0.2,
-              "duration_ms": 620,
-              "pan": 0.12,
-              "evidence_ids": [
-                "ev_b47a14b8bed24cdc85dcb5fa74faf005"
-              ],
-              "responsibility_id": "resp_channel_adapters",
-              "event_id": "evt_web_save_quote",
-              "unit_id": "unit_abde290f8eb1c352"
             },
             {
               "note_id": "bass_5_0",
@@ -1790,13 +1756,13 @@
               "note_id": "chord_5_0_1",
               "kind": "accompaniment",
               "tick": 9607,
-              "duration_ms": 1500,
               "voice": "piano",
+              "midi": 60,
               "variant": 0,
               "velocity": 0.19,
+              "duration_ms": 1500,
               "pan": 0.12,
-              "evidence_ids": [],
-              "midi": 60
+              "evidence_ids": []
             },
             {
               "note_id": "chord_5_0_2",
@@ -1814,30 +1780,18 @@
               "note_id": "chord_5_0_3",
               "kind": "accompaniment",
               "tick": 9621,
+              "duration_ms": 1500,
               "voice": "piano",
-              "midi": 69,
               "variant": 0,
               "velocity": 0.19,
-              "duration_ms": 1500,
               "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "bass_5_1",
-              "kind": "accompaniment",
-              "tick": 10080,
-              "voice": "bass",
-              "midi": 36,
-              "variant": 0,
-              "velocity": 0.42,
-              "duration_ms": 510,
-              "pan": -0.12,
-              "evidence_ids": []
+              "evidence_ids": [],
+              "midi": 69
             },
             {
               "note_id": "melody_5_resp_channel_adapters_1",
               "kind": "accompaniment",
-              "tick": 10080,
+              "tick": 9920,
               "voice": "vibes",
               "midi": 72,
               "variant": 1,
@@ -1852,21 +1806,16 @@
               "unit_id": "unit_abde290f8eb1c352"
             },
             {
-              "note_id": "melody_5_resp_channel_adapters_2",
+              "note_id": "bass_5_1",
               "kind": "accompaniment",
-              "tick": 10400,
-              "voice": "vibes",
-              "midi": 69,
-              "variant": 1,
-              "velocity": 0.2,
-              "duration_ms": 620,
-              "pan": 0.12,
-              "evidence_ids": [
-                "ev_b47a14b8bed24cdc85dcb5fa74faf005"
-              ],
-              "responsibility_id": "resp_channel_adapters",
-              "event_id": "evt_store_save_quote",
-              "unit_id": "unit_80cdf1ba31960a68"
+              "tick": 10080,
+              "voice": "bass",
+              "midi": 36,
+              "variant": 0,
+              "velocity": 0.42,
+              "duration_ms": 510,
+              "pan": -0.12,
+              "evidence_ids": []
             },
             {
               "note_id": "bass_5_2",
@@ -1879,6 +1828,23 @@
               "duration_ms": 510,
               "pan": -0.12,
               "evidence_ids": []
+            },
+            {
+              "note_id": "melody_5_resp_channel_adapters_2",
+              "kind": "accompaniment",
+              "tick": 10560,
+              "voice": "vibes",
+              "midi": 69,
+              "variant": 1,
+              "velocity": 0.2,
+              "duration_ms": 620,
+              "pan": 0.12,
+              "evidence_ids": [
+                "ev_b47a14b8bed24cdc85dcb5fa74faf005"
+              ],
+              "responsibility_id": "resp_channel_adapters",
+              "event_id": "evt_store_save_quote",
+              "unit_id": "unit_80cdf1ba31960a68"
             },
             {
               "note_id": "chord_5_10_0",
@@ -1907,40 +1873,40 @@
             {
               "note_id": "chord_5_10_2",
               "kind": "accompaniment",
-              "duration_ms": 1500,
+              "tick": 10814,
               "voice": "piano",
               "midi": 64,
               "variant": 0,
               "velocity": 0.19,
+              "duration_ms": 1500,
               "pan": 0.12,
-              "evidence_ids": [],
-              "tick": 10814
+              "evidence_ids": []
             },
             {
               "note_id": "chord_5_10_3",
               "kind": "accompaniment",
               "tick": 10821,
-              "duration_ms": 1500,
               "voice": "piano",
+              "midi": 69,
               "variant": 0,
               "velocity": 0.19,
+              "duration_ms": 1500,
               "pan": 0.12,
-              "evidence_ids": [],
-              "midi": 69
+              "evidence_ids": []
             },
             {
               "note_id": "melody_5_resp_channel_adapters_3",
               "kind": "accompaniment",
-              "tick": 10880,
+              "duration_ms": 620,
               "voice": "vibes",
               "midi": 67,
               "variant": 1,
               "velocity": 0.2,
-              "duration_ms": 620,
               "pan": 0.12,
               "evidence_ids": [
                 "ev_b47a14b8bed24cdc85dcb5fa74faf005"
               ],
+              "tick": 10880,
               "responsibility_id": "resp_channel_adapters",
               "event_id": "evt_store_record_audit",
               "unit_id": "unit_80cdf1ba31960a68"
@@ -1949,13 +1915,13 @@
               "note_id": "bass_5_3",
               "kind": "accompaniment",
               "tick": 11040,
+              "duration_ms": 510,
               "voice": "bass",
-              "midi": 37,
               "variant": 0,
               "velocity": 0.42,
-              "duration_ms": 510,
               "pan": -0.12,
-              "evidence_ids": []
+              "evidence_ids": [],
+              "midi": 37
             },
             {
               "note_id": "note_evt_store_save_quote",
@@ -1970,8 +1936,8 @@
               "evidence_ids": [
                 "ev_b47a14b8bed24cdc85dcb5fa74faf005"
               ],
-              "event_id": "evt_store_save_quote",
               "responsibility_id": "resp_channel_adapters",
+              "event_id": "evt_store_save_quote",
               "unit_id": "unit_80cdf1ba31960a68"
             },
             {
@@ -2002,15 +1968,15 @@
               "note_id": "melody_6_resp_channel_adapters_0",
               "kind": "accompaniment",
               "tick": 11520,
-              "duration_ms": 620,
               "voice": "vibes",
+              "midi": 67,
               "variant": 1,
               "velocity": 0.28,
+              "duration_ms": 620,
               "pan": 0.12,
               "evidence_ids": [
                 "ev_b47a14b8bed24cdc85dcb5fa74faf005"
               ],
-              "midi": 67,
               "responsibility_id": "resp_channel_adapters",
               "event_id": "evt_web_save_quote",
               "unit_id": "unit_abde290f8eb1c352"
@@ -2036,13 +2002,13 @@
               "note_id": "chord_6_0_1",
               "kind": "accompaniment",
               "tick": 11527,
+              "duration_ms": 1500,
               "voice": "piano",
-              "midi": 60,
               "variant": 0,
               "velocity": 0.19,
-              "duration_ms": 1500,
               "pan": 0.12,
-              "evidence_ids": []
+              "evidence_ids": [],
+              "midi": 60
             },
             {
               "note_id": "chord_6_0_2",
@@ -2098,9 +2064,21 @@
               "evidence_ids": []
             },
             {
+              "note_id": "bass_6_2",
+              "kind": "accompaniment",
+              "tick": 12480,
+              "voice": "bass",
+              "midi": 45,
+              "variant": 0,
+              "velocity": 0.42,
+              "duration_ms": 510,
+              "pan": -0.12,
+              "evidence_ids": []
+            },
+            {
               "note_id": "melody_6_resp_channel_adapters_2",
               "kind": "accompaniment",
-              "tick": 12240,
+              "tick": 12480,
               "voice": "vibes",
               "midi": 72,
               "variant": 1,
@@ -2112,35 +2090,6 @@
               ],
               "responsibility_id": "resp_channel_adapters",
               "event_id": "evt_store_save_quote",
-              "unit_id": "unit_80cdf1ba31960a68"
-            },
-            {
-              "note_id": "bass_6_2",
-              "kind": "accompaniment",
-              "tick": 12480,
-              "duration_ms": 510,
-              "voice": "bass",
-              "variant": 0,
-              "velocity": 0.42,
-              "pan": -0.12,
-              "evidence_ids": [],
-              "midi": 45
-            },
-            {
-              "note_id": "melody_6_resp_channel_adapters_3",
-              "kind": "accompaniment",
-              "tick": 12640,
-              "voice": "vibes",
-              "midi": 76,
-              "variant": 1,
-              "velocity": 0.2,
-              "duration_ms": 620,
-              "pan": 0.12,
-              "evidence_ids": [
-                "ev_b47a14b8bed24cdc85dcb5fa74faf005"
-              ],
-              "responsibility_id": "resp_channel_adapters",
-              "event_id": "evt_store_record_audit",
               "unit_id": "unit_80cdf1ba31960a68"
             },
             {
@@ -2159,13 +2108,13 @@
               "note_id": "chord_6_10_1",
               "kind": "accompaniment",
               "tick": 12727,
+              "duration_ms": 1500,
               "voice": "piano",
-              "midi": 60,
               "variant": 0,
               "velocity": 0.19,
-              "duration_ms": 1500,
               "pan": 0.12,
-              "evidence_ids": []
+              "evidence_ids": [],
+              "midi": 60
             },
             {
               "note_id": "chord_6_10_2",
@@ -2192,6 +2141,23 @@
               "evidence_ids": []
             },
             {
+              "note_id": "melody_6_resp_channel_adapters_3",
+              "kind": "accompaniment",
+              "tick": 12800,
+              "voice": "vibes",
+              "midi": 76,
+              "variant": 1,
+              "velocity": 0.2,
+              "duration_ms": 620,
+              "pan": 0.12,
+              "evidence_ids": [
+                "ev_b47a14b8bed24cdc85dcb5fa74faf005"
+              ],
+              "responsibility_id": "resp_channel_adapters",
+              "event_id": "evt_store_record_audit",
+              "unit_id": "unit_80cdf1ba31960a68"
+            },
+            {
               "note_id": "bass_6_3",
               "kind": "accompaniment",
               "tick": 12960,
@@ -2202,23 +2168,6 @@
               "duration_ms": 510,
               "pan": -0.12,
               "evidence_ids": []
-            },
-            {
-              "note_id": "melody_6_resp_channel_adapters_4",
-              "kind": "accompaniment",
-              "tick": 13120,
-              "duration_ms": 620,
-              "voice": "vibes",
-              "variant": 1,
-              "velocity": 0.2,
-              "pan": 0.12,
-              "evidence_ids": [
-                "ev_b47a14b8bed24cdc85dcb5fa74faf005"
-              ],
-              "midi": 74,
-              "responsibility_id": "resp_channel_adapters",
-              "event_id": "evt_web_save_quote",
-              "unit_id": "unit_abde290f8eb1c352"
             },
             {
               "note_id": "bass_7_0",
@@ -2248,15 +2197,15 @@
               "note_id": "melody_7_resp_channel_adapters_0",
               "kind": "accompaniment",
               "tick": 13440,
+              "duration_ms": 620,
               "voice": "vibes",
-              "midi": 74,
               "variant": 1,
               "velocity": 0.28,
-              "duration_ms": 620,
               "pan": 0.12,
               "evidence_ids": [
                 "ev_b47a14b8bed24cdc85dcb5fa74faf005"
               ],
+              "midi": 74,
               "responsibility_id": "resp_channel_adapters",
               "event_id": "evt_web_save_quote",
               "unit_id": "unit_abde290f8eb1c352"
@@ -2315,33 +2264,33 @@
               "evidence_ids": []
             },
             {
-              "note_id": "bass_7_1",
-              "kind": "accompaniment",
-              "duration_ms": 510,
-              "voice": "bass",
-              "midi": 35,
-              "variant": 0,
-              "velocity": 0.42,
-              "pan": -0.12,
-              "evidence_ids": [],
-              "tick": 13920
-            },
-            {
               "note_id": "melody_7_resp_channel_adapters_1",
               "kind": "accompaniment",
-              "tick": 14080,
-              "duration_ms": 620,
+              "tick": 13760,
               "voice": "vibes",
+              "midi": 72,
               "variant": 1,
               "velocity": 0.2,
+              "duration_ms": 620,
               "pan": 0.12,
               "evidence_ids": [
                 "ev_b47a14b8bed24cdc85dcb5fa74faf005"
               ],
-              "midi": 72,
               "responsibility_id": "resp_channel_adapters",
               "event_id": "evt_web_record_audit",
               "unit_id": "unit_abde290f8eb1c352"
+            },
+            {
+              "note_id": "bass_7_1",
+              "kind": "accompaniment",
+              "tick": 13920,
+              "voice": "bass",
+              "midi": 35,
+              "variant": 0,
+              "velocity": 0.42,
+              "duration_ms": 510,
+              "pan": -0.12,
+              "evidence_ids": []
             },
             {
               "note_id": "bass_7_2",
@@ -2358,16 +2307,16 @@
             {
               "note_id": "melody_7_resp_channel_adapters_2",
               "kind": "accompaniment",
-              "tick": 14400,
+              "duration_ms": 1000,
               "voice": "vibes",
               "midi": 69,
               "variant": 1,
               "velocity": 0.2,
-              "duration_ms": 1000,
               "pan": 0.12,
               "evidence_ids": [
                 "ev_b47a14b8bed24cdc85dcb5fa74faf005"
               ],
+              "tick": 14400,
               "responsibility_id": "resp_channel_adapters",
               "event_id": "evt_store_save_quote",
               "unit_id": "unit_80cdf1ba31960a68"
@@ -2376,13 +2325,13 @@
               "note_id": "chord_7_10_0",
               "kind": "accompaniment",
               "tick": 14640,
+              "duration_ms": 937,
               "voice": "piano",
-              "midi": 53,
               "variant": 0,
               "velocity": 0.19,
-              "duration_ms": 937,
               "pan": 0.12,
-              "evidence_ids": []
+              "evidence_ids": [],
+              "midi": 53
             },
             {
               "note_id": "chord_7_10_1",
@@ -2421,16 +2370,33 @@
               "evidence_ids": []
             },
             {
+              "note_id": "melody_7_resp_channel_adapters_3",
+              "kind": "accompaniment",
+              "tick": 14720,
+              "voice": "vibes",
+              "midi": 67,
+              "variant": 1,
+              "velocity": 0.2,
+              "duration_ms": 620,
+              "pan": 0.12,
+              "evidence_ids": [
+                "ev_b47a14b8bed24cdc85dcb5fa74faf005"
+              ],
+              "responsibility_id": "resp_channel_adapters",
+              "event_id": "evt_store_record_audit",
+              "unit_id": "unit_80cdf1ba31960a68"
+            },
+            {
               "note_id": "bass_7_3",
               "kind": "accompaniment",
               "tick": 14880,
-              "duration_ms": 510,
               "voice": "bass",
+              "midi": 35,
               "variant": 0,
               "velocity": 0.42,
+              "duration_ms": 510,
               "pan": -0.12,
-              "evidence_ids": [],
-              "midi": 35
+              "evidence_ids": []
             },
             {
               "note_id": "bass_8_0",
@@ -2448,13 +2414,13 @@
               "note_id": "chord_8_0_0",
               "kind": "accompaniment",
               "tick": 15360,
+              "duration_ms": 1500,
               "voice": "piano",
-              "midi": 52,
               "variant": 0,
               "velocity": 0.19,
-              "duration_ms": 1500,
               "pan": 0.12,
-              "evidence_ids": []
+              "evidence_ids": [],
+              "midi": 52
             },
             {
               "note_id": "melody_8_resp_receipt_rendering_0",
@@ -2527,23 +2493,6 @@
               "evidence_ids": []
             },
             {
-              "note_id": "melody_8_resp_receipt_rendering_1",
-              "kind": "accompaniment",
-              "tick": 15680,
-              "duration_ms": 620,
-              "voice": "piano",
-              "variant": 2,
-              "velocity": 0.2,
-              "pan": 0.12,
-              "evidence_ids": [
-                "ev_91849d42ac064b63bfcbd0fc6c8d159c"
-              ],
-              "midi": 79,
-              "responsibility_id": "resp_receipt_rendering",
-              "event_id": "evt_receipt_body_format",
-              "unit_id": "unit_f92a49b5f2e12c42"
-            },
-            {
               "note_id": "bass_8_1",
               "kind": "accompaniment",
               "tick": 15840,
@@ -2556,9 +2505,38 @@
               "evidence_ids": []
             },
             {
+              "note_id": "melody_8_resp_receipt_rendering_1",
+              "kind": "accompaniment",
+              "tick": 16000,
+              "voice": "piano",
+              "midi": 79,
+              "variant": 2,
+              "velocity": 0.2,
+              "duration_ms": 620,
+              "pan": 0.12,
+              "evidence_ids": [
+                "ev_91849d42ac064b63bfcbd0fc6c8d159c"
+              ],
+              "responsibility_id": "resp_receipt_rendering",
+              "event_id": "evt_receipt_body_format",
+              "unit_id": "unit_f92a49b5f2e12c42"
+            },
+            {
+              "note_id": "bass_8_2",
+              "kind": "accompaniment",
+              "tick": 16320,
+              "duration_ms": 510,
+              "voice": "bass",
+              "variant": 0,
+              "velocity": 0.42,
+              "pan": -0.12,
+              "evidence_ids": [],
+              "midi": 43
+            },
+            {
               "note_id": "melody_8_resp_receipt_rendering_2",
               "kind": "accompaniment",
-              "tick": 16080,
+              "tick": 16320,
               "voice": "piano",
               "midi": 81,
               "variant": 2,
@@ -2570,35 +2548,6 @@
               ],
               "responsibility_id": "resp_receipt_rendering",
               "event_id": "evt_receipt_heading_decision",
-              "unit_id": "unit_f92a49b5f2e12c42"
-            },
-            {
-              "note_id": "bass_8_2",
-              "kind": "accompaniment",
-              "tick": 16320,
-              "voice": "bass",
-              "midi": 43,
-              "variant": 0,
-              "velocity": 0.42,
-              "duration_ms": 510,
-              "pan": -0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "melody_8_resp_receipt_rendering_3",
-              "kind": "accompaniment",
-              "tick": 16320,
-              "voice": "piano",
-              "midi": 84,
-              "variant": 2,
-              "velocity": 0.2,
-              "duration_ms": 620,
-              "pan": 0.12,
-              "evidence_ids": [
-                "ev_91849d42ac064b63bfcbd0fc6c8d159c"
-              ],
-              "responsibility_id": "resp_receipt_rendering",
-              "event_id": "evt_receipt_body_format",
               "unit_id": "unit_f92a49b5f2e12c42"
             },
             {
@@ -2641,13 +2590,13 @@
               "note_id": "chord_8_10_3",
               "kind": "accompaniment",
               "tick": 16581,
-              "duration_ms": 1500,
               "voice": "piano",
+              "midi": 67,
               "variant": 0,
               "velocity": 0.19,
+              "duration_ms": 1500,
               "pan": 0.12,
-              "evidence_ids": [],
-              "midi": 67
+              "evidence_ids": []
             },
             {
               "note_id": "bass_8_3",
@@ -2662,11 +2611,11 @@
               "evidence_ids": []
             },
             {
-              "note_id": "melody_8_resp_receipt_rendering_4",
+              "note_id": "melody_8_resp_receipt_rendering_3",
               "kind": "accompaniment",
-              "tick": 16800,
+              "tick": 16960,
               "voice": "piano",
-              "midi": 81,
+              "midi": 84,
               "variant": 2,
               "velocity": 0.2,
               "duration_ms": 620,
@@ -2675,20 +2624,20 @@
                 "ev_91849d42ac064b63bfcbd0fc6c8d159c"
               ],
               "responsibility_id": "resp_receipt_rendering",
-              "event_id": "evt_receipt_heading_decision",
+              "event_id": "evt_receipt_body_format",
               "unit_id": "unit_f92a49b5f2e12c42"
             },
             {
               "note_id": "bass_9_0",
               "kind": "accompaniment",
               "tick": 17280,
+              "duration_ms": 510,
               "voice": "bass",
-              "midi": 36,
               "variant": 0,
               "velocity": 0.42,
-              "duration_ms": 510,
               "pan": -0.12,
-              "evidence_ids": []
+              "evidence_ids": [],
+              "midi": 36
             },
             {
               "note_id": "chord_9_0_0",
@@ -2752,13 +2701,13 @@
               "note_id": "chord_9_0_2",
               "kind": "accompaniment",
               "tick": 17294,
-              "duration_ms": 1500,
               "voice": "piano",
+              "midi": 62,
               "variant": 0,
               "velocity": 0.19,
+              "duration_ms": 1500,
               "pan": 0.12,
-              "evidence_ids": [],
-              "midi": 62
+              "evidence_ids": []
             },
             {
               "note_id": "chord_9_0_3",
@@ -2787,35 +2736,18 @@
             {
               "note_id": "melody_9_resp_receipt_rendering_1",
               "kind": "accompaniment",
-              "tick": 17760,
+              "tick": 17920,
+              "duration_ms": 620,
               "voice": "piano",
-              "midi": 79,
               "variant": 2,
               "velocity": 0.2,
-              "duration_ms": 620,
               "pan": 0.12,
               "evidence_ids": [
                 "ev_91849d42ac064b63bfcbd0fc6c8d159c"
               ],
+              "midi": 79,
               "responsibility_id": "resp_receipt_rendering",
               "event_id": "evt_receipt_body_format",
-              "unit_id": "unit_f92a49b5f2e12c42"
-            },
-            {
-              "note_id": "melody_9_resp_receipt_rendering_2",
-              "kind": "accompaniment",
-              "tick": 18080,
-              "voice": "piano",
-              "midi": 76,
-              "variant": 2,
-              "velocity": 0.2,
-              "duration_ms": 620,
-              "pan": 0.12,
-              "evidence_ids": [
-                "ev_91849d42ac064b63bfcbd0fc6c8d159c"
-              ],
-              "responsibility_id": "resp_receipt_rendering",
-              "event_id": "evt_receipt_heading_decision",
               "unit_id": "unit_f92a49b5f2e12c42"
             },
             {
@@ -2829,6 +2761,23 @@
               "duration_ms": 510,
               "pan": -0.12,
               "evidence_ids": []
+            },
+            {
+              "note_id": "melody_9_resp_receipt_rendering_2",
+              "kind": "accompaniment",
+              "tick": 18240,
+              "voice": "piano",
+              "midi": 76,
+              "variant": 2,
+              "velocity": 0.2,
+              "duration_ms": 620,
+              "pan": 0.12,
+              "evidence_ids": [
+                "ev_91849d42ac064b63bfcbd0fc6c8d159c"
+              ],
+              "responsibility_id": "resp_receipt_rendering",
+              "event_id": "evt_receipt_heading_decision",
+              "unit_id": "unit_f92a49b5f2e12c42"
             },
             {
               "note_id": "chord_9_10_0",
@@ -2846,13 +2795,13 @@
               "note_id": "chord_9_10_1",
               "kind": "accompaniment",
               "tick": 18487,
-              "duration_ms": 928,
               "voice": "piano",
+              "midi": 59,
               "variant": 0,
               "velocity": 0.19,
+              "duration_ms": 928,
               "pan": 0.12,
-              "evidence_ids": [],
-              "midi": 59
+              "evidence_ids": []
             },
             {
               "note_id": "chord_9_10_2",
@@ -2879,14 +2828,26 @@
               "evidence_ids": []
             },
             {
+              "note_id": "bass_9_3",
+              "kind": "accompaniment",
+              "tick": 18720,
+              "duration_ms": 510,
+              "voice": "bass",
+              "variant": 0,
+              "velocity": 0.42,
+              "pan": -0.12,
+              "evidence_ids": [],
+              "midi": 36
+            },
+            {
               "note_id": "melody_9_resp_receipt_rendering_3",
               "kind": "accompaniment",
-              "tick": 18560,
+              "tick": 18880,
               "voice": "piano",
               "midi": 72,
               "variant": 2,
               "velocity": 0.2,
-              "duration_ms": 620,
+              "duration_ms": 416,
               "pan": 0.12,
               "evidence_ids": [
                 "ev_91849d42ac064b63bfcbd0fc6c8d159c"
@@ -2894,24 +2855,12 @@
               "responsibility_id": "resp_receipt_rendering",
               "event_id": "evt_receipt_body_format",
               "unit_id": "unit_f92a49b5f2e12c42"
-            },
-            {
-              "note_id": "bass_9_3",
-              "kind": "accompaniment",
-              "tick": 18720,
-              "voice": "bass",
-              "midi": 36,
-              "variant": 0,
-              "velocity": 0.42,
-              "duration_ms": 510,
-              "pan": -0.12,
-              "evidence_ids": []
             }
           ]
         },
         "repo": {
           "scene_id": "scene_1",
-          "grammar_version": "groove-chamber-v6",
+          "grammar_version": "groove-chamber-v7",
           "kit_id": "midnight-jazz-v4",
           "kit_hash": "a302b56825512936a014a556a88819affd50de65c9d68ff3acb544702dc919f7",
           "bpm": 96,
@@ -3075,9 +3024,21 @@
               "evidence_ids": []
             },
             {
+              "note_id": "bass_0_2",
+              "kind": "accompaniment",
+              "tick": 960,
+              "voice": "bass",
+              "midi": 43,
+              "variant": 0,
+              "velocity": 0.42,
+              "duration_ms": 510,
+              "pan": -0.12,
+              "evidence_ids": []
+            },
+            {
               "note_id": "melody_0_resp_channel_adapters_2",
               "kind": "accompaniment",
-              "tick": 720,
+              "tick": 960,
               "voice": "vibes",
               "midi": 72,
               "variant": 1,
@@ -3092,57 +3053,28 @@
               "unit_id": "unit_abde290f8eb1c352"
             },
             {
-              "note_id": "bass_0_2",
-              "kind": "accompaniment",
-              "tick": 960,
-              "voice": "bass",
-              "midi": 43,
-              "variant": 0,
-              "velocity": 0.42,
-              "duration_ms": 510,
-              "pan": -0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "melody_0_resp_channel_adapters_3",
-              "kind": "accompaniment",
-              "tick": 960,
-              "voice": "vibes",
-              "midi": 76,
-              "variant": 1,
-              "velocity": 0.2,
-              "duration_ms": 620,
-              "pan": 0.12,
-              "evidence_ids": [
-                "ev_b47a14b8bed24cdc85dcb5fa74faf005"
-              ],
-              "responsibility_id": "resp_channel_adapters",
-              "event_id": "evt_web_record_audit",
-              "unit_id": "unit_abde290f8eb1c352"
-            },
-            {
               "note_id": "chord_0_10_0",
               "kind": "accompaniment",
               "tick": 1200,
+              "voice": "piano",
+              "midi": 52,
+              "variant": 0,
+              "velocity": 0.19,
+              "duration_ms": 1500,
+              "pan": 0.12,
+              "evidence_ids": []
+            },
+            {
+              "note_id": "chord_0_10_1",
+              "kind": "accompaniment",
+              "tick": 1207,
               "duration_ms": 1500,
               "voice": "piano",
               "variant": 0,
               "velocity": 0.19,
               "pan": 0.12,
               "evidence_ids": [],
-              "midi": 52
-            },
-            {
-              "note_id": "chord_0_10_1",
-              "kind": "accompaniment",
-              "tick": 1207,
-              "voice": "piano",
-              "midi": 59,
-              "variant": 0,
-              "velocity": 0.19,
-              "duration_ms": 1500,
-              "pan": 0.12,
-              "evidence_ids": []
+              "midi": 59
             },
             {
               "note_id": "chord_0_10_2",
@@ -3169,6 +3101,23 @@
               "evidence_ids": []
             },
             {
+              "note_id": "melody_0_resp_channel_adapters_3",
+              "kind": "accompaniment",
+              "tick": 1280,
+              "voice": "vibes",
+              "midi": 76,
+              "variant": 1,
+              "velocity": 0.2,
+              "duration_ms": 620,
+              "pan": 0.12,
+              "evidence_ids": [
+                "ev_b47a14b8bed24cdc85dcb5fa74faf005"
+              ],
+              "responsibility_id": "resp_channel_adapters",
+              "event_id": "evt_web_record_audit",
+              "unit_id": "unit_abde290f8eb1c352"
+            },
+            {
               "note_id": "bass_0_3",
               "kind": "accompaniment",
               "tick": 1440,
@@ -3179,23 +3128,6 @@
               "duration_ms": 510,
               "pan": -0.12,
               "evidence_ids": []
-            },
-            {
-              "note_id": "melody_0_resp_channel_adapters_4",
-              "kind": "accompaniment",
-              "tick": 1440,
-              "voice": "vibes",
-              "midi": 74,
-              "variant": 1,
-              "velocity": 0.2,
-              "duration_ms": 620,
-              "pan": 0.12,
-              "evidence_ids": [
-                "ev_b47a14b8bed24cdc85dcb5fa74faf005"
-              ],
-              "responsibility_id": "resp_channel_adapters",
-              "event_id": "evt_web_save_quote",
-              "unit_id": "unit_abde290f8eb1c352"
             },
             {
               "note_id": "bass_1_0",
@@ -3225,15 +3157,15 @@
               "note_id": "melody_1_resp_channel_adapters_0",
               "kind": "accompaniment",
               "tick": 1920,
-              "duration_ms": 620,
               "voice": "vibes",
+              "midi": 74,
               "variant": 1,
               "velocity": 0.28,
+              "duration_ms": 620,
               "pan": 0.12,
               "evidence_ids": [
                 "ev_b47a14b8bed24cdc85dcb5fa74faf005"
               ],
-              "midi": 74,
               "responsibility_id": "resp_channel_adapters",
               "event_id": "evt_web_save_quote",
               "unit_id": "unit_abde290f8eb1c352"
@@ -3242,17 +3174,17 @@
               "note_id": "note_evt_web_record_audit",
               "kind": "data",
               "tick": 1920,
+              "duration_ms": 520,
               "voice": "vibes",
-              "midi": 69,
               "variant": 1,
               "velocity": 0.52,
-              "duration_ms": 520,
               "pan": 0.2,
               "evidence_ids": [
                 "ev_b47a14b8bed24cdc85dcb5fa74faf005"
               ],
-              "event_id": "evt_web_record_audit",
+              "midi": 69,
               "responsibility_id": "resp_channel_adapters",
+              "event_id": "evt_web_record_audit",
               "unit_id": "unit_abde290f8eb1c352"
             },
             {
@@ -3292,21 +3224,9 @@
               "evidence_ids": []
             },
             {
-              "note_id": "bass_1_1",
-              "kind": "accompaniment",
-              "tick": 2400,
-              "voice": "bass",
-              "midi": 36,
-              "variant": 0,
-              "velocity": 0.42,
-              "duration_ms": 510,
-              "pan": -0.12,
-              "evidence_ids": []
-            },
-            {
               "note_id": "melody_1_resp_channel_adapters_1",
               "kind": "accompaniment",
-              "tick": 2400,
+              "tick": 2240,
               "voice": "vibes",
               "midi": 72,
               "variant": 1,
@@ -3321,9 +3241,33 @@
               "unit_id": "unit_abde290f8eb1c352"
             },
             {
+              "note_id": "bass_1_1",
+              "kind": "accompaniment",
+              "tick": 2400,
+              "voice": "bass",
+              "midi": 36,
+              "variant": 0,
+              "velocity": 0.42,
+              "duration_ms": 510,
+              "pan": -0.12,
+              "evidence_ids": []
+            },
+            {
+              "note_id": "bass_1_2",
+              "kind": "accompaniment",
+              "tick": 2880,
+              "voice": "bass",
+              "midi": 40,
+              "variant": 0,
+              "velocity": 0.42,
+              "duration_ms": 510,
+              "pan": -0.12,
+              "evidence_ids": []
+            },
+            {
               "note_id": "melody_1_resp_channel_adapters_2",
               "kind": "accompaniment",
-              "tick": 2720,
+              "tick": 2880,
               "voice": "vibes",
               "midi": 69,
               "variant": 1,
@@ -3338,28 +3282,16 @@
               "unit_id": "unit_abde290f8eb1c352"
             },
             {
-              "note_id": "bass_1_2",
-              "kind": "accompaniment",
-              "tick": 2880,
-              "duration_ms": 510,
-              "voice": "bass",
-              "variant": 0,
-              "velocity": 0.42,
-              "pan": -0.12,
-              "evidence_ids": [],
-              "midi": 40
-            },
-            {
               "note_id": "chord_1_10_0",
               "kind": "accompaniment",
               "tick": 3120,
+              "duration_ms": 937,
               "voice": "piano",
-              "midi": 55,
               "variant": 0,
               "velocity": 0.19,
-              "duration_ms": 937,
               "pan": 0.12,
-              "evidence_ids": []
+              "evidence_ids": [],
+              "midi": 55
             },
             {
               "note_id": "chord_1_10_1",
@@ -3442,29 +3374,29 @@
               "note_id": "chord_2_0_0",
               "kind": "accompaniment",
               "tick": 3840,
-              "duration_ms": 1500,
               "voice": "piano",
+              "midi": 53,
               "variant": 0,
               "velocity": 0.19,
+              "duration_ms": 1500,
               "pan": 0.12,
-              "evidence_ids": [],
-              "midi": 53
+              "evidence_ids": []
             },
             {
               "note_id": "melody_2_resp_channel_adapters_0",
               "kind": "accompaniment",
               "tick": 3840,
+              "duration_ms": 620,
               "voice": "vibes",
-              "midi": 67,
               "variant": 1,
               "velocity": 0.28,
-              "duration_ms": 620,
               "pan": 0.12,
               "evidence_ids": [
                 "ev_b47a14b8bed24cdc85dcb5fa74faf005"
               ],
-              "event_id": "evt_store_save_quote",
+              "midi": 67,
               "responsibility_id": "resp_channel_adapters",
+              "event_id": "evt_store_save_quote",
               "unit_id": "unit_80cdf1ba31960a68"
             },
             {
@@ -3533,23 +3465,6 @@
               "evidence_ids": []
             },
             {
-              "note_id": "melody_2_resp_channel_adapters_2",
-              "kind": "accompaniment",
-              "tick": 4560,
-              "duration_ms": 620,
-              "voice": "vibes",
-              "variant": 1,
-              "velocity": 0.2,
-              "pan": 0.12,
-              "evidence_ids": [
-                "ev_b47a14b8bed24cdc85dcb5fa74faf005"
-              ],
-              "midi": 72,
-              "responsibility_id": "resp_channel_adapters",
-              "event_id": "evt_store_save_quote",
-              "unit_id": "unit_80cdf1ba31960a68"
-            },
-            {
               "note_id": "bass_2_2",
               "kind": "accompaniment",
               "tick": 4800,
@@ -3562,20 +3477,20 @@
               "evidence_ids": []
             },
             {
-              "note_id": "melody_2_resp_channel_adapters_3",
+              "note_id": "melody_2_resp_channel_adapters_2",
               "kind": "accompaniment",
               "tick": 4800,
+              "duration_ms": 620,
               "voice": "vibes",
-              "midi": 76,
               "variant": 1,
               "velocity": 0.2,
-              "duration_ms": 620,
               "pan": 0.12,
               "evidence_ids": [
                 "ev_b47a14b8bed24cdc85dcb5fa74faf005"
               ],
+              "midi": 72,
               "responsibility_id": "resp_channel_adapters",
-              "event_id": "evt_store_record_audit",
+              "event_id": "evt_store_save_quote",
               "unit_id": "unit_80cdf1ba31960a68"
             },
             {
@@ -3627,23 +3542,11 @@
               "evidence_ids": []
             },
             {
-              "note_id": "bass_2_3",
+              "note_id": "melody_2_resp_channel_adapters_3",
               "kind": "accompaniment",
-              "tick": 5280,
-              "duration_ms": 510,
-              "voice": "bass",
-              "variant": 0,
-              "velocity": 0.42,
-              "pan": -0.12,
-              "evidence_ids": [],
-              "midi": 42
-            },
-            {
-              "note_id": "melody_2_resp_channel_adapters_4",
-              "kind": "accompaniment",
-              "tick": 5280,
+              "tick": 5120,
               "voice": "vibes",
-              "midi": 74,
+              "midi": 76,
               "variant": 1,
               "velocity": 0.2,
               "duration_ms": 620,
@@ -3652,22 +3555,34 @@
                 "ev_b47a14b8bed24cdc85dcb5fa74faf005"
               ],
               "responsibility_id": "resp_channel_adapters",
-              "event_id": "evt_store_save_quote",
+              "event_id": "evt_store_record_audit",
               "unit_id": "unit_80cdf1ba31960a68"
+            },
+            {
+              "note_id": "bass_2_3",
+              "kind": "accompaniment",
+              "tick": 5280,
+              "voice": "bass",
+              "midi": 42,
+              "variant": 0,
+              "velocity": 0.42,
+              "duration_ms": 510,
+              "pan": -0.12,
+              "evidence_ids": []
             },
             {
               "note_id": "note_evt_store_save_quote",
               "kind": "data",
               "tick": 5280,
+              "duration_ms": 540,
               "voice": "vibes",
-              "midi": 72,
               "variant": 1,
               "velocity": 0.55,
-              "duration_ms": 540,
               "pan": 0.2,
               "evidence_ids": [
                 "ev_b47a14b8bed24cdc85dcb5fa74faf005"
               ],
+              "midi": 72,
               "event_id": "evt_store_save_quote",
               "responsibility_id": "resp_channel_adapters",
               "unit_id": "unit_80cdf1ba31960a68"
@@ -3746,13 +3661,13 @@
               "note_id": "chord_3_0_2",
               "kind": "accompaniment",
               "tick": 5774,
-              "duration_ms": 1500,
               "voice": "piano",
+              "midi": 64,
               "variant": 0,
               "velocity": 0.19,
+              "duration_ms": 1500,
               "pan": 0.12,
-              "evidence_ids": [],
-              "midi": 64
+              "evidence_ids": []
             },
             {
               "note_id": "chord_3_0_3",
@@ -3767,6 +3682,23 @@
               "evidence_ids": []
             },
             {
+              "note_id": "melody_3_resp_channel_adapters_1",
+              "kind": "accompaniment",
+              "tick": 6080,
+              "duration_ms": 620,
+              "voice": "vibes",
+              "variant": 1,
+              "velocity": 0.2,
+              "pan": 0.12,
+              "evidence_ids": [
+                "ev_b47a14b8bed24cdc85dcb5fa74faf005"
+              ],
+              "midi": 72,
+              "responsibility_id": "resp_channel_adapters",
+              "event_id": "evt_store_record_audit",
+              "unit_id": "unit_80cdf1ba31960a68"
+            },
+            {
               "note_id": "bass_3_1",
               "kind": "accompaniment",
               "tick": 6240,
@@ -3779,26 +3711,21 @@
               "evidence_ids": []
             },
             {
-              "note_id": "melody_3_resp_channel_adapters_1",
+              "note_id": "bass_3_2",
               "kind": "accompaniment",
-              "tick": 6240,
-              "voice": "vibes",
-              "midi": 72,
-              "variant": 1,
-              "velocity": 0.2,
-              "duration_ms": 620,
-              "pan": 0.12,
-              "evidence_ids": [
-                "ev_b47a14b8bed24cdc85dcb5fa74faf005"
-              ],
-              "responsibility_id": "resp_channel_adapters",
-              "event_id": "evt_store_record_audit",
-              "unit_id": "unit_80cdf1ba31960a68"
+              "tick": 6720,
+              "voice": "bass",
+              "midi": 38,
+              "variant": 0,
+              "velocity": 0.42,
+              "duration_ms": 510,
+              "pan": -0.12,
+              "evidence_ids": []
             },
             {
               "note_id": "melody_3_resp_channel_adapters_2",
               "kind": "accompaniment",
-              "tick": 6560,
+              "tick": 6720,
               "voice": "vibes",
               "midi": 69,
               "variant": 1,
@@ -3811,18 +3738,6 @@
               "responsibility_id": "resp_channel_adapters",
               "event_id": "evt_store_save_quote",
               "unit_id": "unit_80cdf1ba31960a68"
-            },
-            {
-              "note_id": "bass_3_2",
-              "kind": "accompaniment",
-              "tick": 6720,
-              "voice": "bass",
-              "midi": 38,
-              "variant": 0,
-              "velocity": 0.42,
-              "duration_ms": 510,
-              "pan": -0.12,
-              "evidence_ids": []
             },
             {
               "note_id": "chord_3_10_0",
@@ -3851,40 +3766,40 @@
             {
               "note_id": "chord_3_10_2",
               "kind": "accompaniment",
-              "duration_ms": 919,
+              "tick": 6974,
               "voice": "piano",
               "midi": 64,
               "variant": 0,
               "velocity": 0.19,
+              "duration_ms": 919,
               "pan": 0.12,
-              "evidence_ids": [],
-              "tick": 6974
+              "evidence_ids": []
             },
             {
               "note_id": "chord_3_10_3",
               "kind": "accompaniment",
               "tick": 6981,
-              "duration_ms": 910,
               "voice": "piano",
+              "midi": 69,
               "variant": 0,
               "velocity": 0.19,
+              "duration_ms": 910,
               "pan": 0.12,
-              "evidence_ids": [],
-              "midi": 69
+              "evidence_ids": []
             },
             {
               "note_id": "melody_3_resp_channel_adapters_3",
               "kind": "accompaniment",
-              "tick": 7040,
+              "duration_ms": 620,
               "voice": "vibes",
               "midi": 67,
               "variant": 1,
               "velocity": 0.2,
-              "duration_ms": 620,
               "pan": 0.12,
               "evidence_ids": [
                 "ev_b47a14b8bed24cdc85dcb5fa74faf005"
               ],
+              "tick": 7040,
               "responsibility_id": "resp_channel_adapters",
               "event_id": "evt_store_record_audit",
               "unit_id": "unit_80cdf1ba31960a68"
@@ -3893,13 +3808,13 @@
               "note_id": "bass_3_3",
               "kind": "accompaniment",
               "tick": 7200,
+              "duration_ms": 510,
               "voice": "bass",
-              "midi": 35,
               "variant": 0,
               "velocity": 0.42,
-              "duration_ms": 510,
               "pan": -0.12,
-              "evidence_ids": []
+              "evidence_ids": [],
+              "midi": 35
             },
             {
               "note_id": "bass_4_0",
@@ -3955,21 +3870,21 @@
               "evidence_ids": [
                 "ev_91849d42ac064b63bfcbd0fc6c8d159c"
               ],
-              "responsibility_id": "resp_receipt_rendering",
               "event_id": "evt_receipt_heading_decision",
+              "responsibility_id": "resp_receipt_rendering",
               "unit_id": "unit_f92a49b5f2e12c42"
             },
             {
               "note_id": "chord_4_0_1",
               "kind": "accompaniment",
               "tick": 7687,
-              "duration_ms": 1500,
               "voice": "piano",
+              "midi": 59,
               "variant": 0,
               "velocity": 0.19,
+              "duration_ms": 1500,
               "pan": 0.12,
-              "evidence_ids": [],
-              "midi": 59
+              "evidence_ids": []
             },
             {
               "note_id": "chord_4_0_2",
@@ -3987,30 +3902,13 @@
               "note_id": "chord_4_0_3",
               "kind": "accompaniment",
               "tick": 7701,
+              "duration_ms": 1500,
               "voice": "piano",
-              "midi": 67,
               "variant": 0,
               "velocity": 0.19,
-              "duration_ms": 1500,
               "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "melody_4_resp_receipt_rendering_1",
-              "kind": "accompaniment",
-              "tick": 8000,
-              "voice": "piano",
-              "midi": 79,
-              "variant": 2,
-              "velocity": 0.2,
-              "duration_ms": 620,
-              "pan": 0.12,
-              "evidence_ids": [
-                "ev_91849d42ac064b63bfcbd0fc6c8d159c"
-              ],
-              "responsibility_id": "resp_receipt_rendering",
-              "event_id": "evt_receipt_body_format",
-              "unit_id": "unit_f92a49b5f2e12c42"
+              "evidence_ids": [],
+              "midi": 67
             },
             {
               "note_id": "bass_4_1",
@@ -4025,11 +3923,11 @@
               "evidence_ids": []
             },
             {
-              "note_id": "melody_4_resp_receipt_rendering_2",
+              "note_id": "melody_4_resp_receipt_rendering_1",
               "kind": "accompaniment",
-              "tick": 8400,
+              "tick": 8320,
               "voice": "piano",
-              "midi": 81,
+              "midi": 79,
               "variant": 2,
               "velocity": 0.2,
               "duration_ms": 620,
@@ -4038,7 +3936,7 @@
                 "ev_91849d42ac064b63bfcbd0fc6c8d159c"
               ],
               "responsibility_id": "resp_receipt_rendering",
-              "event_id": "evt_receipt_heading_decision",
+              "event_id": "evt_receipt_body_format",
               "unit_id": "unit_f92a49b5f2e12c42"
             },
             {
@@ -4054,20 +3952,20 @@
               "evidence_ids": []
             },
             {
-              "note_id": "melody_4_resp_receipt_rendering_3",
+              "note_id": "melody_4_resp_receipt_rendering_2",
               "kind": "accompaniment",
               "tick": 8640,
-              "duration_ms": 620,
               "voice": "piano",
+              "midi": 81,
               "variant": 2,
               "velocity": 0.2,
+              "duration_ms": 620,
               "pan": 0.12,
               "evidence_ids": [
                 "ev_91849d42ac064b63bfcbd0fc6c8d159c"
               ],
-              "midi": 84,
               "responsibility_id": "resp_receipt_rendering",
-              "event_id": "evt_receipt_body_format",
+              "event_id": "evt_receipt_heading_decision",
               "unit_id": "unit_f92a49b5f2e12c42"
             },
             {
@@ -4098,13 +3996,13 @@
               "note_id": "chord_4_10_2",
               "kind": "accompaniment",
               "tick": 8894,
+              "duration_ms": 1500,
               "voice": "piano",
-              "midi": 62,
               "variant": 0,
               "velocity": 0.19,
-              "duration_ms": 1500,
               "pan": 0.12,
-              "evidence_ids": []
+              "evidence_ids": [],
+              "midi": 62
             },
             {
               "note_id": "chord_4_10_3",
@@ -4131,11 +4029,11 @@
               "evidence_ids": []
             },
             {
-              "note_id": "melody_4_resp_receipt_rendering_4",
+              "note_id": "melody_4_resp_receipt_rendering_3",
               "kind": "accompaniment",
-              "tick": 9120,
+              "tick": 9280,
               "voice": "piano",
-              "midi": 81,
+              "midi": 84,
               "variant": 2,
               "velocity": 0.2,
               "duration_ms": 620,
@@ -4144,7 +4042,7 @@
                 "ev_91849d42ac064b63bfcbd0fc6c8d159c"
               ],
               "responsibility_id": "resp_receipt_rendering",
-              "event_id": "evt_receipt_heading_decision",
+              "event_id": "evt_receipt_body_format",
               "unit_id": "unit_f92a49b5f2e12c42"
             },
             {
@@ -4163,13 +4061,13 @@
               "note_id": "chord_5_0_0",
               "kind": "accompaniment",
               "tick": 9600,
-              "duration_ms": 1500,
               "voice": "piano",
+              "midi": 55,
               "variant": 0,
               "velocity": 0.19,
+              "duration_ms": 1500,
               "pan": 0.12,
-              "evidence_ids": [],
-              "midi": 55
+              "evidence_ids": []
             },
             {
               "note_id": "melody_5_resp_receipt_rendering_0",
@@ -4201,21 +4099,21 @@
               "evidence_ids": [
                 "ev_91849d42ac064b63bfcbd0fc6c8d159c"
               ],
-              "responsibility_id": "resp_receipt_rendering",
               "event_id": "evt_receipt_body_format",
+              "responsibility_id": "resp_receipt_rendering",
               "unit_id": "unit_f92a49b5f2e12c42"
             },
             {
               "note_id": "chord_5_0_1",
               "kind": "accompaniment",
               "tick": 9607,
+              "duration_ms": 1500,
               "voice": "piano",
-              "midi": 60,
               "variant": 0,
               "velocity": 0.19,
-              "duration_ms": 1500,
               "pan": 0.12,
-              "evidence_ids": []
+              "evidence_ids": [],
+              "midi": 60
             },
             {
               "note_id": "chord_5_0_2",
@@ -4256,7 +4154,7 @@
             {
               "note_id": "melody_5_resp_receipt_rendering_1",
               "kind": "accompaniment",
-              "tick": 10080,
+              "tick": 10240,
               "voice": "piano",
               "midi": 79,
               "variant": 2,
@@ -4271,9 +4169,21 @@
               "unit_id": "unit_f92a49b5f2e12c42"
             },
             {
+              "note_id": "bass_5_2",
+              "kind": "accompaniment",
+              "tick": 10560,
+              "voice": "bass",
+              "midi": 40,
+              "variant": 0,
+              "velocity": 0.42,
+              "duration_ms": 510,
+              "pan": -0.12,
+              "evidence_ids": []
+            },
+            {
               "note_id": "melody_5_resp_receipt_rendering_2",
               "kind": "accompaniment",
-              "tick": 10400,
+              "tick": 10560,
               "voice": "piano",
               "midi": 76,
               "variant": 2,
@@ -4286,18 +4196,6 @@
               "responsibility_id": "resp_receipt_rendering",
               "event_id": "evt_receipt_heading_decision",
               "unit_id": "unit_f92a49b5f2e12c42"
-            },
-            {
-              "note_id": "bass_5_2",
-              "kind": "accompaniment",
-              "tick": 10560,
-              "duration_ms": 510,
-              "voice": "bass",
-              "variant": 0,
-              "velocity": 0.42,
-              "pan": -0.12,
-              "evidence_ids": [],
-              "midi": 40
             },
             {
               "note_id": "chord_5_10_0",
@@ -4327,13 +4225,13 @@
               "note_id": "chord_5_10_2",
               "kind": "accompaniment",
               "tick": 10814,
+              "duration_ms": 919,
               "voice": "piano",
-              "midi": 64,
               "variant": 0,
               "velocity": 0.19,
-              "duration_ms": 919,
               "pan": 0.12,
-              "evidence_ids": []
+              "evidence_ids": [],
+              "midi": 64
             },
             {
               "note_id": "chord_5_10_3",
@@ -4348,14 +4246,26 @@
               "evidence_ids": []
             },
             {
+              "note_id": "bass_5_3",
+              "kind": "accompaniment",
+              "tick": 11040,
+              "voice": "bass",
+              "midi": 37,
+              "variant": 0,
+              "velocity": 0.42,
+              "duration_ms": 510,
+              "pan": -0.12,
+              "evidence_ids": []
+            },
+            {
               "note_id": "melody_5_resp_receipt_rendering_3",
               "kind": "accompaniment",
-              "tick": 10880,
+              "tick": 11200,
               "voice": "piano",
               "midi": 74,
               "variant": 2,
               "velocity": 0.2,
-              "duration_ms": 620,
+              "duration_ms": 416,
               "pan": 0.12,
               "evidence_ids": [
                 "ev_91849d42ac064b63bfcbd0fc6c8d159c"
@@ -4363,18 +4273,6 @@
               "responsibility_id": "resp_receipt_rendering",
               "event_id": "evt_receipt_body_format",
               "unit_id": "unit_f92a49b5f2e12c42"
-            },
-            {
-              "note_id": "bass_5_3",
-              "kind": "accompaniment",
-              "tick": 11040,
-              "duration_ms": 510,
-              "voice": "bass",
-              "variant": 0,
-              "velocity": 0.42,
-              "pan": -0.12,
-              "evidence_ids": [],
-              "midi": 37
             },
             {
               "note_id": "bass_6_0",
@@ -4404,15 +4302,15 @@
               "note_id": "melody_6_resp_return_policy_0",
               "kind": "accompaniment",
               "tick": 11520,
+              "duration_ms": 620,
               "voice": "piano",
-              "midi": 72,
               "variant": 0,
               "velocity": 0.28,
-              "duration_ms": 620,
               "pan": 0.12,
               "evidence_ids": [
                 "ev_9cf0df475a22478b9b2e60a13452ca80"
               ],
+              "midi": 72,
               "responsibility_id": "resp_return_policy",
               "event_id": "evt_policy_window_check",
               "unit_id": "unit_61d06d578c6a45bf"
@@ -4471,23 +4369,6 @@
               "evidence_ids": []
             },
             {
-              "note_id": "melody_6_resp_return_policy_1",
-              "kind": "accompaniment",
-              "tick": 11840,
-              "duration_ms": 620,
-              "voice": "piano",
-              "variant": 0,
-              "velocity": 0.2,
-              "pan": 0.12,
-              "evidence_ids": [
-                "ev_9cf0df475a22478b9b2e60a13452ca80"
-              ],
-              "midi": 76,
-              "responsibility_id": "resp_return_policy",
-              "event_id": "evt_policy_receipt_check",
-              "unit_id": "unit_61d06d578c6a45bf"
-            },
-            {
               "note_id": "bass_6_1",
               "kind": "accompaniment",
               "tick": 12000,
@@ -4500,9 +4381,26 @@
               "evidence_ids": []
             },
             {
+              "note_id": "melody_6_resp_return_policy_1",
+              "kind": "accompaniment",
+              "tick": 12000,
+              "voice": "piano",
+              "midi": 76,
+              "variant": 0,
+              "velocity": 0.2,
+              "duration_ms": 620,
+              "pan": 0.12,
+              "evidence_ids": [
+                "ev_9cf0df475a22478b9b2e60a13452ca80"
+              ],
+              "responsibility_id": "resp_return_policy",
+              "event_id": "evt_policy_receipt_check",
+              "unit_id": "unit_61d06d578c6a45bf"
+            },
+            {
               "note_id": "melody_6_resp_return_policy_2",
               "kind": "accompaniment",
-              "tick": 12240,
+              "tick": 12320,
               "voice": "piano",
               "midi": 79,
               "variant": 0,
@@ -4520,30 +4418,13 @@
               "note_id": "bass_6_2",
               "kind": "accompaniment",
               "tick": 12480,
+              "duration_ms": 510,
               "voice": "bass",
-              "midi": 45,
               "variant": 0,
               "velocity": 0.42,
-              "duration_ms": 510,
               "pan": -0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "melody_6_resp_return_policy_3",
-              "kind": "accompaniment",
-              "tick": 12480,
-              "voice": "piano",
-              "midi": 81,
-              "variant": 0,
-              "velocity": 0.2,
-              "duration_ms": 620,
-              "pan": 0.12,
-              "evidence_ids": [
-                "ev_9cf0df475a22478b9b2e60a13452ca80"
-              ],
-              "responsibility_id": "resp_return_policy",
-              "event_id": "evt_policy_fee_calculation",
-              "unit_id": "unit_61d06d578c6a45bf"
+              "evidence_ids": [],
+              "midi": 45
             },
             {
               "note_id": "chord_6_10_0",
@@ -4573,13 +4454,13 @@
               "note_id": "chord_6_10_2",
               "kind": "accompaniment",
               "tick": 12734,
-              "duration_ms": 1500,
               "voice": "piano",
+              "midi": 64,
               "variant": 0,
               "velocity": 0.19,
+              "duration_ms": 1500,
               "pan": 0.12,
-              "evidence_ids": [],
-              "midi": 64
+              "evidence_ids": []
             },
             {
               "note_id": "chord_6_10_3",
@@ -4606,11 +4487,11 @@
               "evidence_ids": []
             },
             {
-              "note_id": "melody_6_resp_return_policy_4",
+              "note_id": "melody_6_resp_return_policy_3",
               "kind": "accompaniment",
               "tick": 12960,
               "voice": "piano",
-              "midi": 79,
+              "midi": 81,
               "variant": 0,
               "velocity": 0.2,
               "duration_ms": 620,
@@ -4619,20 +4500,20 @@
                 "ev_9cf0df475a22478b9b2e60a13452ca80"
               ],
               "responsibility_id": "resp_return_policy",
-              "event_id": "evt_policy_expires_calculation",
+              "event_id": "evt_policy_fee_calculation",
               "unit_id": "unit_61d06d578c6a45bf"
             },
             {
               "note_id": "bass_7_0",
               "kind": "accompaniment",
               "tick": 13440,
+              "duration_ms": 510,
               "voice": "bass",
-              "midi": 31,
               "variant": 0,
               "velocity": 0.42,
-              "duration_ms": 510,
               "pan": -0.12,
-              "evidence_ids": []
+              "evidence_ids": [],
+              "midi": 31
             },
             {
               "note_id": "chord_7_0_0",
@@ -4684,13 +4565,13 @@
               "note_id": "chord_7_0_1",
               "kind": "accompaniment",
               "tick": 13447,
-              "duration_ms": 1500,
               "voice": "piano",
+              "midi": 59,
               "variant": 0,
               "velocity": 0.19,
+              "duration_ms": 1500,
               "pan": 0.12,
-              "evidence_ids": [],
-              "midi": 59
+              "evidence_ids": []
             },
             {
               "note_id": "chord_7_0_2",
@@ -4732,15 +4613,15 @@
               "note_id": "melody_7_resp_return_policy_1",
               "kind": "accompaniment",
               "tick": 13920,
+              "duration_ms": 620,
               "voice": "piano",
-              "midi": 76,
               "variant": 0,
               "velocity": 0.2,
-              "duration_ms": 620,
               "pan": 0.12,
               "evidence_ids": [
                 "ev_9cf0df475a22478b9b2e60a13452ca80"
               ],
+              "midi": 76,
               "responsibility_id": "resp_return_policy",
               "event_id": "evt_policy_window_check",
               "unit_id": "unit_61d06d578c6a45bf"
@@ -4778,15 +4659,15 @@
               "note_id": "note_evt_policy_expires_calculation",
               "kind": "data",
               "tick": 14400,
-              "duration_ms": 580,
               "voice": "piano",
+              "midi": 79,
               "variant": 0,
               "velocity": 0.52,
+              "duration_ms": 580,
               "pan": -0.25,
               "evidence_ids": [
                 "ev_9cf0df475a22478b9b2e60a13452ca80"
               ],
-              "midi": 79,
               "event_id": "evt_policy_expires_calculation",
               "responsibility_id": "resp_return_policy",
               "unit_id": "unit_61d06d578c6a45bf"
@@ -4831,30 +4712,13 @@
               "note_id": "chord_7_10_3",
               "kind": "accompaniment",
               "tick": 14661,
+              "duration_ms": 1500,
               "voice": "piano",
-              "midi": 69,
               "variant": 0,
               "velocity": 0.19,
-              "duration_ms": 1500,
               "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "melody_7_resp_return_policy_3",
-              "kind": "accompaniment",
-              "tick": 14720,
-              "voice": "piano",
-              "midi": 72,
-              "variant": 0,
-              "velocity": 0.2,
-              "duration_ms": 620,
-              "pan": 0.12,
-              "evidence_ids": [
-                "ev_9cf0df475a22478b9b2e60a13452ca80"
-              ],
-              "responsibility_id": "resp_return_policy",
-              "event_id": "evt_policy_lines_evaluation",
-              "unit_id": "unit_61d06d578c6a45bf"
+              "evidence_ids": [],
+              "midi": 69
             },
             {
               "note_id": "bass_7_3",
@@ -4867,6 +4731,23 @@
               "duration_ms": 510,
               "pan": -0.12,
               "evidence_ids": []
+            },
+            {
+              "note_id": "melody_7_resp_return_policy_3",
+              "kind": "accompaniment",
+              "tick": 14880,
+              "voice": "piano",
+              "midi": 72,
+              "variant": 0,
+              "velocity": 0.2,
+              "duration_ms": 620,
+              "pan": 0.12,
+              "evidence_ids": [
+                "ev_9cf0df475a22478b9b2e60a13452ca80"
+              ],
+              "responsibility_id": "resp_return_policy",
+              "event_id": "evt_policy_lines_evaluation",
+              "unit_id": "unit_61d06d578c6a45bf"
             },
             {
               "note_id": "bass_8_0",
@@ -4884,13 +4765,13 @@
               "note_id": "chord_8_0_0",
               "kind": "accompaniment",
               "tick": 15360,
-              "duration_ms": 1500,
               "voice": "piano",
+              "midi": 52,
               "variant": 0,
               "velocity": 0.19,
+              "duration_ms": 1500,
               "pan": 0.12,
-              "evidence_ids": [],
-              "midi": 52
+              "evidence_ids": []
             },
             {
               "note_id": "melody_8_resp_return_policy_0",
@@ -4942,13 +4823,13 @@
               "note_id": "chord_8_0_2",
               "kind": "accompaniment",
               "tick": 15374,
+              "duration_ms": 1500,
               "voice": "piano",
-              "midi": 62,
               "variant": 0,
               "velocity": 0.19,
-              "duration_ms": 1500,
               "pan": 0.12,
-              "evidence_ids": []
+              "evidence_ids": [],
+              "midi": 62
             },
             {
               "note_id": "chord_8_0_3",
@@ -4963,9 +4844,21 @@
               "evidence_ids": []
             },
             {
+              "note_id": "bass_8_1",
+              "kind": "accompaniment",
+              "tick": 15840,
+              "voice": "bass",
+              "midi": 40,
+              "variant": 0,
+              "velocity": 0.42,
+              "duration_ms": 510,
+              "pan": -0.12,
+              "evidence_ids": []
+            },
+            {
               "note_id": "melody_8_resp_return_policy_1",
               "kind": "accompaniment",
-              "tick": 15680,
+              "tick": 15840,
               "voice": "piano",
               "midi": 76,
               "variant": 0,
@@ -4980,30 +4873,18 @@
               "unit_id": "unit_61d06d578c6a45bf"
             },
             {
-              "note_id": "bass_8_1",
-              "kind": "accompaniment",
-              "tick": 15840,
-              "voice": "bass",
-              "midi": 40,
-              "variant": 0,
-              "velocity": 0.42,
-              "duration_ms": 510,
-              "pan": -0.12,
-              "evidence_ids": []
-            },
-            {
               "note_id": "melody_8_resp_return_policy_2",
               "kind": "accompaniment",
-              "tick": 16080,
-              "duration_ms": 620,
+              "tick": 16160,
               "voice": "piano",
+              "midi": 79,
               "variant": 0,
               "velocity": 0.2,
+              "duration_ms": 620,
               "pan": 0.12,
               "evidence_ids": [
                 "ev_9cf0df475a22478b9b2e60a13452ca80"
               ],
-              "midi": 79,
               "responsibility_id": "resp_return_policy",
               "event_id": "evt_policy_window_check",
               "unit_id": "unit_61d06d578c6a45bf"
@@ -5019,23 +4900,6 @@
               "duration_ms": 510,
               "pan": -0.12,
               "evidence_ids": []
-            },
-            {
-              "note_id": "melody_8_resp_return_policy_3",
-              "kind": "accompaniment",
-              "tick": 16480,
-              "voice": "piano",
-              "midi": 81,
-              "variant": 0,
-              "velocity": 0.2,
-              "duration_ms": 620,
-              "pan": 0.12,
-              "evidence_ids": [
-                "ev_9cf0df475a22478b9b2e60a13452ca80"
-              ],
-              "responsibility_id": "resp_return_policy",
-              "event_id": "evt_policy_receipt_check",
-              "unit_id": "unit_61d06d578c6a45bf"
             },
             {
               "note_id": "chord_8_10_0",
@@ -5065,13 +4929,13 @@
               "note_id": "chord_8_10_2",
               "kind": "accompaniment",
               "tick": 16574,
+              "duration_ms": 1500,
               "voice": "piano",
-              "midi": 62,
               "variant": 0,
               "velocity": 0.19,
-              "duration_ms": 1500,
               "pan": 0.12,
-              "evidence_ids": []
+              "evidence_ids": [],
+              "midi": 62
             },
             {
               "note_id": "chord_8_10_3",
@@ -5098,20 +4962,20 @@
               "evidence_ids": []
             },
             {
-              "note_id": "melody_8_resp_return_policy_4",
+              "note_id": "melody_8_resp_return_policy_3",
               "kind": "accompaniment",
-              "tick": 16960,
-              "duration_ms": 620,
+              "tick": 16800,
               "voice": "piano",
+              "midi": 81,
               "variant": 0,
               "velocity": 0.2,
+              "duration_ms": 620,
               "pan": 0.12,
               "evidence_ids": [
                 "ev_9cf0df475a22478b9b2e60a13452ca80"
               ],
-              "midi": 79,
               "responsibility_id": "resp_return_policy",
-              "event_id": "evt_policy_lines_evaluation",
+              "event_id": "evt_policy_receipt_check",
               "unit_id": "unit_61d06d578c6a45bf"
             },
             {
@@ -5176,13 +5040,13 @@
               "note_id": "chord_9_0_1",
               "kind": "accompaniment",
               "tick": 17287,
+              "duration_ms": 1500,
               "voice": "piano",
-              "midi": 59,
               "variant": 0,
               "velocity": 0.19,
-              "duration_ms": 1500,
               "pan": 0.12,
-              "evidence_ids": []
+              "evidence_ids": [],
+              "midi": 59
             },
             {
               "note_id": "chord_9_0_2",
@@ -5200,13 +5064,13 @@
               "note_id": "chord_9_0_3",
               "kind": "accompaniment",
               "tick": 17301,
-              "duration_ms": 1500,
               "voice": "piano",
+              "midi": 67,
               "variant": 0,
               "velocity": 0.19,
+              "duration_ms": 1500,
               "pan": 0.12,
-              "evidence_ids": [],
-              "midi": 67
+              "evidence_ids": []
             },
             {
               "note_id": "bass_9_1",
@@ -5223,7 +5087,7 @@
             {
               "note_id": "melody_9_resp_return_policy_1",
               "kind": "accompaniment",
-              "tick": 17920,
+              "tick": 17760,
               "voice": "piano",
               "midi": 76,
               "variant": 0,
@@ -5233,8 +5097,25 @@
               "evidence_ids": [
                 "ev_9cf0df475a22478b9b2e60a13452ca80"
               ],
-              "responsibility_id": "resp_return_policy",
               "event_id": "evt_policy_fee_calculation",
+              "responsibility_id": "resp_return_policy",
+              "unit_id": "unit_61d06d578c6a45bf"
+            },
+            {
+              "note_id": "melody_9_resp_return_policy_2",
+              "kind": "accompaniment",
+              "tick": 18080,
+              "voice": "piano",
+              "midi": 74,
+              "variant": 0,
+              "velocity": 0.2,
+              "duration_ms": 1000,
+              "pan": 0.12,
+              "evidence_ids": [
+                "ev_9cf0df475a22478b9b2e60a13452ca80"
+              ],
+              "responsibility_id": "resp_return_policy",
+              "event_id": "evt_policy_expires_calculation",
               "unit_id": "unit_61d06d578c6a45bf"
             },
             {
@@ -5250,33 +5131,16 @@
               "evidence_ids": []
             },
             {
-              "note_id": "melody_9_resp_return_policy_2",
-              "kind": "accompaniment",
-              "tick": 18240,
-              "voice": "piano",
-              "midi": 72,
-              "variant": 0,
-              "velocity": 0.2,
-              "duration_ms": 1000,
-              "pan": 0.12,
-              "evidence_ids": [
-                "ev_9cf0df475a22478b9b2e60a13452ca80"
-              ],
-              "responsibility_id": "resp_return_policy",
-              "event_id": "evt_policy_expires_calculation",
-              "unit_id": "unit_61d06d578c6a45bf"
-            },
-            {
               "note_id": "chord_9_10_0",
               "kind": "accompaniment",
               "tick": 18480,
+              "duration_ms": 937,
               "voice": "piano",
-              "midi": 52,
               "variant": 0,
               "velocity": 0.19,
-              "duration_ms": 937,
               "pan": 0.12,
-              "evidence_ids": []
+              "evidence_ids": [],
+              "midi": 52
             },
             {
               "note_id": "chord_9_10_1",
@@ -5294,13 +5158,13 @@
               "note_id": "chord_9_10_2",
               "kind": "accompaniment",
               "tick": 18494,
-              "duration_ms": 919,
               "voice": "piano",
+              "midi": 62,
               "variant": 0,
               "velocity": 0.19,
+              "duration_ms": 919,
               "pan": 0.12,
-              "evidence_ids": [],
-              "midi": 62
+              "evidence_ids": []
             },
             {
               "note_id": "chord_9_10_3",
@@ -5325,6 +5189,23 @@
               "duration_ms": 510,
               "pan": -0.12,
               "evidence_ids": []
+            },
+            {
+              "note_id": "melody_9_resp_return_policy_3",
+              "kind": "accompaniment",
+              "tick": 18720,
+              "voice": "piano",
+              "midi": 72,
+              "variant": 0,
+              "velocity": 0.2,
+              "duration_ms": 620,
+              "pan": 0.12,
+              "evidence_ids": [
+                "ev_9cf0df475a22478b9b2e60a13452ca80"
+              ],
+              "responsibility_id": "resp_return_policy",
+              "event_id": "evt_policy_window_check",
+              "unit_id": "unit_61d06d578c6a45bf"
             }
           ]
         }

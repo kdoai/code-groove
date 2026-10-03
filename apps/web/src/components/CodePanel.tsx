@@ -9,7 +9,15 @@ import { useWorkspace } from '../state';
 
 self.MonacoEnvironment = { getWorker: () => new EditorWorker() };
 loader.config({ monaco });
-export function CodePanel({ bundle }: { bundle: Bundle }) {
+export function CodePanel({
+  bundle,
+  following,
+  toggleFollowing,
+}: {
+  bundle: Bundle;
+  following?: boolean;
+  toggleFollowing?: () => void;
+}) {
   const ws = useWorkspace();
   const event = bundle.map.events.find((e) => e.event_id === ws.eventId);
   const unit = bundle.map.units.find((u) => u.unit_id === ws.unitId) ?? bundle.map.units[0];
@@ -64,7 +72,11 @@ export function CodePanel({ bundle }: { bundle: Bundle }) {
     <section className="code-panel">
       <div className="panel-heading">
         <span>{span.path}</span>
-        <span className="read-only">READ ONLY</span>
+        {toggleFollowing && (
+          <button aria-pressed={following} onClick={toggleFollowing}>
+            演奏に追従
+          </button>
+        )}
       </div>
       <Editor
         height="100%"
@@ -87,10 +99,6 @@ export function CodePanel({ bundle }: { bundle: Bundle }) {
           contextmenu: false,
         }}
       />
-      <div className="code-footer">
-        {span.path}:{span.start_line}–{span.end_line}
-        <span>UTF-8 · {span.path.endsWith('.py') ? 'Python' : 'TypeScript'}</span>
-      </div>
     </section>
   );
 }

@@ -13,7 +13,7 @@ const motifs = [
 const velocity = [0.58, 0.52, 0.55, 0.48, 0.52, 0.5, 0.48, 0.54];
 const duration = [650, 520, 540, 700, 580, 520, 560, 820];
 const pan = [-0.25, 0.2, -0.08, 0.3, -0.3, 0.08];
-export const grammarVersion = 'groove-chamber-v6' as const;
+export const grammarVersion = 'groove-chamber-v7' as const;
 export const tickSeconds = (tick: number) => ((tick / 480) * 60) / 96;
 function occupiedBars(steps: number[]) {
   return new Map(

@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react';
-import { ChevronDown, ChevronRight, FileCode2, Folder, Headphones, Play, ScanLine } from 'lucide-react';
+import { ChevronDown, ChevronRight, FileCode2, Folder, Headphones, Play } from 'lucide-react';
 import type { ScorePlan, ScheduledNote } from '../../../../packages/contracts/ScoreBundle';
 import type { Bundle } from '../api';
 import { engine } from '../audio/engine';
@@ -9,11 +9,34 @@ const CodePanel = lazy(() => import('./CodePanel').then((module) => ({ default: 
 const motifColors = ['#c7cfff', '#a6ddce', '#aad4ef', '#e4bfde', '#b8debd', '#edc4ae'];
 export function SampleSwitch({ openSample }: { openSample: (id: string) => void }) {
   return (
-    <div className="sample-switch">
-      <button data-tour="album" onClick={() => openSample('recorded-checkout-flow')}>
-        サンプルを開く
-      </button>
-    </div>
+    <details className="sample-switch">
+      <summary data-tour="album">サンプル</summary>
+      <div className="sample-menu">
+        <strong>Checkout Lab</strong>
+        <p>カート・クーポン・注文履歴が動く、小さなショップ。決済ロジックの保存済みGemini解析を聴けます。</p>
+        <button
+          onClick={(event) => {
+            event.currentTarget.closest('details')?.removeAttribute('open');
+            openSample('recorded-checkout-flow');
+          }}
+        >
+          サンプルを開く
+        </button>
+        <a href="/samples/checkout-lab.zip" download>
+          動くプロジェクトをダウンロード
+        </a>
+        <small>ZIPを展開し、Node.js 22以上で起動</small>
+        <code>
+          npm ci
+          <br />
+          npm start
+        </code>
+        <a href="http://127.0.0.1:4174" target="_blank" rel="noreferrer">
+          起動したローカルデモを開く ↗
+        </a>
+        <small>検査対象は src の13関数。画面・起動用サーバーは保存済み解析の対象外です。</small>
+      </div>
+    </details>
   );
 }
 
@@ -162,7 +185,7 @@ export function ReviewWorkspace({
     });
   }
   return (
-    <div className="review-workspace">
+    <div className={`review-workspace ${ws.agentVisible ? '' : 'agent-collapsed'}`}>
       <aside className="file-sidebar">
         <div className="pane-heading">
           Repository<span>{Object.keys(bundle.sources).length} files</span>
@@ -175,20 +198,33 @@ export function ReviewWorkspace({
             concernPaths={concernPaths}
           />
         </div>
-        <div className="file-scope">
-          <span>
-            <ScanLine size={13} />
-            Agentが読取を確認
-          </span>
-          <strong>
-            {bundle.map.coverage.inspected_units}/{bundle.map.coverage.indexed_units} 関数
-          </strong>
-          <small>
-            型・READMEも階層に表示
-            <br />
-            未確認範囲に音の意味を作りません
-          </small>
-        </div>
+        <details className="file-scope">
+          <summary>
+            解析済み {bundle.map.coverage.inspected_units}/{bundle.map.coverage.indexed_units} 関数
+            <small data-testid="analysis-origin">
+              {bundle.map.origin === 'fixture'
+                ? '模擬サンプル'
+                : bundle.map.origin === 'recorded_live'
+                  ? '保存済み実解析'
+                  : '実解析'}
+            </small>
+          </summary>
+          <div>
+            <p>分母は対象の関数数、分子は確認できた数です。READMEと型定義もファイル一覧に含みます。</p>
+            {bundle.map.coverage.unresolved_unit_ids.length > 0 && (
+              <p>
+                未確認: {bundle.map.coverage.unresolved_unit_ids.length}{' '}
+                関数。未確認の処理には意味の音を付けていません。
+              </p>
+            )}
+            {bundle.sample_id === 'recorded-checkout-flow' && (
+              <p>
+                動くサンプルの検査対象は src
+                の決済ロジックです。起動用の画面とサーバーはこの解析に含まれません。
+              </p>
+            )}
+          </div>
+        </details>
       </aside>
       <main className="review-center">
         <Arrangement
@@ -198,21 +234,17 @@ export function ReviewWorkspace({
           select={select}
           followPlayback={() => setFollowing(true)}
         />
-        <div className="code-toolbar">
-          <span>
-            選択した音の根拠 <b>{selectedPath}</b>
-          </span>
-          <button aria-pressed={following} onClick={() => setFollowing(!following)}>
-            演奏に追従
-          </button>
-        </div>
         <div className="review-code">
           <Suspense fallback={<div className="code-loading">コードを読み込み中…</div>}>
-            <CodePanel bundle={bundle} />
+            <CodePanel
+              bundle={bundle}
+              following={following}
+              toggleFollowing={() => setFollowing(!following)}
+            />
           </Suspense>
         </div>
       </main>
-      <aside className="review-agent" data-tour="chat">
+      <aside className="review-agent" id="workspace-agent" data-tour="chat" hidden={!ws.agentVisible}>
         {children}
       </aside>
     </div>
@@ -348,8 +380,27 @@ function Arrangement({
         <span>
           <Headphones size={16} />
           <b>Arrangement</b>
-          <small>コードのある区間だけ演奏</small>
         </span>
+        <details className="motif-legend">
+          <summary>旋律と色の凡例</summary>
+          <div>
+            <p>
+              同じ役割は同じ色・リズム。健康の点数ではありません。精密検査の応答は、根拠のある将来の負担候補です。
+            </p>
+            {bundle.map.responsibilities.map((r) => {
+              const note = musical.find(
+                (n) => n.kind === 'data' && n.responsibility_id === r.responsibility_id,
+              );
+              return (
+                <button key={r.responsibility_id} disabled={!note} onClick={() => note && select(note)}>
+                  <i style={{ background: motifColors[Number(r.motif_id.slice(1))] }} />
+                  {r.motif_id} / {r.label}
+                </button>
+              );
+            })}
+            <small>低音・和音は共通伴奏です。</small>
+          </div>
+        </details>
         <div className="arrangement-layout" aria-label="同じ解釈の演奏配置">
           <button
             aria-pressed={ws.mode === 'repo'}
@@ -614,39 +665,6 @@ function Arrangement({
             この区間を選ぶ
           </button>
         )}
-      </div>
-      <div className="arrangement-legend">
-        <span>
-          <i className="semantic-key" />
-          判断と旋律
-        </span>
-        {bundle.map.analysis_depth !== 'overview' && (
-          <span>
-            <i className="concern-key" />
-            精密検査の応答
-          </span>
-        )}
-        <span>
-          <i className="backing-key" />
-          共通伴奏
-        </span>
-        <details className="motif-legend">
-          <summary>旋律と色の凡例</summary>
-          <div>
-            {bundle.map.responsibilities.map((r) => {
-              const note = musical.find(
-                (n) => n.kind === 'data' && n.responsibility_id === r.responsibility_id,
-              );
-              return (
-                <button key={r.responsibility_id} disabled={!note} onClick={() => note && select(note)}>
-                  <i style={{ background: motifColors[Number(r.motif_id.slice(1))] }} />
-                  {r.motif_id} / {r.label}
-                </button>
-              );
-            })}
-            <small>色は役割の識別です。健康の点数ではありません。</small>
-          </div>
-        </details>
       </div>
     </section>
   );

@@ -67,7 +67,12 @@ export function Transport({
   }
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if ((e.target as HTMLElement).closest('input,textarea,.monaco-editor,[role="dialog"]')) return;
+      if (
+        (e.target as HTMLElement).closest(
+          'button,a,input,textarea,select,summary,[contenteditable="true"],.monaco-editor,[role="dialog"]',
+        )
+      )
+        return;
       if (e.code === 'Space') {
         e.preventDefault();
         void toggle();
@@ -131,21 +136,22 @@ export function Transport({
           選択ファイル{selectedFile ? ` · ${selectedFile.split('/').at(-1)}` : ''}
         </option>
       </select>
-      <div className="volume">
-        <Volume2 size={15} />
-        <input
-          aria-label="音量"
-          type="range"
-          min="0"
-          max="1"
-          step=".01"
-          value={ws.volume}
-          onChange={(e) => ws.set({ volume: Number(e.target.value) })}
-        />
-      </div>
       <details className="playback-settings">
         <summary>再生設定</summary>
         <div className="settings-popover">
+          <div className="volume">
+            <Volume2 size={15} />
+            <input
+              aria-label="音量"
+              type="range"
+              min="0"
+              max="1"
+              step=".01"
+              value={ws.volume}
+              onChange={(e) => ws.set({ volume: Number(e.target.value) })}
+            />
+          </div>
+
           <span>聴く範囲</span>
           <button
             aria-pressed={ws.wholeWork}

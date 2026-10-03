@@ -92,10 +92,13 @@ test('actual Agent actions remain visible across dialogs and samples; indexing i
   await expect(activity).toContainText('境界の別説明');
   await expect(activity).toContainText('src/pricing.ts:10');
   await expect(activity).toContainText('判断の所有者が分かれている可能性');
+  await page.getByRole('button', { name: 'Agentを閉じる', exact: true }).click();
+  await expect(page.locator('.agent-panel')).toBeHidden();
+  await expect(activity).toBeInViewport();
   await page.getByRole('button', { name: 'Repositoryを開く', exact: true }).click();
   await expect(page.getByRole('dialog')).toBeVisible();
   await expect(activity).toBeInViewport();
-  await page.screenshot({ path: 'artifacts/agent-activity-r6-mock.png' });
+  await page.screenshot({ path: 'artifacts/agent-activity-r8-mock.png' });
   await page.getByRole('button', { name: /実解析を再生 · 例外/ }).click();
   await expect(activity).toContainText('Gemini Agentが調査中');
   status = null;

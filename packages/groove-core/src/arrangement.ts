@@ -21,6 +21,14 @@ const bassLines = [
   [38, 41, 45, 42],
   [31, 35, 38, 35],
 ];
+const roleRhythms = [
+  [0, 480, 800, 1440],
+  [0, 320, 960, 1280],
+  [0, 640, 960, 1600],
+  [0, 320, 720, 1440],
+  [0, 480, 1120, 1440],
+  [0, 640, 1120, 1600],
+];
 
 export function arrangeJazz(plan: ScorePlan, map: SemanticMap) {
   const add = (
@@ -79,13 +87,7 @@ export function arrangeJazz(plan: ScorePlan, map: SemanticMap) {
       const motif = Number(responsibility.motif_id.slice(1));
       const anchor = owners.find((n) => n.responsibility_id === rid)!;
       const localBar = bar - (phrase?.start_bar ?? 0);
-      const rhythms = [
-        [0, 320, 720, 960, 1440],
-        [0, 480, 800, 1280],
-        [0, 320, 720, 1120, 1600],
-        [0, 640, 960],
-      ];
-      rhythms[localBar % 4].forEach((offset, beat) => {
+      roleRhythms[motif].forEach((offset, beat) => {
         const anchors = owners.filter((n) => n.responsibility_id === rid);
         const linked = anchors[(localBar * 4 + beat) % anchors.length] ?? anchor;
         const position = localBar * 4 + beat;
@@ -93,7 +95,7 @@ export function arrangeJazz(plan: ScorePlan, map: SemanticMap) {
           `melody_${bar}_${rid}_${beat}`,
           start + offset + index * 40,
           motif % 2 ? 'vibes' : 'piano',
-          bar === plan.total_bars - 1 && beat === rhythms[localBar % 4].length - 1
+          bar === plan.total_bars - 1 && beat === roleRhythms[motif].length - 1
             ? 72
             : melody[motif][position % 8],
           (beat === 0 ? 0.28 : 0.2) / Math.sqrt(rids.length),
@@ -109,20 +111,26 @@ export function arrangeJazz(plan: ScorePlan, map: SemanticMap) {
       });
     });
   }
-  for (const signal of map.review_signals ?? []) {
+  const responseBars = new Set<number>();
+  for (const signal of [...(map.review_signals ?? [])].sort((a, b) =>
+    a.signal_id.localeCompare(b.signal_id),
+  )) {
     if (map.analysis_depth === 'overview') continue;
     if (signal.verdict !== 'concern') continue;
-    for (const target of plan.mode === 'repo' ? signal.unit_ids : [undefined]) {
+    for (const phrase of plan.phrases) {
+      if (plan.mode === 'repo' && !signal.unit_ids.includes(phrase.unit_id!)) continue;
       const signalEvents = plan.notes.filter(
         (n) =>
-          n.kind === 'data' && signal.event_ids.includes(n.event_id!) && (!target || n.unit_id === target),
+          n.kind === 'data' &&
+          signal.event_ids.includes(n.event_id!) &&
+          n.tick >= phrase.start_bar * 1920 &&
+          n.tick < (phrase.start_bar + phrase.bar_count) * 1920,
       );
       const event = signalEvents[0];
       if (!event) continue;
-      const phrase = plan.phrases.find(
-        (p) => p.unit_id === event.unit_id || p.responsibility_id === event.responsibility_id,
-      );
-      const start = (phrase?.start_bar ?? Math.floor(event.tick / 1920)) * 1920;
+      const bar = phrase.start_bar + (phrase.bar_count > 1 ? 1 : 0);
+      if (responseBars.has(bar)) continue;
+      responseBars.add(bar);
       const pattern =
         signal.category === 'policy_scattering'
           ? [0, 160, 480, 640, 960, 1120, 1440, 1600]
@@ -131,29 +139,31 @@ export function arrangeJazz(plan: ScorePlan, map: SemanticMap) {
             : signal.category === 'data_flow_opacity'
               ? [0, 320, 1120, 1440]
               : [0, 480, 720, 960, 1440];
-      const cueBars = (phrase?.bar_count ?? 1) === 1 ? [0] : [1, 2];
-      for (const bar of cueBars) {
-        const tick = start + bar * 1920;
-        if (tick + 1920 > start + (phrase?.bar_count ?? 1) * 1920) continue;
+      {
+        const tick = bar * 1920;
+        // Replace the decorative repetition here; stacking responses would imply severity.
+        plan.notes = plan.notes.filter(
+          (n) => !(n.kind === 'accompaniment' && n.event_id && n.tick >= tick && n.tick < tick + 1920),
+        );
         pattern.forEach((offset, i) => {
           const sourceEvent = signalEvents[Math.floor(i / 2) % signalEvents.length];
+          const motif = Number(
+            map.responsibilities
+              .find((r) => r.responsibility_id === sourceEvent.responsibility_id)!
+              .motif_id.slice(1),
+          );
           add(
-            `cue_${signal.signal_id}_${target ?? 'theme'}_${bar}_${i}`,
+            `cue_${signal.signal_id}_${phrase.phrase_id}_${bar}_${i}`,
             tick + offset,
             i % 2 ? 'vibes' : 'piano',
             signal.category === 'data_flow_opacity' && i === pattern.length - 1
               ? 71
-              : melody[
-                  Number(
-                    map.responsibilities
-                      .find((r) => r.responsibility_id === event.responsibility_id)!
-                      .motif_id.slice(1),
-                  )
-                ][Math.floor(i / 2) % 4],
-            i % 2 ? 0.4 : 0.58,
-            i % 2 ? 420 : 560,
+              : melody[motif][Math.floor(i / 2) % 4],
+            i % 2 ? 0.38 : 0.44,
+            i % 2 ? 380 : 480,
             {
               kind: 'cue',
+              variant: motif,
               signal_id: signal.signal_id,
               event_id: sourceEvent.event_id,
               unit_id: sourceEvent.unit_id,
@@ -169,7 +179,7 @@ export function arrangeJazz(plan: ScorePlan, map: SemanticMap) {
             note.tick < tick + 1920 &&
             (note.voice === 'piano' || note.voice === 'vibes' || note.voice === 'bass')
           )
-            note.velocity *= note.voice === 'bass' ? 0.65 : 0.3;
+            note.velocity *= note.voice === 'bass' ? 0.9 : 0.8;
       }
     }
   }

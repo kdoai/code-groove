@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { User } from 'firebase/auth';
-import { FolderGit2, ArrowRight, HelpCircle, LogOut, ScanLine, Sun, Moon } from 'lucide-react';
+import { FolderGit2, ArrowRight, HelpCircle, LogOut, ScanLine, Sun, Moon, PanelRight } from 'lucide-react';
 import { AgentActivity } from './components/AgentActivity';
 import { api, currentUser, logout, setupAuth, type Bundle, type PublicConfig } from './api';
 import { useWorkspace } from './state';
@@ -158,7 +158,7 @@ export default function App() {
     cache.invalidateQueries({ queryKey: ['project', ws.projectId] });
   }, [proposalRun.data]);
   const bundle = useQuery({
-    queryKey: ['bundle', ws.projectId, ws.analysisId, 'groove-chamber-v6'],
+    queryKey: ['bundle', ws.projectId, ws.analysisId, 'groove-chamber-v7'],
     queryFn: () =>
       api<Bundle>(
         ws.sampleId
@@ -543,6 +543,17 @@ export default function App() {
           <FolderGit2 size={14} />
           Repositoryを開く
         </button>
+        {data && (
+          <button
+            className="agent-toggle"
+            aria-label={ws.agentVisible ? 'Agentを閉じる' : 'Agentを開く'}
+            aria-expanded={ws.agentVisible}
+            aria-controls="workspace-agent"
+            onClick={() => ws.set({ agentVisible: !ws.agentVisible })}
+          >
+            <PanelRight size={15} /> Agent
+          </button>
+        )}
         <button className="icon-button" aria-label="使い方" onClick={() => setModal('guide')}>
           <HelpCircle size={16} />
         </button>
@@ -690,22 +701,6 @@ export default function App() {
           <small>保存したGemini調査を聴く · 改善案の作成はログイン後にあなたが依頼</small>
         </main>
       )}
-      <footer className="statusbar">
-        <span className="status-dot" />
-        {data
-          ? data.map.origin === 'fixture'
-            ? '模擬サンプル'
-            : data.map.origin === 'recorded_live'
-              ? '保存済み実解析'
-              : '実解析'
-          : 'Ready'}
-        <span className="status-right">
-          {data
-            ? `${data.map.coverage.inspected_units}/${data.map.coverage.indexed_units} 関数を確認`
-            : 'TypeScript / Python'}{' '}
-          · {project.data?.working_copy ? 'アプリ内の作業コピー' : '元コードを保持'}
-        </span>
-      </footer>
       {modal === 'open' && (
         <OpenDialog
           close={() => setModal('')}
@@ -722,7 +717,7 @@ export default function App() {
         <Onboarding
           close={() => setModal('')}
           loadSample={() => {
-            ws.set({ mode: 'repo', wholeWork: true, loop: false, pulseMuted: true });
+            ws.set({ mode: 'repo', wholeWork: true, loop: false, pulseMuted: true, agentVisible: true });
             openSample('recorded-checkout-flow');
             setTour(true);
           }}

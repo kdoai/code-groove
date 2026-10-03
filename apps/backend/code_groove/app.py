@@ -56,7 +56,7 @@ def studio_score(serialized_map: str, kit_hash: str) -> dict:
 
 def current_music(bundle: dict) -> dict:
     plan = bundle["score"]["scenes"][0]["repo"]
-    if plan["kit_id"] == "midnight-jazz-v4" and plan["grammar_version"] == "groove-chamber-v6":
+    if plan["kit_id"] == "midnight-jazz-v4" and plan["grammar_version"] == "groove-chamber-v7":
         return bundle
     kit = json.loads(
         (ROOT / "apps/web/public/audio/midnight-jazz-v4/manifest.json").read_text(encoding="utf-8")

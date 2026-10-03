@@ -8,7 +8,7 @@ test('recorded Gemini evidence is replayable without sign-in or new model calls'
   await page.goto('/projects/sample-recorded-justified/arrange?scene=1');
   await page.getByRole('checkbox', { name: '今後このメッセージを表示しない', exact: true }).check();
   await page.getByRole('button', { name: 'あとで見る', exact: true }).click();
-  await expect(page.locator('.statusbar')).toContainText('保存済み実解析');
+  await expect(page.getByTestId('analysis-origin')).toContainText('保存済み実解析');
   await page.getByTestId('data-note').first().click();
   await expect(page.locator('.monaco-editor')).toBeVisible({ timeout: 20000 });
   await expect(page.getByText('Gemini Agent', { exact: true })).toBeVisible();

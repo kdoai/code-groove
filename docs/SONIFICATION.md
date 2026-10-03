@@ -1,6 +1,6 @@
-# Musical grammar v6 / whole-repository health examination
+# Musical grammar v7 / whole-repository health examination
 
-R7 uses grammar `groove-chamber-v6` and the immutable `midnight-jazz-v4` recorded piano/bass kit. Provenance, envelopes, file playback and module scope: [WORKSPACE_R6.md](WORKSPACE_R6.md). Historical videos retain their original grammar/kit and are not demonstrations of the current timing.
+R8 uses grammar `groove-chamber-v7` and the immutable `midnight-jazz-v4` recorded piano/bass kit. Provenance, envelopes, file playback and module scope: [WORKSPACE_R6.md](WORKSPACE_R6.md). Historical videos retain their original grammar/kit and are not demonstrations of the current timing.
 
 Gemini examines the whole eligible snapshot for role ownership, readability and future change friction, with full reasoning capability. It records all grounded concerns it can establish and explicit unknowns. This is not a claim that audio detects something Gemini cannot know. Present bugs and security issues, when encountered, are disclosed for ordinary review/testing; they are not turned into a musical quality score.
 
@@ -8,7 +8,7 @@ The overview performance encodes structural observations: the same role returns 
 
 The fixed compiler uses six motifs, code-length phrasing at 96 BPM, rootless jazz
 voicings, walking bass and piano/vibes melodies with rests and swing. **There are no
-drums or metronome notes in v6**, including hidden lanes. Common bass and chords are
+drums or metronome notes in v7**, including hidden lanes. Common bass and chords are
 musical context and make no code claim. Every semantic note and its repeated melody
 carry their exact event and source span. Paired concern responses move among the
 actual cited decisions, rather than pointing all sounds to one line.
@@ -33,8 +33,14 @@ four-bar blocks. Rests within a meaningful bar remain part of the rhythm.
 | Opaque reading flow | Broken answer at 0/320/1120/1440, final B instead of tonic C | A concrete sequence must be mentally tracked across phases |
 | Justified / inconclusive | No additional concern response | A supported boundary, or insufficient evidence |
 
-During concern bars melody/chord backing drops to 30% and bass to 65%, leaving room
-for the audible answer. Smooth PCM envelopes remain. The two layouts preserve the
+Each role now repeats its own fixed rhythmic fingerprint across files, instead of
+changing the decorative rhythm every local bar. A grounded focused response replaces
+the repeated melody in one bar per phrase; it does not stack on top of it. Additional
+signals cannot multiply responses or ducking in the same bar. Chords keep80% and
+bass90% of their normal level. Cue velocities are capped at0.44, below the previous
+0.58 peak, with no severity-dependent gain, noise or new waiting time. These are
+bounded call-and-response patterns, not alarm sounds or a quantitative health score.
+Smooth PCM envelopes remain. The two layouts preserve the
 same grounded data notes; meaning layout groups them, file layout distributes them.
 The player shows actual notes rather than fabricated waveforms. Clicking and playback
 follow take the listener back to source. This makes sound an index for relationships
@@ -44,13 +50,13 @@ Initial navigation offers a working checkout feature, with no corrected answer. 
 
 The proposal contains exact edits, fresh reads, tradeoffs and outstanding verification. Explicit acceptance creates a separate app-only snapshot and reserves independent re-analysis. Rejection leaves source unchanged. A concern may remain after acceptance. Only completed accepted re-analysis exposes before/after; original sources and equivalent role motifs remain available. The Agent cannot approve itself, execute source, push Git or alter musical grammar.
 
-Reproducibility has two boundaries: the same saved validated analysis, compiler v6
+Reproducibility has two boundaries: the same saved validated analysis, compiler v7
 and PCM kit hash produce the same score hash and scheduled notes. Random proof UUIDs
 are normalized. Gemini reruns can make different judgments; those results and drafts
 are saved with their model/prompt/snapshot versions. Device/audio scheduling may
 change the physical playback, so bit-identical speaker output is not promised.
 
-The authored checkout example has 6 files, 13 indexed functions including callbacks, and a27.5-second whole-work file arrangement (16 events). It works across expiry, minimum, cap and gift exclusions; the client preview has an explicit offline boundary and the server reprices independently. The default sample is the recorded real initial prompt-v6 examination (13/13 functions read, 14 events), now35 seconds in grammar v6 instead of130 seconds; the authored development map remains separately labeled. The actual initial result grouped responsibilities broadly by subsystem. Its provenance is preserved, and prompt v9 guides subsequent grounded reclassification by shared reasons to change; a preferred map is not fabricated or silently substituted for a failed live job. Imported repositories are never executed; behavior-contract tests run only this trusted bundled fixture.
+The authored checkout example has 6 files, 13 indexed functions including callbacks, and a27.5-second whole-work file arrangement (16 events). It works across expiry, minimum, cap and gift exclusions; the client preview has an explicit offline boundary and the server reprices independently. The default sample is the recorded real initial prompt-v6 examination (13/13 functions read, 14 events), now35 seconds in grammar v7 instead of130 seconds; the authored development map remains separately labeled. The actual initial result grouped responsibilities broadly by subsystem. Its provenance is preserved, and prompt v9 guides subsequent grounded reclassification by shared reasons to change; a preferred map is not fabricated or silently substituted for a failed live job. Imported repositories are never executed. The trusted authored Checkout Lab runs locally using these same five unchanged TypeScript source files; its UI/server are separately identified as outside the original recorded examination. See [runnable example](../examples/checkout-lab/README.md). Normal CI executes only this bundled demo and mocks, never imported user code.
 
 Usefulness remains a hypothesis: practitioners should try to locate cross-layer responsibilities, distinguish intentional boundaries from avoidable future coordination, and explain their decision. Compare sound-assisted navigation with the same map shown visually and as text; measure time/accuracy before claiming a benefit. The music is an optional parallel view with exact code navigation, not a scientific diagnostic test.
 

@@ -33,7 +33,7 @@ test('reviewer sign-in, saved live source and real investigation', async ({ page
   await expect(page.getByTestId('data-note').first()).toBeVisible({ timeout: 30000 });
   await page.getByTestId('data-note').first().click();
   await expect(page.locator('.monaco-editor')).toBeVisible({ timeout: 30000 });
-  await expect(page.locator('.statusbar')).toContainText('実解析');
+  await expect(page.getByTestId('analysis-origin')).toContainText('実解析');
   await page
     .getByRole('textbox', { name: '選択した範囲への質問' })
     .fill('このフレーズの意味と、設計上の違いが正当化される理由を調べてください。');
