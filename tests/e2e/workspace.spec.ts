@@ -33,6 +33,9 @@ test('whole-health listening and real-screen tour keep investigation human-direc
   await page.getByRole('button', { name: '自分で使ってみる', exact: true }).click();
   await expect(page.getByRole('button', { name: '採用後', exact: true })).toHaveCount(0);
   await expect(page.getByTestId('cue-note')).toHaveCount(0);
+  await page.getByText('旋律と色の凡例', { exact: true }).click();
+  await expect(page.locator('.motif-legend button')).toHaveCount(4);
+  await page.getByText('旋律と色の凡例', { exact: true }).click();
   await page.getByRole('button', { name: 'contracts.ts', exact: true }).click();
   await expect(page.locator('.code-panel .panel-heading')).toContainText('src/contracts.ts');
   await page.getByTestId('data-note').first().click();

@@ -1765,6 +1765,7 @@ a {
   background: #77512a;
 }
 .arrangement-legend {
+  position: relative;
   height: 26px;
   flex: none;
   display: flex;
@@ -1801,6 +1802,48 @@ a {
   color: #76869f;
   margin-left: auto;
   white-space: nowrap;
+}
+.motif-legend {
+  margin-left: auto;
+}
+.motif-legend summary {
+  cursor: pointer;
+  white-space: nowrap;
+  color: #d3ddf0;
+}
+.motif-legend > div {
+  position: absolute;
+  z-index: 10;
+  bottom: 30px;
+  right: 12px;
+  width: 280px;
+  max-height: 250px;
+  overflow: auto;
+  background: #fff;
+  border: 1px solid #d3d9e2;
+  padding: 8px;
+  border-radius: 6px;
+  box-shadow: 0 8px 22px #10182730;
+}
+.motif-legend button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  text-align: left;
+  font-size: 11px;
+}
+.motif-legend i {
+  width: 12px;
+  height: 12px;
+  border: 1px solid #46526755;
+}
+.motif-legend small {
+  display: block;
+  color: #596171;
+  white-space: normal;
+  padding: 8px;
+  font-size: 10px;
 }
 .change-scenario {
   background: #f5f6fd;

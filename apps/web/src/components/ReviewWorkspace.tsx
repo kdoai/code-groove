@@ -6,6 +6,7 @@ import { engine } from '../audio/engine';
 import { useWorkspace } from '../state';
 
 const CodePanel = lazy(() => import('./CodePanel').then((module) => ({ default: module.CodePanel })));
+const motifColors = ['#c7cfff', '#a6ddce', '#aad4ef', '#e4bfde', '#b8debd', '#edc4ae'];
 export function SampleSwitch({ openSample }: { openSample: (id: string) => void }) {
   return (
     <div className="sample-switch">
@@ -240,6 +241,12 @@ function Arrangement({
     lastFollowed = useRef('');
   const total = plan.total_bars * 1920;
   const musical = plan.notes.filter((n) => n.kind !== 'pulse' || !ws.pulseMuted);
+  function noteColor(note: ScheduledNote) {
+    if (note.kind === 'cue') return '#ffbc66';
+    if (!note.event_id) return '#74849c';
+    const role = bundle.map.responsibilities.find((r) => r.responsibility_id === note.responsibility_id);
+    return motifColors[Number(role?.motif_id.slice(1) ?? 0)];
+  }
   const files = [...new Set(bundle.map.units.map((u) => u.primary_span.path))];
   const selectedPath =
     ws.codeSpan?.path ?? bundle.map.units.find((unit) => unit.unit_id === ws.unitId)?.primary_span.path;
@@ -367,7 +374,7 @@ function Arrangement({
               y={note.kind === 'cue' ? 3 : note.event_id ? 8 : 19}
               width={Math.max(0.8, ((note.duration_ms * 0.768) / total) * 1000)}
               height={note.kind === 'cue' ? 22 : note.event_id ? 13 : 6}
-              fill={note.kind === 'cue' ? '#ffbd68' : note.event_id ? '#a8b4fc' : '#74849c'}
+              fill={noteColor(note)}
             />
           ))}
         </svg>
@@ -476,12 +483,22 @@ function Arrangement({
                             y={note.midi != null ? 5 + (84 - note.midi) * 1.1 : 38}
                             width={Math.max(2, ((note.duration_ms * 0.768) / length) * 1000)}
                             height={note.kind === 'data' ? 5 : 3}
-                            fill={
-                              note.kind === 'cue' ? '#ffbc66' : note.kind === 'data' ? '#c7cfff' : '#8293d7'
-                            }
+                            fill={noteColor(note)}
+                            opacity={note.kind === 'accompaniment' ? 0.65 : 1}
                           >
                             <title>
-                              {bundle.map.events.find((e) => e.event_id === note.event_id)?.span.path}:
+                              {
+                                bundle.map.responsibilities.find(
+                                  (r) => r.responsibility_id === note.responsibility_id,
+                                )?.motif_id
+                              }{' '}
+                              /{' '}
+                              {
+                                bundle.map.responsibilities.find(
+                                  (r) => r.responsibility_id === note.responsibility_id,
+                                )?.label
+                              }{' '}
+                              · {bundle.map.events.find((e) => e.event_id === note.event_id)?.span.path}:
                               {bundle.map.events.find((e) => e.event_id === note.event_id)?.span.start_line} ·{' '}
                               {note.kind === 'accompaniment'
                                 ? '意味の旋律を反復'
@@ -605,7 +622,23 @@ function Arrangement({
           <i className="backing-key" />
           共通伴奏
         </span>
-        <small>表示は実際の発音ノート · 波形の演出は使っていません</small>
+        <details className="motif-legend">
+          <summary>旋律と色の凡例</summary>
+          <div>
+            {bundle.map.responsibilities.map((r) => {
+              const note = musical.find(
+                (n) => n.kind === 'data' && n.responsibility_id === r.responsibility_id,
+              );
+              return (
+                <button key={r.responsibility_id} disabled={!note} onClick={() => note && select(note)}>
+                  <i style={{ background: motifColors[Number(r.motif_id.slice(1))] }} />
+                  {r.motif_id} / {r.label}
+                </button>
+              );
+            })}
+            <small>色は役割の識別です。健康の点数ではありません。</small>
+          </div>
+        </details>
       </div>
     </section>
   );
