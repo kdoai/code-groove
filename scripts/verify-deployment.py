@@ -1,5 +1,6 @@
 """Read-only deployment checks; reviewer credentials never leave process memory or auth service."""
 
+import hashlib
 import json
 
 import httpx
@@ -13,6 +14,20 @@ def main():
     with httpx.Client(timeout=30, follow_redirects=False) as client:
         checks["private_worker"] = client.get(state["worker_url"] + "/health").status_code == 403
         checks["protected_api"] = client.get(state["web_url"] + "/api/v1/projects").status_code == 401
+        checks["activity_requires_auth"] = (
+            client.get(state["web_url"] + "/api/v1/account/activity").status_code == 401
+        )
+        kit_url = state["web_url"] + "/audio/midnight-jazz-v4/"
+        kit = client.get(kit_url + "manifest.json").json()
+        expected = json.loads(
+            (ROOT / "apps/web/public/audio/midnight-jazz-v4/manifest.json").read_text(encoding="utf-8")
+        )
+        checks["pinned_recorded_kit"] = kit == expected
+        sample = next(s for s in kit["samples"] if s["voice"] == "bass")
+        checks["recorded_asset_hash"] = (
+            hashlib.sha256(client.get(kit_url + sample["file"]).content).hexdigest() == sample["sha256"]
+        )
+        checks["sample_attribution"] = "CC BY 3.0" in client.get(kit_url + "NOTICE.txt").text
         homepage = client.get(state["web_url"])
         checks["security_headers"] = (
             homepage.status_code == 200
@@ -43,6 +58,14 @@ def main():
             state["web_url"] + "/api/v1/projects", headers={"Authorization": f"Bearer {token}"}
         )
         checks["reviewer_authorized_api"] = projects.status_code == 200
+        activity = client.get(
+            state["web_url"] + "/api/v1/account/activity",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        checks["activity_owned_lookup"] = activity.status_code == 200 and (
+            activity.json()["data"] is None
+            or set(activity.json()["data"]) == {"run_id", "project_id", "kind", "status"}
+        )
         checks["unknown_owner_resource_hidden"] = (
             client.get(
                 state["web_url"] + "/api/v1/projects/p_unknown",

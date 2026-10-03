@@ -196,9 +196,9 @@ def main():
         [
             "Repository directory tree",
             "File/function clips + all notes",
-            "Separate common backing tracks",
+            "Backing tracks on demand",
             "Audible note -> exact file lines",
-            "Always available Agent questions",
+            "Questions + actual Agent activity",
         ],
     )
     arrow(parts, 435, 305, 525, 305)
