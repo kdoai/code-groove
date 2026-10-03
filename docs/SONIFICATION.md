@@ -1,11 +1,8 @@
-# Musical grammar v5 / human-approved review
+# Musical grammar v5 / whole-repository health examination
 
-Gemini interprets reasons to change and readability from source evidence. It checks
-alternatives and may find policy scattering, mixed responsibilities, change coupling,
-or an opaque data flow. These are human-review questions, not lint, bug detection or
-an objective health score. A reading scenario explains which values/decisions must
-be followed through actual source spans. Findings are optional, never invented to
-make the song interesting.
+Gemini examines the whole eligible snapshot for role ownership, readability and future change friction, with full reasoning capability. It records all grounded concerns it can establish and explicit unknowns. This is not a claim that audio detects something Gemini cannot know. Present bugs and security issues, when encountered, are disclosed for ordinary review/testing; they are not turned into a musical quality score.
+
+The overview performance encodes structural observations: the same role returns as the same motif across files, and several roles can coexist in a function. These relationships may be healthy. Initial health notes stay available; no upfront improvement action is presented. A human selects a heard/visible passage, then Gemini rereads its related source and checks future debt and legitimate boundaries. A confirmed focused result can be reflected into a separate saved map, adding the fixed response cues below where appropriate. Justified, inconclusive and observation-only outcomes are useful too.
 
 The fixed compiler uses six motifs, four-bar phrasing at 96 BPM, rootless jazz
 voicings, walking bass and piano/vibes melodies with rests and swing. **There are no
@@ -30,14 +27,9 @@ The player shows actual notes rather than fabricated waveforms. Clicking and pla
 follow take the listener back to source. This makes sound an index for relationships
 and comparison; it cannot explain the reason without the Agent evidence.
 
-Initial navigation has only the original sample. Requesting an improvement starts a
-real authenticated Gemini tool run. The immutable draft contains exact edits, fresh
-read evidence, tradeoffs and outstanding verification. Human acceptance creates a
-separate app-only snapshot and reserves a fresh analysis; rejection leaves the source
-unchanged. Only a completed accepted re-analysis exposes before/after controls. The
-Agent independently checks the new source and may retain a concern. It cannot edit
-the compiler, approve its own proposal or force a pleasant result. Existing matching
-responsibility IDs/motifs are supplied to the review to reduce unrelated musical drift.
+Initial navigation offers a working checkout feature, with no corrected answer. A new focused investigation is authenticated and quota bounded. Its findings, alternatives and fresh evidence are reviewable before the human reflects them into an immutable focused map. Only then can a grounded concern support an optional Gemini source proposal.
+
+The proposal contains exact edits, fresh reads, tradeoffs and outstanding verification. Explicit acceptance creates a separate app-only snapshot and reserves independent re-analysis. Rejection leaves source unchanged. A concern may remain after acceptance. Only completed accepted re-analysis exposes before/after; original sources and equivalent role motifs remain available. The Agent cannot approve itself, execute source, push Git or alter musical grammar.
 
 Reproducibility has two boundaries: the same saved validated analysis, compiler v5
 and PCM kit hash produce the same score hash and scheduled notes. Random proof UUIDs
@@ -45,9 +37,11 @@ are normalized. Gemini reruns can make different judgments; those results and dr
 are saved with their model/prompt/snapshot versions. Device/audio scheduling may
 change the physical playback, so bit-identical speaker output is not promised.
 
-The original realistic example is 151 TypeScript lines in four source files. Earlier
-116-line authored B remains an archived test case; it is not a default improved answer.
-No review effectiveness or musical enjoyment is claimed from automated checks.
+The new authored checkout example has 6 files, 13 indexed functions including callbacks, and a 130-second whole-work file arrangement. It works across expiry, minimum, cap and gift exclusions; the client preview has an explicit offline boundary and the server reprices independently. Initial data origin is visible. A recorded real examination replaces the development fixture once verified; neither is silently substituted for a failed live job. Imported repositories are never executed; behavior-contract tests run only this trusted bundled fixture.
+
+Usefulness remains a hypothesis: practitioners should try to locate cross-layer responsibilities, distinguish intentional boundaries from avoidable future coordination, and explain their decision. Compare sound-assisted navigation with the same map shown visually and as text; measure time/accuracy before claiming a benefit. The music is an optional parallel view with exact code navigation, not a scientific diagnostic test.
+
+Primary research: [Hussein et al., Sonification Design Guidelines to Enhance Program Comprehension](https://people.cs.vt.edu/tilevich/papers/sonification.pdf) studies auditory supplementation of unfamiliar-code visualization; it does not establish that this app or audio alone outperforms visual review. [Vickers and Alty, Musical Program Auralization: Empirical Studies](https://researchportal.northumbria.ac.uk/en/publications/musical-program-auralization-empirical-studies/) reports controlled novice studies of structured musical representations. Transfer to professional AI-era repository health review has not been established. These findings motivate a constrained, testable interface, not superiority claims.
 
 Design references: [Ableton Arrangement](https://www.ableton.com/en/manual/arrangement-view/),
 [Clip View](https://www.ableton.com/en/manual/clip-view/),

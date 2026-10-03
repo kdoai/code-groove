@@ -63,3 +63,8 @@ private artifacts use the existing lifecycle, and project deletion removes propo
 No new dependency or widened IAM permission is required. Automated checks cover the
 listed boundaries; generated code is a proposal, with behavior/testing obligations
 shown to the human, not a proven safe refactoring.
+# R5 health-review boundaries
+
+`analysis_depth` is server-owned and absent from model submit candidates and client create bodies. An overview can retain detected concerns but cannot start a source proposal. A human-selected investigation must cite fresh code evidence; interpreted signals must reference existing grounded events and freshly read covering functions. Publication revalidates evidence against the immutable base snapshot, then atomically checks the current base and project lifecycle. It creates a separate map and never changes source. Interpretation and later refactoring are separate decisions.
+
+Owned investigation metadata persists the active run and latest result for reload. Stale results are not presented as belonging to a newer analysis. Public recorded health data contains only the trusted bundled sample and allowlisted actual tool trace, not reviewer credentials or metadata owner IDs. The new flow adds no IAM, dependencies or services; quotas, retention and keyless release remain unchanged. Subjective health interpretation is not a security audit; source bugs encountered by the Agent are disclosed for ordinary review, not hidden to motivate listening.

@@ -83,6 +83,9 @@ export default function App() {
         previous_analysis_id?: string;
         latest_proposal_id?: string;
         proposal_run_id?: string;
+        investigation_run_id?: string;
+        investigation_analysis_id?: string;
+        latest_investigation_id?: string;
         working_copy?: boolean;
       }>(`/projects/${ws.projectId}`),
     enabled: !!ws.projectId && !ws.sampleId && !!user,
@@ -161,7 +164,12 @@ export default function App() {
   useEffect(() => {
     if (!run.data || active.includes(run.data.status)) return;
     if (['completed', 'partial'].includes(run.data.status)) {
-      ws.set({ analysisId: run.data.result_id ?? '' });
+      ws.set({
+        analysisId: run.data.result_id ?? '',
+        ...(run.data.result_id !== ws.analysisId
+          ? { unitId: '', eventId: '', codeSpan: null, scene: 0 }
+          : {}),
+      });
       setRunId('');
       setAcceptingImprovement(false);
       cache.invalidateQueries({ queryKey: ['project', ws.projectId] });
@@ -177,6 +185,15 @@ export default function App() {
     enabled: !!investigationRunId && !!user,
     refetchInterval: (query) => (active.includes(query.state.data?.status ?? 'queued') ? 1000 : false),
   });
+  useEffect(() => {
+    if (!project.data || project.data.investigation_analysis_id !== ws.analysisId) return;
+    if (project.data.investigation_run_id) setInvestigationRunId(project.data.investigation_run_id);
+    else if (project.data.latest_investigation_id) {
+      void api<InvestigationResult>(`/investigations/${project.data.latest_investigation_id}`)
+        .then(setResult)
+        .catch((e) => setInvestigationError(e.message));
+    }
+  }, [project.data, ws.analysisId]);
   const investigationEvents = useRunEvents(
     investigationRunId,
     !!user,
@@ -194,6 +211,7 @@ export default function App() {
   const pending = starting || (!!runId && active.includes(run.data?.status ?? 'queued'));
   const investigating = !!investigationRunId && active.includes(investigationRun.data?.status ?? 'queued');
   function openSample(id: string) {
+    setInvestigationRunId('');
     setProposalId('');
     setProposalRunId('');
     setShowProposal(false);
@@ -292,7 +310,7 @@ export default function App() {
       setModal('auth');
       return;
     }
-    if (ws.sampleId === 'recorded-checkout-flow') {
+    if (['recorded-checkout-flow', 'recorded-returns-before'].includes(ws.sampleId)) {
       try {
         const saved = await api<{ project_id: string; analysis_id: string }>(
           `/samples/${ws.sampleId}/projects`,
@@ -564,7 +582,7 @@ export default function App() {
           <AgentPanel
             key={data.map.analysis_id}
             bundle={data}
-            result={result}
+            result={result?.base_analysis_id === data.map.analysis_id ? result : undefined}
             events={proposing ? (proposalEvents.data ?? []) : (investigationEvents.data ?? [])}
             pending={investigating}
             proposing={proposing}
@@ -606,7 +624,7 @@ export default function App() {
             <br />
             Agentに、その判断の理由を聞けます。
           </p>
-          <button className="primary" onClick={() => openSample('checkout-flow')}>
+          <button className="primary" onClick={() => openSample('recorded-checkout-flow')}>
             比較サンプルを開く
             <ArrowRight size={15} />
           </button>
@@ -646,7 +664,7 @@ export default function App() {
           close={() => setModal('')}
           loadSample={() => {
             ws.set({ mode: 'repo', wholeWork: true, loop: false, pulseMuted: true });
-            openSample('checkout-flow');
+            openSample('recorded-checkout-flow');
             setTour(true);
           }}
         />

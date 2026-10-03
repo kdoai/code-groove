@@ -401,7 +401,7 @@ export function AgentPanel({
 function FindingCards({ result, map }: { result?: InvestigationResult; map: SemanticMap }) {
   const ws = useWorkspace();
   const titles = {
-    concern: '懸念あり',
+    concern: '将来の負担候補',
     justified_difference: '理由のある違い',
     inconclusive: '判断保留',
     no_specific_concern: '注目点なし',

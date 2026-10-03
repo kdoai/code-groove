@@ -106,7 +106,7 @@ export function AuthDialog({ close, done }: { close: () => void; done: () => voi
 }
 export const sampleLabels = [
   {
-    id: 'checkout-flow',
+    id: 'recorded-checkout-flow',
     label: 'コードの健康診断 / TypeScript',
     detail: '動く購入機能の全体像 · 聴いて選び、境界を精密検査',
   },

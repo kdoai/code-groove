@@ -12,8 +12,8 @@ from code_groove.validation import validate_investigation
 from fastapi.testclient import TestClient
 
 
-def fresh_review(base, sources):
-    ctx = AgentContext(
+def fresh_review(base, sources, ctx=None):
+    ctx = ctx or AgentContext(
         Settings(),
         base["project_id"],
         base["snapshot_id"],
@@ -54,6 +54,57 @@ def fresh_review(base, sources):
         ],
         hypotheses=[],
     )
+
+
+@pytest.mark.asyncio
+async def test_fresh_investigation_is_saved_for_reload_without_another_model_run(tmp_path, monkeypatch):
+    app = create_app(
+        Settings(local_data_dir=tmp_path, enable_live_analysis=True, model_mode="live"),
+        verifier=lambda token: token,
+    )
+    app.state.store.put("accounts", "alice", {"enabled": True})
+    client = TestClient(app)
+    headers = {"Authorization": "Bearer alice", "Idempotency-Key": "health-resume"}
+    copied = client.post("/api/v1/samples/recorded-returns-before/projects", json={}, headers=headers).json()[
+        "data"
+    ]
+    bundle = client.get(f"/api/v1/projects/{copied['project_id']}/bundle", headers=headers).json()["data"]
+    event = bundle["map"]["events"][0]
+    calls = []
+
+    async def agent(ctx):
+        calls.append(ctx)
+        _, candidate = fresh_review(ctx.base, ctx.sources, ctx)
+        return execute_tool(
+            ctx, "submit_investigation", {"candidate": candidate.model_dump(mode="json")}, "submit_health"
+        )
+
+    monkeypatch.setattr("code_groove.jobs.run_agent", agent)
+    created = client.post(
+        f"/api/v1/analyses/{copied['analysis_id']}/investigations",
+        json={
+            "scene_id": bundle["score"]["scenes"][0]["scene_id"],
+            "unit_ids": [event["unit_id"]],
+            "event_ids": [event["event_id"]],
+            "question": "Check future friction and legitimate boundaries",
+        },
+        headers={**headers, "Idempotency-Key": "health-inv"},
+    ).json()["data"]
+    assert app.state.store.get("projects", copied["project_id"])["investigation_run_id"] == created["run_id"]
+    await app.state.jobs.handle(created["run_id"])
+    run = app.state.store.get("runs", created["run_id"])
+    assert run["status"] == "completed", run.get("error")
+    project = client.get(f"/api/v1/projects/{copied['project_id']}", headers=headers).json()["data"]
+    assert project["latest_investigation_id"] == run["result_id"]
+    assert not project["investigation_run_id"]
+    assert project["investigation_analysis_id"] == copied["analysis_id"]
+    assert (
+        client.get(
+            f"/api/v1/investigations/{project['latest_investigation_id']}", headers=headers
+        ).status_code
+        == 200
+    )
+    assert len(calls) == 1
 
 
 def test_initial_detection_is_preserved_but_proposal_requires_focused_confirmation(tmp_path):

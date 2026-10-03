@@ -167,6 +167,17 @@ class JobService:
                     project_id,
                     {**(current_project or {}), "proposal_run_id": run_id, "updated_at": now},
                 )
+            elif kind == "investigation":
+                tx.put(
+                    "projects",
+                    project_id,
+                    {
+                        **(current_project or {}),
+                        "investigation_run_id": run_id,
+                        "investigation_analysis_id": body["analysis_id"],
+                        "updated_at": now,
+                    },
+                )
             for collection, identifier, quota in [
                 ("daily_quotas", quota_id, user_quota),
                 ("global_quotas", date, global_quota),
@@ -649,6 +660,18 @@ class JobService:
                             **target,
                             "latest_proposal_id": result_id,
                             "proposal_run_id": "",
+                            "updated_at": time.time(),
+                        },
+                    )
+                elif base:
+                    tx.put(
+                        "projects",
+                        run["project_id"],
+                        {
+                            **target,
+                            "latest_investigation_id": result_id,
+                            "investigation_analysis_id": base["analysis_id"],
+                            "investigation_run_id": "",
                             "updated_at": time.time(),
                         },
                     )

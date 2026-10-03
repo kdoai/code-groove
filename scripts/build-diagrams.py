@@ -154,7 +154,7 @@ def main():
     save("data-flow", parts)
     parts = document(
         "Code Groove / Why this rhythm?",
-        "The Agent judges code. The deterministic compiler composes. The player reveals the evidence.",
+        "Whole-health mapping -> listen -> select -> focused inspection -> human decision.",
     )
     box(
         parts,
@@ -162,13 +162,13 @@ def main():
         190,
         375,
         240,
-        "1 / Agent interpretation",
+        "1 / Whole-health map",
         [
             "Read exact functions + context",
             "Ask: same reason to change?",
             "Check alternative contracts",
-            "Concern / justified / unknown",
-            "Concrete changes / reading tasks",
+            "Detected debt candidates stay visible",
+            "Roles first; no initial patch action",
         ],
     )
     box(
@@ -183,7 +183,7 @@ def main():
             "Four-bar question and answer",
             "Rootless voicing / walking bass",
             "Swing / rests / no drums",
-            "Fixed evidence-linked echo cues",
+            "Response cues after focused review",
         ],
     )
     box(
@@ -209,12 +209,12 @@ def main():
         530,
         635,
         210,
-        "Shared decisions / checked concern",
+        "Human-selected precision examination",
         [
-            "Hypothesis: policy window or fee changes",
-            "Two code owners must change together",
-            "A shifted musical response is added in both clips",
-            "Amber ranges link to read evidence; backing is reduced",
+            "Follow a recurring motif across layers",
+            "Fresh reads check future friction + alternatives",
+            "Explicit reflection publishes a focused map",
+            "Optional proposal only after reviewing that result",
         ],
     )
     box(
@@ -264,6 +264,30 @@ def main():
         '<text x="60" y="875" class="sub">Compare with stable responsibility motifs. No GitHub writes or repository execution. Reject keeps the original; replay makes no model request.</text>'
     )
     save("approval-sequence", parts)
+    parts = document(
+        "Code Groove / Repository health examination",
+        "Full Gemini detection stays available. Sound guides the scope of fresh examination; no initial patch action.",
+    )
+    for x, name in actors:
+        box(parts, x - 130, 150, 260, 80, name, [])
+        parts.append(f'<path d="M{x} 230V830" stroke="#cbd5e6" stroke-dasharray="6 6"/>')
+    for y, a, b, label in [
+        (275, 0, 1, "1. Open a pinned whole-repository snapshot"),
+        (330, 1, 2, "2. Full health examination / roles / alternatives"),
+        (385, 2, 3, "3. Save map + detected debt candidates + unknowns"),
+        (440, 1, 0, "4. Descriptive motifs / file and meaning layouts"),
+        (495, 0, 1, "5. Listen / select a passage / ask a question"),
+        (550, 1, 2, "6. Fresh targeted reads / legitimate boundaries"),
+        (605, 2, 3, "7. Save findings / evidence / possible reinterpretation"),
+        (660, 1, 0, "8. Review observation / tradeoff / limitation"),
+        (715, 0, 1, "9. Explicitly reflect into a separate focused map"),
+        (770, 0, 1, "10. Observe, or request an optional source proposal"),
+    ]:
+        arrow(parts, actors[a][0], y, actors[b][0], y, label)
+    parts.append(
+        '<text x="60" y="875" class="sub">Refactoring follows the separate approval sequence. Repeated roles are not defects; audio cannot recover unmapped information.</text>'
+    )
+    save("health-sequence", parts)
     architecture = ROOT / "docs/architecture.svg"
     value = (
         architecture.read_text(encoding="utf-8")

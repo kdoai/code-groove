@@ -48,7 +48,7 @@ test('paid deployed Gemini proposal, explicit approval, fresh analysis and prese
   await page.getByRole('dialog').getByRole('button', { name: 'ログイン', exact: true }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
   timings.login_complete = time();
-  await page.getByRole('button', { name: '懸念の前後を聴く', exact: true }).click();
+  await page.getByRole('button', { name: 'この区間を聴く', exact: true }).click();
   timings.before_play = time();
   await page.waitForTimeout(20000);
   await page.getByRole('button', { name: 'Pause', exact: true }).click();

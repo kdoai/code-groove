@@ -9,7 +9,7 @@ const CodePanel = lazy(() => import('./CodePanel').then((module) => ({ default: 
 export function SampleSwitch({ openSample }: { openSample: (id: string) => void }) {
   return (
     <div className="sample-switch">
-      <button data-tour="album" onClick={() => openSample('checkout-flow')}>
+      <button data-tour="album" onClick={() => openSample('recorded-checkout-flow')}>
         サンプルを開く
       </button>
     </div>
