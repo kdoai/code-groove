@@ -84,7 +84,7 @@ export async function compileGroove(map: SemanticMap, kitHash: string): Promise<
     const sceneId = `scene_${index + 1}`;
     const base = {
       scene_id: sceneId,
-      grammar_version: 'groove-arrangement-v4' as const,
+      grammar_version: 'groove-chamber-v5' as const,
       kit_id: 'midnight-jazz-v3' as const,
       kit_hash: kitHash,
       bpm: 96 as const,
@@ -145,20 +145,6 @@ export async function compileGroove(map: SemanticMap, kitHash: string): Promise<
     });
     for (const plan of [theme, repo]) {
       arrangeJazz(plan, map);
-      for (let bar = 0; bar < plan.total_bars; bar++)
-        for (const step of [0, 4, 8, 12]) {
-          plan.notes.push({
-            note_id: `pulse_${bar}_${step}`,
-            kind: 'pulse',
-            tick: (bar * 16 + step) * 120,
-            duration_ms: 35,
-            voice: 'wood',
-            variant: 0,
-            velocity: 0.08,
-            pan: 0,
-            evidence_ids: [],
-          });
-        }
       plan.notes.sort((a, b) => a.tick - b.tick || a.note_id.localeCompare(b.note_id));
     }
     return { scene_id: sceneId, unit_ids: unitIds, theme, repo };
@@ -190,7 +176,7 @@ export async function compileGroove(map: SemanticMap, kitHash: string): Promise<
     analysis_id: map.analysis_id,
     score_hash: await sha256({
       semanticContent,
-      grammar: 'groove-arrangement-v4',
+      grammar: 'groove-chamber-v5',
       kitHash,
       scenes: scenes.map((scene) => ({
         ...scene,

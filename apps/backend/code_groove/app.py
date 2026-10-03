@@ -1,4 +1,5 @@
 import copy
+import hashlib
 import json
 import re
 import time
@@ -16,10 +17,12 @@ from starlette.middleware.gzip import GZipMiddleware
 from code_groove.auth import FirebaseVerifier
 from code_groove.errors import GrooveError
 from code_groove.http_limits import BodyLimitMiddleware
+from code_groove.improvements import apply_edits, source_hash
+from code_groove.incremental import INDEX_VERSION
 from code_groove.jobs import JobService
-from code_groove.schemas import Contract, Evidence, Id, SemanticMap
+from code_groove.schemas import Contract, Evidence, Id, ImprovementProposal, SemanticMap
 from code_groove.settings import ROOT, Settings
-from code_groove.source import parse_github_url, run_node
+from code_groove.source import build_index, parse_github_url, run_node
 from code_groove.storage import ArtifactStore, MetadataStore, Transaction
 from code_groove.validation import validate_candidate
 
@@ -63,6 +66,10 @@ class Selection(Contract):
 class TaskBody(Contract):
     run_id: Id | None = None
     project_id: Id | None = None
+
+
+class ProposalRequest(Contract):
+    signal_id: Id
 
 
 def create_app(settings: Settings | None = None, verifier: Callable[[str], str] | None = None) -> FastAPI:
@@ -215,7 +222,7 @@ def create_app(settings: Settings | None = None, verifier: Callable[[str], str] 
             )
         )
         bundle = json.loads(file.read_text(encoding="utf-8"))
-        if bundle["score"]["scenes"][0]["repo"]["grammar_version"] != "groove-arrangement-v4":
+        if bundle["score"]["scenes"][0]["repo"]["grammar_version"] != "groove-chamber-v5":
             kit = json.loads((ROOT / "apps/web/public/audio/midnight-jazz-v3/manifest.json").read_text())
             bundle["score"] = run_node("groove-core", {"map": bundle["map"], "kit_hash": kit["kit_hash"]})
         return {"data": bundle}
@@ -229,6 +236,77 @@ def create_app(settings: Settings | None = None, verifier: Callable[[str], str] 
         elif not body.source.sample_id or body.source.url or body.source.ref:
             raise GrooveError("INVALID_SOURCE", "内蔵サンプルを指定してください。")
         return {"data": jobs.create(user, body.model_dump(mode="json"), key)}
+
+    @app.post("/api/v1/samples/recorded-returns-before/projects", status_code=201)
+    def adopt_recorded_sample(user: User, key: Key) -> dict:
+        idem_id = hashlib.sha256(f"{user}:adopt:{key}".encode()).hexdigest()
+        previous = store.get("idempotency", idem_id)
+        if previous and previous["expires_at"] > time.time():
+            project = own("projects", previous["project_id"], user)
+            return {
+                "data": {"project_id": project["project_id"], "analysis_id": project["latest_analysis_id"]}
+            }
+        if (
+            len(
+                [
+                    p
+                    for p in store.list("projects", "owner_uid", user)
+                    if p["expires_at"] > time.time() and p["status"] != "deleted"
+                ]
+            )
+            >= 20
+        ):
+            raise GrooveError("PROJECT_LIMIT", "保存数の上限です。不要な作業を削除してください。", 429)
+        bundle = sample_bundle("recorded-returns-before")["data"]
+        project_id, analysis_id = f"p_{uuid.uuid4().hex}", f"analysis_{uuid.uuid4().hex}"
+        bundle["map"].update(project_id=project_id, analysis_id=analysis_id)
+        bundle["score"]["analysis_id"] = analysis_id
+        snapshot_id = bundle["map"]["snapshot_id"]
+        snapshot_key = f"projects/{project_id}/snapshots/{snapshot_id}/snapshot.json.gz"
+        artifact_key = f"projects/{project_id}/analyses/{analysis_id}/bundle.json.gz"
+        snapshot = {
+            "snapshot_id": snapshot_id,
+            "sources": bundle["sources"],
+            "sha": source_hash(bundle["sources"]),
+            "index_version": INDEX_VERSION,
+            "index": build_index(snapshot_id, bundle["sources"]),
+        }
+        artifacts.put(snapshot_key, snapshot)
+        artifacts.put(artifact_key, {"map": bundle["map"], "score": bundle["score"]})
+        now = time.time()
+        common = {
+            "owner_uid": user,
+            "project_id": project_id,
+            "snapshot_key": snapshot_key,
+            "snapshot_id": snapshot_id,
+            "created_at": now,
+            "updated_at": now,
+            "expires_at": now + 7 * 86400,
+        }
+
+        def publish_copy(tx):
+            existing = tx.get("idempotency", idem_id)
+            if existing and existing["expires_at"] > now:
+                return existing["project_id"], existing["analysis_id"]
+            tx.put(
+                "projects",
+                project_id,
+                {
+                    **common,
+                    "status": "completed",
+                    "source": {"kind": "sample", "sample_id": "returns-before"},
+                    "latest_analysis_id": analysis_id,
+                    "run_id": "",
+                    "working_copy": True,
+                    "sha": snapshot["sha"],
+                },
+            )
+            tx.put("analyses", analysis_id, {**common, "artifact_key": artifact_key})
+            tx.put("idempotency", idem_id, {**common, "analysis_id": analysis_id, "expires_at": now + 86400})
+            return project_id, analysis_id
+
+        project_id, analysis_id = store.atomic(publish_copy)
+        return {"data": {"project_id": project_id, "analysis_id": analysis_id}}
 
     @app.get("/api/v1/projects")
     def list_projects(user: User) -> dict:
@@ -299,7 +377,7 @@ def create_app(settings: Settings | None = None, verifier: Callable[[str], str] 
             raise GrooveError("NOT_FOUND", "対象が見つかりません。", 404)
         snapshot = artifacts.get(meta["snapshot_key"]) if meta.get("snapshot_key") else snapshot_for(project)
         bundle = artifacts.get(meta["artifact_key"])
-        if bundle["score"]["scenes"][0]["repo"]["grammar_version"] != "groove-arrangement-v4":
+        if bundle["score"]["scenes"][0]["repo"]["grammar_version"] != "groove-chamber-v5":
             kit = json.loads((ROOT / "apps/web/public/audio/midnight-jazz-v3/manifest.json").read_text())
             bundle["score"] = run_node("groove-core", {"map": bundle["map"], "kit_hash": kit["kit_hash"]})
         return {"data": {**bundle, "sources": snapshot["sources"]}}
@@ -340,6 +418,87 @@ def create_app(settings: Settings | None = None, verifier: Callable[[str], str] 
     @app.get("/api/v1/investigations/{investigation_id}")
     def get_investigation(investigation_id: str, user: User) -> dict:
         return {"data": artifacts.get(own("investigations", investigation_id, user)["artifact_key"])}
+
+    @app.post("/api/v1/analyses/{analysis_id}/proposals", status_code=202)
+    def propose_improvement(analysis_id: str, body: ProposalRequest, user: User, key: Key) -> dict:
+        analysis = own("analyses", analysis_id, user)
+        project = own("projects", analysis["project_id"], user)
+        base = artifacts.get(analysis["artifact_key"])["map"]
+        signal = next(
+            (
+                s
+                for s in base.get("review_signals", [])
+                if s["signal_id"] == body.signal_id and s["verdict"] == "concern"
+            ),
+            None,
+        )
+        if not signal:
+            raise GrooveError("INVALID_SELECTION", "根拠のある懸念を選択してください。")
+        return {
+            "data": jobs.create(
+                user,
+                {
+                    "analysis_id": analysis_id,
+                    "signal_id": body.signal_id,
+                    "unit_ids": signal["unit_ids"],
+                    "event_ids": signal["event_ids"],
+                },
+                key,
+                "proposal",
+                project,
+            )
+        }
+
+    @app.get("/api/v1/proposals/{proposal_id}")
+    def get_proposal(proposal_id: str, user: User) -> dict:
+        meta = own("proposals", proposal_id, user)
+        return {"data": {**artifacts.get(meta["artifact_key"]), "status": meta.get("status", "draft")}}
+
+    @app.post("/api/v1/proposals/{proposal_id}/accept", status_code=202)
+    def accept_proposal(proposal_id: str, user: User, key: Key) -> dict:
+        meta = own("proposals", proposal_id, user)
+        project = own("projects", meta["project_id"], user)
+        proposal = ImprovementProposal.model_validate(artifacts.get(meta["artifact_key"]))
+        analysis = own("analyses", proposal.base_analysis_id, user)
+        snapshot = artifacts.get(analysis["snapshot_key"])
+        if (
+            source_hash(snapshot["sources"]) != proposal.source_hash
+            or snapshot["snapshot_id"] != proposal.base_snapshot_id
+        ):
+            raise GrooveError("STALE_BASE_ANALYSIS", "変更元スナップショットが一致しません。", 409)
+        sources = apply_edits(proposal, snapshot["sources"], proposal.evidence)
+        artifact_key = f"projects/{project['project_id']}/proposals/{proposal_id}/accepted-sources.json.gz"
+        artifacts.put(artifact_key, {"sources": sources})
+        return {
+            "data": jobs.create(
+                user,
+                {
+                    "analysis_id": proposal.base_analysis_id,
+                    "proposal_id": proposal_id,
+                    "derived_sources_key": artifact_key,
+                    "refresh": True,
+                },
+                key,
+                "analysis",
+                project,
+            )
+        }
+
+    @app.post("/api/v1/proposals/{proposal_id}/reject")
+    def reject_proposal(proposal_id: str, user: User) -> dict:
+        own("proposals", proposal_id, user)
+
+        def reject(tx):
+            meta = tx.get("proposals", proposal_id)
+            project = tx.get("projects", meta["project_id"])
+            if meta.get("status", "draft") == "accepted":
+                raise GrooveError("INVALID_STATE", "採用した改善案は却下できません。", 409)
+            if not project or project["status"] in ("deleting", "deleted"):
+                raise GrooveError("NOT_FOUND", "projectを利用できません。", 404)
+            tx.put("proposals", proposal_id, {**meta, "status": "rejected", "updated_at": time.time()})
+
+        store.atomic(reject)
+        return {"data": {"status": "rejected"}}
 
     @app.post("/api/v1/investigations/{investigation_id}/publish-interpretation")
     def publish(investigation_id: str, user: User) -> dict:

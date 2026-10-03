@@ -120,13 +120,6 @@ export function Transport({ score, onError }: { score?: ScoreBundle; onError: (m
         <summary>再生設定</summary>
         <div className="settings-popover">
           <span>聴く範囲</span>
-          <div className="mode-switch">
-            {(['repo', 'theme'] as const).map((mode) => (
-              <button key={mode} aria-pressed={ws.mode === mode} onClick={() => ws.set({ mode })}>
-                {mode === 'repo' ? 'ファイルの配置' : '意味ごとの比較'}
-              </button>
-            ))}
-          </div>
           <button aria-pressed={ws.wholeWork} onClick={() => ws.set({ wholeWork: !ws.wholeWork })}>
             {ws.wholeWork ? '全体を再生' : '選択区間を再生'}
           </button>
@@ -146,9 +139,6 @@ export function Transport({ score, onError }: { score?: ScoreBundle; onError: (m
           <button aria-label="Loop" aria-pressed={ws.loop} onClick={() => ws.set({ loop: !ws.loop })}>
             <Repeat2 size={14} />
             繰り返す
-          </button>
-          <button aria-pressed={!ws.pulseMuted} onClick={() => ws.set({ pulseMuted: !ws.pulseMuted })}>
-            メトロノーム
           </button>
           <span>伴奏・メロディー</span>
           <div className="instrument-settings">

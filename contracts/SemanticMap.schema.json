@@ -467,6 +467,7 @@
             "policy_scattering",
             "responsibility_mixing",
             "change_coupling",
+            "data_flow_opacity",
             "justified_boundary"
           ],
           "title": "Category",

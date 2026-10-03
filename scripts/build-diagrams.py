@@ -235,6 +235,35 @@ def main():
         '<text x="60" y="840" class="sub">Accompaniment is musical context, not a code claim. Unread code gets no invented events. Scores and kits have stable hashes.</text>'
     )
     save("sonification", parts)
+    parts = document(
+        "Code Groove / Human-approved improvement",
+        "A proposal changes nothing. Approval creates an app-only snapshot; independent review may retain a concern.",
+    )
+    actors = [
+        (180, "Human / browser"),
+        (510, "Protected API"),
+        (860, "Worker / Gemini"),
+        (1220, "Private store"),
+    ]
+    for x, name in actors:
+        box(parts, x - 130, 150, 260, 80, name, [])
+        parts.append(f'<path d="M{x} 230V830" stroke="#cbd5e6" stroke-dasharray="6 6"/>')
+    for y, a, b, label in [
+        (280, 0, 1, "1. Request a grounded improvement"),
+        (340, 1, 2, "2. Reserve shared investigation quota"),
+        (400, 2, 3, "3. Read base / tools / exact edit validation"),
+        (460, 2, 3, "4. Store immutable draft + evidence"),
+        (520, 1, 0, "5. Show diff / tradeoffs / pending checks"),
+        (595, 0, 1, "6. Explicit accept or reject (no auto approval)"),
+        (665, 1, 3, "7. CAS base + draft state + analysis budget"),
+        (735, 1, 2, "8. Re-index / review accepted snapshot"),
+        (805, 2, 3, "9. Preserve original / publish new score"),
+    ]:
+        arrow(parts, actors[a][0], y, actors[b][0], y, label)
+    parts.append(
+        '<text x="60" y="875" class="sub">Compare with stable responsibility motifs. No GitHub writes or repository execution. Reject keeps the original; replay makes no model request.</text>'
+    )
+    save("approval-sequence", parts)
     architecture = ROOT / "docs/architecture.svg"
     value = (
         architecture.read_text(encoding="utf-8")

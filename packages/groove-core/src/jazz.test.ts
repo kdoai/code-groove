@@ -26,11 +26,15 @@ describe('meaningful jazz arrangements', () => {
     expect(new Set(cueBar.map((n) => n.voice))).toEqual(new Set(['piano', 'vibes']));
     const diagnosticBar = Math.floor(a.notes.find((n) => n.kind === 'cue')!.tick / 1920);
     const chord = (bar: number) => a.notes.find((n) => n.note_id.includes(`chord_${bar}_0_0`))!;
-    expect(chord(diagnosticBar).velocity).toBeCloseTo(chord(diagnosticBar - 1).velocity * 0.4);
+    expect(chord(diagnosticBar).velocity).toBeCloseTo(chord(diagnosticBar - 1).velocity * 0.3);
+    expect(
+      a.notes.some((n) => ['kick', 'snare', 'hat', 'wood'].includes(n.voice) || n.kind === 'pulse'),
+    ).toBe(false);
 
     expect(new Set(a.notes.filter((n) => n.voice === 'piano').map((n) => n.midi)).size).toBeGreaterThan(5);
     expect(a.notes.filter((n) => n.kind === 'data')).toHaveLength(load('before').events.length);
     expect(a.notes.filter((n) => n.kind === 'cue').every((n) => n.evidence_ids.length > 0)).toBe(true);
+    expect(new Set(a.notes.filter((n) => n.kind === 'cue').map((n) => n.event_id)).size).toBeGreaterThan(2);
     expect((await compileGroove(load('before'), 'kit')).score_hash).toBe(before.score_hash);
   });
   it('keeps alternative-read UUIDs out of musical identity', async () => {
@@ -63,6 +67,19 @@ describe('meaningful jazz arrangements', () => {
     expect(new Set(merged.notes.map((n) => n.note_id)).size).toBe(merged.notes.length);
     expect(merged.phrases.at(-1)!.start_bar).toBe(
       scene.repo.phrases.at(-1)!.start_bar + scene.repo.total_bars,
+    );
+  });
+  it('grounds a fragmented reading response in the same exact code event', async () => {
+    const map = load('before');
+    map.review_signals![0]!.category = 'data_flow_opacity';
+    const plan = (await compileGroove(map, 'kit')).scenes[0].repo;
+    const notes = plan.notes.filter((n) => n.kind === 'cue');
+    expect(notes.some((n) => n.midi === 71)).toBe(true);
+    expect(
+      notes.every((n) => map.events.some((e) => e.event_id === n.event_id && e.unit_id === n.unit_id)),
+    ).toBe(true);
+    expect(plan.notes.filter((n) => n.kind === 'data').map((n) => n.event_id)).toEqual(
+      expect.arrayContaining(map.events.map((e) => e.event_id)),
     );
   });
 });

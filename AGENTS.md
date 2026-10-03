@@ -3,7 +3,7 @@
 - Read `docs/SPEC.md` before changing contracts, music, Agent behavior, or deployment.
 - Implement in M0–M5 order; record actual checks and remaining work in `EXECUTION_PLAN.md`.
 - Use subagents only when the user explicitly requests them in the current request.
-- Never execute code from an analyzed repository. All Agent tools are bounded, read-only, and authorized.
+- Never execute code from an analyzed repository. Agent tools only read or submit a bounded draft. Human acceptance is required before app-only source snapshots change; never push reviewed repositories.
 - Keep fixture, recorded live, and live results visibly distinct. Never fall back silently.
 - Use Python snake_case, TypeScript camelCase, PascalCase components/types, and descriptive domain names.
 - Validate at boundaries. Keep functions focused and comments for non-obvious constraints only.

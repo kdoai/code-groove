@@ -309,7 +309,8 @@ export type ReviewSignals =
       ReviewSignal
     ];
 export type SignalId = string;
-export type Category = "policy_scattering" | "responsibility_mixing" | "change_coupling" | "justified_boundary";
+export type Category =
+  "policy_scattering" | "responsibility_mixing" | "change_coupling" | "data_flow_opacity" | "justified_boundary";
 export type Verdict = "concern" | "justified" | "inconclusive";
 export type Label3 = string;
 export type Explanation = string;

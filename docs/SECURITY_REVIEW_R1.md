@@ -43,3 +43,23 @@ is enlarged. After bounded exploration, the server permits only final submission
 with validated existing evidence. Unsupported claims must stay unknown. A single
 administrative analysis-count credit used for release verification is audited in
 artifacts/r3-verification-credit.json; consumed tokens and global ceilings remain.
+
+R4 adds a separate draft/approval boundary. Drafts require fresh covering reads,
+exact unique source replacements, at most six hunks/four normal source files,
+restricted paths/new-file directories and bounded size. The trusted parsers check
+syntax and relative imports without executing submitted source. The Agent cannot
+approve a draft, modify a score rule, change dependencies/CI/secrets, or push GitHub.
+
+Accept/reject endpoints require the owner and unexpired parent. Acceptance atomically
+checks current base + draft state + active-run and token/daily allowances; duplicate
+idempotency keys recover the same run. The original source and result remain immutable.
+Re-analysis publication checks the base again, retains honest concerns and cannot
+replace a newer interpretation. A rejected or expired draft cannot change source.
+All diffs are escaped React text; the dialog traps focus and supports Escape. Paid
+generation is never started by the tour. Proposal generation shares investigation
+quotas; re-analysis is reserved before acceptance. New proposals metadata has TTL,
+private artifacts use the existing lifecycle, and project deletion removes proposals.
+
+No new dependency or widened IAM permission is required. Automated checks cover the
+listed boundaries; generated code is a proposal, with behavior/testing obligations
+shown to the human, not a proven safe refactoring.

@@ -1,56 +1,59 @@
-# Musical grammar v4 / arrangement workspace
+# Musical grammar v5 / human-approved review
 
-Gemini reads the authorized source, tests the reason to change, checks an alternative,
-and submits grounded design events. A concern now requires an explicitly hypothetical
-change scenario and actual read evidence checking the alternative. It never selects
-notes or generates music. Lint findings, simple bugs and arbitrary quality scores
-are outside this interpretation.
+Gemini interprets reasons to change and readability from source evidence. It checks
+alternatives and may find policy scattering, mixed responsibilities, change coupling,
+or an opaque data flow. These are human-review questions, not lint, bug detection or
+an objective health score. A reading scenario explains which values/decisions must
+be followed through actual source spans. Findings are optional, never invented to
+make the song interesting.
 
-The compiler produces four-bar phrases at 96 BPM with six authored motifs, rootless
-Cmaj9 / Am7 / Dm9 / G13 voicings, common-tone motion, walking bass and restrained
-brush/ride swing. Melody patterns contain rests, anticipations and longer answers;
-they are not four equal notes every bar. The last harmony resolves to C major.
-PCM instruments have smooth attacks/releases and a separate versioned hash. There
-is no runtime randomness. The musical arrangement is a product design, not a
-scientific measure of code health.
+The fixed compiler uses six motifs, four-bar phrasing at 96 BPM, rootless jazz
+voicings, walking bass and piano/vibes melodies with rests and swing. **There are no
+drums or metronome notes in v5**, including hidden lanes. Common bass and chords are
+musical context and make no code claim. Every semantic note and its repeated melody
+carry their exact event and source span. Paired concern responses move among the
+actual cited decisions, rather than pointing all sounds to one line.
 
-Every grounded meaning event produces one data note in each arrangement. Theme
-and Repo keep that note's pitch, instrument, velocity and evidence; its location
-changes with ownership. Supporting repetitions explicitly carry the linked event
-ID. Common bass/chords/drums have no code claim and use separate visible lanes.
-Unread units do not acquire invented semantic melodies.
-
-| Agent judgment | Deterministic rhythm | Evidence relationship |
+| Interpretation | Fixed musical relationship | What to compare |
 |---|---|---|
-| Shared policy scattered | Paired piano/vibes responses, offsets 0/160 then 480/640, repeated over two bars | Same documented change affects the cited function owners |
-| Responsibility mixing | Fixed displaced responses at 0/320/720/1040/1440/1680 | Separate reasons to change share a checked implementation |
-| Change coupling | Fixed syncopated response at 0/480/720/960/1440 | Change crosses an investigated boundary |
-| Justified / inconclusive | No concern response | Separate contracts are supported, or evidence is insufficient |
+| Same responsibility | Same motif in both arrangements | File-order dispersal versus meaning-grouped continuity |
+| Shared policy scattered | Paired piano/vibes response at 0/160, 480/640, 960/1120, 1440/1600 | A repeated decision returns in separate file clips |
+| Mixed responsibility | Displaced answers at 0/320/720/1040/1440/1680 | Different motifs share a checked implementation |
+| Change coupling | Syncopated answer at 0/480/720/960/1440 | An investigated boundary needs coordinated change |
+| Opaque reading flow | Broken answer at 0/320/1120/1440, final B instead of tonic C | A concrete sequence must be mentally tracked across phases |
+| Justified / inconclusive | No additional concern response | A supported boundary, or insufficient evidence |
 
-During diagnostic bars, supporting melody/chord velocities are reduced to 40%.
-The underlying swing offbeat is at 320/480 of a beat; the concern's 160/480 response
-intentionally interrupts that feel. Concern notes are musical pitches rather than
-the harsh wood clicks rejected in R2. The UI displays actual scheduled notes and
-durations, not invented audio waveforms. Active note labels include exact file lines.
-The directory tree includes source, type and context files; type/context-only files
-have no fabricated events. Evidence solo removes accompaniment for listening.
+During concern bars melody/chord backing drops to 30% and bass to 65%, leaving room
+for the audible answer. Smooth PCM envelopes remain. The two layouts preserve the
+same grounded data notes; meaning layout groups them, file layout distributes them.
+The player shows actual notes rather than fabricated waveforms. Clicking and playback
+follow take the listener back to source. This makes sound an index for relationships
+and comparison; it cannot explain the reason without the Agent evidence.
 
-A/B contains 151 / 116 lines of TypeScript in four source files per version. A is
-currently correct but repeats shared policy decisions in two channels. B preserves
-results and moves policy ownership into one implementation, retaining valid channel
-adapters. Behavior comparisons cover 24 combinations of dates, tiers and receipt
-states, plus final-sale and already-returned items. Repo durations are 50 / 40 seconds.
-Both recordings use real Gemini 3.8 Flash investigations with matching M0/M1/M2 roles;
-new R3 traces and usage remain visibly recorded-live. Replay has no new model call.
+Initial navigation has only the original sample. Requesting an improvement starts a
+real authenticated Gemini tool run. The immutable draft contains exact edits, fresh
+read evidence, tradeoffs and outstanding verification. Human acceptance creates a
+separate app-only snapshot and reserves a fresh analysis; rejection leaves the source
+unchanged. Only a completed accepted re-analysis exposes before/after controls. The
+Agent independently checks the new source and may retain a concern. It cannot edit
+the compiler, approve its own proposal or force a pleasant result. Existing matching
+responsibility IDs/motifs are supplied to the review to reduce unrelated musical drift.
 
-Technical checks establish stable scores, valid evidence, finite/non-clipping audio
-and actual browser playback. Human enjoyment and reliable recognition still require
-listening feedback; a pleasant passage is never a safety guarantee.
+Reproducibility has two boundaries: the same saved validated analysis, compiler v5
+and PCM kit hash produce the same score hash and scheduled notes. Random proof UUIDs
+are normalized. Gemini reruns can make different judgments; those results and drafts
+are saved with their model/prompt/snapshot versions. Device/audio scheduling may
+change the physical playback, so bit-identical speaker output is not promised.
+
+The original realistic example is 151 TypeScript lines in four source files. Earlier
+116-line authored B remains an archived test case; it is not a default improved answer.
+No review effectiveness or musical enjoyment is claimed from automated checks.
 
 Design references: [Ableton Arrangement](https://www.ableton.com/en/manual/arrangement-view/),
 [Clip View](https://www.ableton.com/en/manual/clip-view/),
-[Groove timing and velocity](https://www.ableton.com/en/manual/using-grooves/),
+[Groove timing](https://www.ableton.com/en/manual/using-grooves/),
 [Berklee voice leading](https://online.berklee.edu/takenote/voice-leading-paradigms-for-harmony-in-music-composition/),
-[MDN audio parameter ramps](https://developer.mozilla.org/en-US/docs/Web/API/AudioParam).
-These informed hierarchy, phrasing and transitions; no third-party artwork or music
-is included. They do not validate our code-to-rhythm correspondence.
+[MDN AudioParam](https://developer.mozilla.org/en-US/docs/Web/API/AudioParam).
+Claude browser consultation (2026-10-03) reinforced comparison/location and independent
+review; its suggestions are design advice, not research validation. No outside music
+or artwork is copied.

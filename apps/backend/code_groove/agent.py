@@ -12,16 +12,19 @@ from google.genai import errors, types
 from pydantic import Field, ValidationError
 
 from code_groove.errors import GrooveError
+from code_groove.improvements import apply_edits
 from code_groove.model_client import create_model_client
 from code_groove.schemas import (
     AnalysisCandidate,
     Contract,
     Evidence,
     Hypothesis,
+    ImprovementCandidate,
     InvestigationCandidate,
     Span,
 )
 from code_groove.settings import ROOT, Settings
+from code_groove.source import build_index
 from code_groove.validation import validate_candidate, validate_investigation
 
 
@@ -77,6 +80,8 @@ class AgentContext:
     cached_interpretation: dict | None = None
     changes: dict | None = None
     selection: dict | None = None
+    proposing: bool = False
+    prior_motifs: list[dict] = field(default_factory=list)
     evidence: list[Evidence] = field(default_factory=list)
     hypotheses: list[Hypothesis] = field(default_factory=list)
     reads: Counter = field(default_factory=Counter)
@@ -126,7 +131,7 @@ def inline_schema(schema: dict) -> dict:
     return walk(schema)
 
 
-def declarations(investigating: bool) -> list[types.FunctionDeclaration]:
+def declarations(investigating: bool, proposing: bool = False) -> list[types.FunctionDeclaration]:
     result = [
         types.FunctionDeclaration(
             name=name,
@@ -135,8 +140,10 @@ def declarations(investigating: bool) -> list[types.FunctionDeclaration]:
         )
         for name, model in TOOL_ARGS.items()
     ]
-    name = "submit_investigation" if investigating else "submit_analysis"
-    model = InvestigationCandidate if investigating else AnalysisCandidate
+    name = "submit_proposal" if proposing else "submit_investigation" if investigating else "submit_analysis"
+    model = (
+        ImprovementCandidate if proposing else InvestigationCandidate if investigating else AnalysisCandidate
+    )
     result.append(
         types.FunctionDeclaration(
             name=name,
@@ -164,16 +171,32 @@ def execute_tool(ctx: AgentContext, name: str, args: dict, event_id: str) -> Any
             "output_tokens": ctx.output_tokens,
         }
     )
-    if name in ("submit_analysis", "submit_investigation"):
+    if name in ("submit_analysis", "submit_investigation", "submit_proposal"):
         try:
+            candidate: Any
             if set(args) != {"candidate"}:
                 raise GrooveError("INVALID_ANALYSIS", "candidateだけを提出してください。")
-            if name == "submit_analysis" and not ctx.investigating:
+            if name == "submit_proposal" and ctx.proposing:
+                candidate = ImprovementCandidate.model_validate(args["candidate"])
+                assert ctx.base is not None
+                signals = {s["signal_id"] for s in ctx.base.get("review_signals", [])}
+                if not candidate.signal_ids or any(s not in signals for s in candidate.signal_ids):
+                    raise GrooveError("INVALID_PROPOSAL", "既存の診断に結び付く改善案が必要です。")
+                changed = apply_edits(candidate, ctx.sources, ctx.evidence)
+                proposed_index = build_index(ctx.snapshot_id, changed)
+                if any(
+                    not item["resolved"] and item["module"].startswith(".")
+                    for file in proposed_index["files"]
+                    for item in file.get("imports", [])
+                ):
+                    raise GrooveError("INVALID_PROPOSAL", "ローカル参照先のないimportは提案できません。")
+                ctx.check()
+            elif name == "submit_analysis" and not ctx.investigating:
                 candidate = AnalysisCandidate.model_validate(args["candidate"])
                 validate_candidate(candidate, ctx.index, ctx.evidence)
                 if {u.unit_id for u in candidate.units} != {u["unit_id"] for u in ctx.index["units"]}:
                     raise GrooveError("INVALID_ANALYSIS", "全unitを分類または未確認として含めてください。")
-            elif name == "submit_investigation" and ctx.investigating:
+            elif name == "submit_investigation" and ctx.investigating and not ctx.proposing:
                 candidate = InvestigationCandidate.model_validate(args["candidate"])  # type: ignore[assignment]
                 assert ctx.base is not None
                 validate_investigation(candidate, ctx.evidence, ctx.base)  # type: ignore[arg-type]
@@ -302,7 +325,9 @@ def execute_tool(ctx: AgentContext, name: str, args: dict, event_id: str) -> Any
 async def run_agent(ctx: AgentContext) -> Any:
     client = create_model_client(ctx.settings)
     prompt = (ROOT / "prompts/conductor-system-v1.txt").read_text(encoding="utf-8")
-    if ctx.investigating:
+    if ctx.proposing:
+        prompt = (ROOT / "prompts/improvement-system-v1.txt").read_text(encoding="utf-8")
+    elif ctx.investigating:
         prompt += "\n" + (ROOT / "prompts/investigation-system-v1.txt").read_text(encoding="utf-8")
     payload = {
         "index": ctx.index,
@@ -313,13 +338,14 @@ async def run_agent(ctx: AgentContext) -> Any:
         "selection": ctx.selection,
         "verified_unchanged_interpretation": ctx.cached_interpretation,
         "changes": ctx.changes,
+        "prior_motif_assignments": ctx.prior_motifs,
     }
     history = [types.Content(role="user", parts=[types.Part(text=json.dumps(payload, ensure_ascii=False))])]
     output_limit = 8192 if ctx.investigating else 16384
     max_input, max_output = (160000, 20000) if ctx.investigating else (400000, 48000)
     config = types.GenerateContentConfig(
         system_instruction=prompt,
-        tools=[types.Tool(function_declarations=declarations(ctx.investigating))],
+        tools=[types.Tool(function_declarations=declarations(ctx.investigating, ctx.proposing))],
         automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
         thinking_config=types.ThinkingConfig(thinking_level=types.ThinkingLevel.MEDIUM),
         max_output_tokens=output_limit,
@@ -351,7 +377,11 @@ async def run_agent(ctx: AgentContext) -> Any:
                     function_calling_config=types.FunctionCallingConfig(
                         mode=types.FunctionCallingConfigMode.ANY,
                         allowed_function_names=[
-                            "submit_investigation" if ctx.investigating else "submit_analysis"
+                            "submit_proposal"
+                            if ctx.proposing
+                            else "submit_investigation"
+                            if ctx.investigating
+                            else "submit_analysis"
                         ],
                     )
                 )
@@ -365,7 +395,12 @@ async def run_agent(ctx: AgentContext) -> Any:
             input_count = (
                 int(counted.total_tokens or 0)
                 + len(prompt) // 2
-                + len(json.dumps([d.model_dump(mode="json") for d in declarations(ctx.investigating)])) // 2
+                + len(
+                    json.dumps(
+                        [d.model_dump(mode="json") for d in declarations(ctx.investigating, ctx.proposing)]
+                    )
+                )
+                // 2
             )
             if (
                 input_count > (32000 if ctx.investigating else 48000)
@@ -376,10 +411,7 @@ async def run_agent(ctx: AgentContext) -> Any:
             for retry in range(3):
                 ctx.check()
                 request_output_limit = min(output_limit, max_output - ctx.output_tokens)
-                if (
-                    ctx.input_tokens + input_count > max_input
-                    or request_output_limit < 1024
-                ):
+                if ctx.input_tokens + input_count > max_input or request_output_limit < 1024:
                     raise GrooveError("BUDGET_EXCEEDED", "再試行のトークン予算に達しました。", 429)
                 if ctx.model_count >= (8 if ctx.investigating else 18):
                     raise GrooveError("BUDGET_EXCEEDED", "モデル呼び出し上限に達しました。", 429)
@@ -460,13 +492,17 @@ async def run_agent(ctx: AgentContext) -> Any:
                 started = time.monotonic()
                 try:
                     if closing and call.name != (
-                        "submit_investigation" if ctx.investigating else "submit_analysis"
+                        "submit_proposal"
+                        if ctx.proposing
+                        else "submit_investigation"
+                        if ctx.investigating
+                        else "submit_analysis"
                     ):
                         raise GrooveError("FINALIZATION_REQUIRED", "取得済みの根拠で提出してください。")
                     if call.name.startswith("submit_") and len(calls) != 1:
                         raise GrooveError("FINALIZE_MUST_BE_ALONE", "提出は単独のbatchで行ってください。")
                     result = execute_tool(ctx, call.name, call.args or {}, event_id)
-                    if isinstance(result, (AnalysisCandidate, InvestigationCandidate)):
+                    if isinstance(result, (AnalysisCandidate, InvestigationCandidate, ImprovementCandidate)):
                         ctx.check()
                         ctx.emit(
                             "tool_completed", {"tool": call.name, "purpose": "検証済み候補を提出", "ok": True}
@@ -482,10 +518,7 @@ async def run_agent(ctx: AgentContext) -> Any:
                             "output_tokens": max_output - ctx.output_tokens,
                             "seconds": max(
                                 0,
-                                round(
-                                    (180 if ctx.investigating else 480)
-                                    - (time.monotonic() - ctx.started)
-                                ),
+                                round((180 if ctx.investigating else 480) - (time.monotonic() - ctx.started)),
                             ),
                             "finalize_next": closing,
                         },

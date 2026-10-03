@@ -15,3 +15,10 @@
 - TypeScript 6 and Python 3.13 adapters are intentionally bounded. Classes, dynamic dispatch and external Python modules are not claimed as fully resolved. Weekly Dependabot updates remain reviewable, with tests before deployment.
 - Identical snapshots reuse the index and compatible analysis without Gemini. Changed snapshots re-index bounded source, reuse unchanged verified proofs and limit expensive review to changed units and transitive callers. Documentation/tests invalidate semantic reuse.
 - Deployment reuses successful main CI for the exact release SHA; otherwise full release checks run. Ordinary changes retain module-based selective verification.
+
+- R4 user instructions supersede the original ban on code proposals: bounded drafts are allowed, with explicit human acceptance before a separate app-only snapshot changes. No arbitrary write/command/GitHub tools are added.
+- An improvement is an atomic coherent diff. Partial hunk acceptance is deliberately omitted because dependent helper/import edits can become inconsistent; reject or request another proposal instead.
+- Proposal generation shares the existing 10/day investigation counter and 160k/20k token allowance. Acceptance reserves one of the 3/day analysis allowances before changing draft state. No limit is raised.
+- Recorded sample adoption copies genuine saved interpretation/sanitized source into owner-scoped storage without a model call and keeps recorded_live origin. New improvements use fresh reads and actual Gemini; no B is loaded in advance.
+- Prompt v5 adds grounded data-flow readability, preserves prior motif assignments where roles match, and explicitly forbids assuming adoption is improvement. Grammar v5 removes all percussion/pulses and links each response to its actual cited decision.
+- Score reproduction is deterministic; Gemini reruns and hardware speaker output are not claimed deterministic. Stored source/analysis/version hashes delimit comparisons.

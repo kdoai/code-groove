@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 
-test('one-screen file review, grounded rhythm, comparison and actual-screen tour', async ({ page }) => {
+test('one-screen drumless review and tour without preset B or paid automation', async ({ page }) => {
   const errors: string[] = [];
   let modelRuns = 0;
   page.on('pageerror', (error) => errors.push(error.message));
@@ -21,17 +21,14 @@ test('one-screen file review, grounded rhythm, comparison and actual-screen tour
   await expect(page.locator('.code-concern').first()).toBeVisible();
   await page.screenshot({ path: 'artifacts/rhythm-tour-evidence.png' });
   await page.getByRole('button', { name: '次へ', exact: true }).click();
-  await expect(page.getByRole('button', { name: 'B 改善後', exact: true })).toHaveAttribute(
-    'aria-pressed',
-    'true',
-  );
-  await expect(page.getByTestId('cue-note')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Geminiに改善案を依頼', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: '採用後', exact: true })).toHaveCount(0);
   await page.getByRole('button', { name: '次へ', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Pause', exact: true })).toBeVisible();
   await page.getByRole('button', { name: '次へ', exact: true }).click();
   await expect(page.getByRole('textbox', { name: '選択した範囲への質問' })).toBeVisible();
   await page.getByRole('button', { name: '自分で使ってみる', exact: true }).click();
-  await page.getByRole('button', { name: 'A 改善前', exact: true }).click();
+  await page.getByRole('button', { name: 'サンプルを開く', exact: true }).click();
   await expect(page.getByTestId('cue-note').first()).toBeVisible();
   await page.getByTestId('cue-note').first().click();
   await expect(page.locator('[data-testid=repository-tree]')).toContainText('contracts.ts');
@@ -49,7 +46,7 @@ test('one-screen file review, grounded rhythm, comparison and actual-screen tour
     'aria-pressed',
     'true',
   );
-  await expect(page.locator('.backing-track.muted-track')).toHaveCount(3);
+  await expect(page.locator('.backing-track.muted-track')).toHaveCount(2);
   await page.getByRole('button', { name: '根拠の音だけ', exact: true }).click();
   for (const viewport of [
     { width: 1440, height: 900 },
@@ -59,7 +56,7 @@ test('one-screen file review, grounded rhythm, comparison and actual-screen tour
     await page.setViewportSize(viewport);
     await expect(page.getByRole('textbox', { name: '選択した範囲への質問' })).toBeInViewport();
     await expect(page.getByRole('button', { name: 'Play', exact: true })).toBeInViewport();
-    await expect(page.locator('.backing-track').filter({ hasText: 'Drums' })).toBeInViewport();
+    await expect(page.locator('.backing-track').filter({ hasText: 'Piano' })).toBeInViewport();
     await expect(page.getByTestId('cue-note').first()).toBeInViewport();
     const size = await page.evaluate(() => ({
       height: document.documentElement.scrollHeight,
@@ -71,8 +68,13 @@ test('one-screen file review, grounded rhythm, comparison and actual-screen tour
     expect(size.width).toBe(size.viewW);
     await page.screenshot({ path: `artifacts/rhythm-review-${viewport.width}.png` });
   }
-  await page.getByRole('button', { name: 'B 改善後', exact: true }).click();
-  await expect(page.getByTestId('cue-note')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'B 改善後', exact: true })).toHaveCount(0);
+  expect(
+    await page.locator('.review-code').evaluate((el) => el.getBoundingClientRect().height),
+  ).toBeGreaterThanOrEqual(180);
+  await page.getByRole('button', { name: 'Geminiに改善案を依頼', exact: true }).click();
+  await expect(page.getByRole('dialog', { name: '実解析にログイン' })).toBeVisible();
+  await page.getByRole('button', { name: '閉じる', exact: true }).click();
   await page.getByText('再生設定', { exact: true }).click();
   await page.getByRole('button', { name: 'Bass', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Bass', exact: true })).toHaveAttribute(

@@ -13,6 +13,11 @@ export function AgentPanel({
   publish,
   error,
   activateLive,
+  propose,
+  proposing = false,
+  proposalTitle,
+  openProposal,
+  cancelProposal,
 }: {
   bundle: Bundle;
   result?: InvestigationResult;
@@ -22,6 +27,11 @@ export function AgentPanel({
   publish: () => void;
   error: string;
   activateLive?: () => void;
+  propose: (signalId: string) => void;
+  proposing?: boolean;
+  proposalTitle?: string;
+  openProposal: () => void;
+  cancelProposal: () => void;
 }) {
   const ws = useWorkspace(),
     [question, setQuestion] = useState(''),
@@ -44,7 +54,15 @@ export function AgentPanel({
           <ScanLine size={15} /> {fixture ? 'サンプルの説明' : 'Gemini Agent'}
         </span>
         <span className={`agent-indicator ${pending ? 'working' : ''}`}>
-          {fixture ? '模擬' : recorded ? '保存済み' : pending ? '調査中' : '実解析'}
+          {fixture
+            ? '模擬'
+            : proposing
+              ? '改善案を作成中'
+              : pending
+                ? '調査中'
+                : bundle.map.origin === 'recorded_live'
+                  ? '保存済み'
+                  : '実解析'}
         </span>
       </div>
       <div className="agent-content">
@@ -65,7 +83,11 @@ export function AgentPanel({
           <div className={`structural-finding ${selectedSignal.verdict}`}>
             <div className="finding-label">
               {selectedSignal.verdict === 'concern'
-                ? '同じ変更で、一緒に直す箇所'
+                ? selectedSignal.category === 'data_flow_opacity'
+                  ? '処理の流れを追う負担'
+                  : selectedSignal.category === 'responsibility_mixing'
+                    ? '異なる判断が混ざる箇所'
+                    : '同じ変更で、一緒に直す箇所'
                 : selectedSignal.verdict === 'justified'
                   ? '理由のある境界'
                   : '判断は保留'}
@@ -73,7 +95,11 @@ export function AgentPanel({
             <p>{selectedSignal.explanation}</p>
             {selectedSignal.change_scenario && (
               <div className="change-scenario">
-                <b>例えば、仕様がこう変わったら</b>
+                <b>
+                  {selectedSignal.category === 'data_flow_opacity'
+                    ? 'この処理を読み解くとき'
+                    : '例えば、仕様がこう変わったら'}
+                </b>
                 {selectedSignal.change_scenario}
               </div>
             )}
@@ -110,11 +136,47 @@ export function AgentPanel({
             })}
           </div>
         )}
+        {selectedSignal?.verdict === 'concern' && !fixture && (
+          <div className="improvement-action" data-tour="improve">
+            <button
+              className="primary wide"
+              disabled={pending || proposing}
+              onClick={() => propose(selectedSignal.signal_id)}
+            >
+              <ScanLine size={15} />
+              {proposing ? 'Geminiが改善案を作成中…' : 'Geminiに改善案を依頼'}
+            </button>
+            <small>コードの書き方と責務を検討 → 差分を確認 → あなたが採用</small>
+          </div>
+        )}
+        {proposing && (
+          <p className="progress-line">
+            <span className="spinner" />
+            {events.filter((e) => e.type === 'progress' || e.type === 'tool_started').at(-1)?.payload
+              .message ??
+              events.filter((e) => e.type === 'tool_started').at(-1)?.payload.purpose ??
+              '関連コードを読み、変更の狙いと代案を検討しています…'}
+          </p>
+        )}
+        {proposing && (
+          <button className="wide" onClick={cancelProposal}>
+            改善案の作成を停止
+          </button>
+        )}
+        {proposalTitle && (
+          <button className="proposal-ready wide" data-tour="proposal" onClick={openProposal}>
+            差分を確認：{proposalTitle}
+            <ArrowUpRight size={15} />
+          </button>
+        )}
         {fixture || recorded ? (
           <>
             {selectedSignal?.verdict === 'concern' && (
               <p className="rhythm-explanation">
-                同じ旋律の応答が重なる = 複数の場所で同じ判断を管理。オレンジの区間から該当コードへ移れます。
+                {selectedSignal.category === 'data_flow_opacity'
+                  ? '応答が途切れる = 処理を追うために判断をまたぐ箇所。'
+                  : '同じ旋律が別のファイルで戻る = 同じ判断の管理が分散。'}
+                「意味で揃える」と同じ音を寄せて聴けます。オレンジから根拠へ戻れます。
               </p>
             )}
             {recorded && bundle.investigation && (
@@ -206,14 +268,14 @@ export function AgentPanel({
         <div className="question-presets">
           <button
             type="button"
-            disabled={pending}
+            disabled={pending || proposing}
             onClick={() => setQuestion('このファイルのどこを確認すべきですか？')}
           >
             どこを確認する？
           </button>
           <button
             type="button"
-            disabled={pending}
+            disabled={pending || proposing}
             onClick={() => setQuestion('理由のある例外はありますか？')}
           >
             例外はある？
@@ -227,7 +289,7 @@ export function AgentPanel({
             onChange={(e) => setQuestion(e.target.value)}
             placeholder="ここの何が、こんな音になるの？"
           />
-          <button aria-label="質問を送信" disabled={pending}>
+          <button aria-label="質問を送信" disabled={pending || proposing}>
             <Send size={16} />
           </button>
         </div>

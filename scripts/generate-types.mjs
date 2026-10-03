@@ -1,7 +1,7 @@
 import { compileFromFile } from 'json-schema-to-typescript';
 import { writeFile } from 'node:fs/promises';
 let result = '';
-for (const name of ['SemanticMap', 'ScoreBundle', 'InvestigationResult']) {
+for (const name of ['SemanticMap', 'ScoreBundle', 'InvestigationResult', 'ImprovementProposal']) {
   const types = await compileFromFile(`contracts/${name}.schema.json`, {
     bannerComment: '',
     additionalProperties: false,

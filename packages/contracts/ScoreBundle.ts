@@ -7,7 +7,8 @@ export type SceneId = string;
 export type UnitIds = string[];
 export type Mode = "theme" | "repo";
 export type SceneId1 = string;
-export type GrammarVersion = "groove-v1" | "groove-jazz-v2" | "groove-rhythm-v3" | "groove-arrangement-v4";
+export type GrammarVersion =
+  "groove-v1" | "groove-jazz-v2" | "groove-rhythm-v3" | "groove-arrangement-v4" | "groove-chamber-v5";
 export type KitId = "paper-studio-v1" | "midnight-jazz-v2" | "midnight-jazz-v3";
 export type KitHash = string;
 export type Bpm = 96;

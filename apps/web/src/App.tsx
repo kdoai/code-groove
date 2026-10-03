@@ -8,9 +8,11 @@ import { Transport } from './components/Transport';
 import { AgentPanel } from './components/AgentPanel';
 import { useRunEvents } from './hooks/useRunEvents';
 import { AuthDialog, OpenDialog, Onboarding } from './components/Dialogs';
-import type { InvestigationResult } from '../../../packages/contracts';
+import type { ImprovementProposal, InvestigationResult } from '../../../packages/contracts';
+import { ImprovementDialog } from './components/ImprovementDialog';
 import { ReviewWorkspace, SampleSwitch } from './components/ReviewWorkspace';
 import { playbackPlan } from './audio/playback';
+import { engine } from './audio/engine';
 import { SpotlightTour } from './components/SpotlightTour';
 
 type Run = {
@@ -36,6 +38,11 @@ export default function App() {
   const [starting, setStarting] = useState(false),
     [investigationError, setInvestigationError] = useState('');
   const [tour, setTour] = useState(false);
+  const [proposalRunId, setProposalRunId] = useState(''),
+    [proposalId, setProposalId] = useState('');
+  const [showProposal, setShowProposal] = useState(false),
+    [proposalBusy, setProposalBusy] = useState(false);
+  const [acceptingImprovement, setAcceptingImprovement] = useState(false);
   const config = useQuery({
     queryKey: ['config'],
     queryFn: () => api<PublicConfig>('/config'),
@@ -46,6 +53,7 @@ export default function App() {
   }, [config.data]);
   useEffect(() => {
     const match = location.pathname.match(/^\/projects\/([^/]+)\/(arrange|inspect)/);
+    if (match?.[1] === 'sample-recorded-returns-after') match[1] = 'sample-recorded-returns-before';
     if (match)
       ws.set({
         projectId: match[1],
@@ -68,17 +76,70 @@ export default function App() {
   }, [ws.projectId, ws.screen, ws.scene, ws.analysisId, ws.unitId, ws.eventId]);
   const project = useQuery({
     queryKey: ['project', ws.projectId],
-    queryFn: () => api<{ run_id: string; latest_analysis_id?: string }>(`/projects/${ws.projectId}`),
+    queryFn: () =>
+      api<{
+        run_id: string;
+        latest_analysis_id?: string;
+        previous_analysis_id?: string;
+        latest_proposal_id?: string;
+        proposal_run_id?: string;
+        working_copy?: boolean;
+      }>(`/projects/${ws.projectId}`),
     enabled: !!ws.projectId && !ws.sampleId && !!user,
     retry: false,
   });
   useEffect(() => {
-    if (!project.data || ws.analysisId || runId) return;
-    if (project.data.latest_analysis_id) ws.set({ analysisId: project.data.latest_analysis_id });
-    else setRunId(project.data.run_id);
+    if (!project.data || runId) return;
+    if (!ws.analysisId && project.data.latest_analysis_id)
+      ws.set({ analysisId: project.data.latest_analysis_id });
+    let cancelled = false;
+    if (project.data.run_id)
+      void api<Run>(`/runs/${project.data.run_id}`)
+        .then((current) => {
+          if (!cancelled && active.includes(current.status)) {
+            setRunId(current.run_id);
+            setAcceptingImprovement(
+              !!project.data?.previous_analysis_id || !!project.data?.latest_proposal_id,
+            );
+          }
+        })
+        .catch((e) => {
+          if (!cancelled) setError(e.message);
+        });
+    return () => {
+      cancelled = true;
+    };
   }, [project.data]);
+  useEffect(() => {
+    if (project.data?.latest_proposal_id) setProposalId(project.data.latest_proposal_id);
+    if (project.data?.proposal_run_id) setProposalRunId(project.data.proposal_run_id);
+  }, [project.data]);
+  const proposalRun = useQuery({
+    queryKey: ['run', proposalRunId],
+    queryFn: () => api<Run>(`/runs/${proposalRunId}`),
+    enabled: !!proposalRunId && !!user,
+    refetchInterval: (q) => (active.includes(q.state.data?.status ?? 'queued') ? 1000 : false),
+  });
+  const proposing =
+    proposalBusy || (!!proposalRunId && active.includes(proposalRun.data?.status ?? 'queued'));
+  const proposalEvents = useRunEvents(proposalRunId, !!user, proposing);
+  const proposal = useQuery({
+    queryKey: ['proposal', proposalId],
+    queryFn: () => api<ImprovementProposal>(`/proposals/${proposalId}`),
+    enabled: !!proposalId && !!user,
+    retry: false,
+  });
+  useEffect(() => {
+    if (!proposalRun.data || active.includes(proposalRun.data.status)) return;
+    if (proposalRun.data.result_id) {
+      setProposalId(proposalRun.data.result_id);
+      setShowProposal(true);
+    } else setInvestigationError(proposalRun.data.error?.message ?? '改善案の作成を終了しました。');
+    setProposalRunId('');
+    cache.invalidateQueries({ queryKey: ['project', ws.projectId] });
+  }, [proposalRun.data]);
   const bundle = useQuery({
-    queryKey: ['bundle', ws.projectId, ws.analysisId, 'groove-arrangement-v4'],
+    queryKey: ['bundle', ws.projectId, ws.analysisId, 'groove-chamber-v5'],
     queryFn: () =>
       api<Bundle>(
         ws.sampleId
@@ -102,8 +163,12 @@ export default function App() {
     if (['completed', 'partial'].includes(run.data.status)) {
       ws.set({ analysisId: run.data.result_id ?? '' });
       setRunId('');
+      setAcceptingImprovement(false);
+      cache.invalidateQueries({ queryKey: ['project', ws.projectId] });
     } else {
       setError(run.data.error?.message ?? '処理を終了しました。');
+      setRunId('');
+      setAcceptingImprovement(false);
     }
   }, [run.data]);
   const investigationRun = useQuery({
@@ -129,6 +194,10 @@ export default function App() {
   const pending = starting || (!!runId && active.includes(run.data?.status ?? 'queued'));
   const investigating = !!investigationRunId && active.includes(investigationRun.data?.status ?? 'queued');
   function openSample(id: string) {
+    setProposalId('');
+    setProposalRunId('');
+    setShowProposal(false);
+    setAcceptingImprovement(false);
     ws.set({
       sampleId: id,
       projectId: `sample-${id}`,
@@ -153,6 +222,10 @@ export default function App() {
     setError('');
   }
   async function openSaved(id: string) {
+    setProposalId('');
+    setProposalRunId('');
+    setShowProposal(false);
+    setAcceptingImprovement(false);
     setStarting(true);
     setModal('');
     setError('');
@@ -185,6 +258,10 @@ export default function App() {
       return;
     }
     setStarting(true);
+    setProposalId('');
+    setProposalRunId('');
+    setShowProposal(false);
+    setAcceptingImprovement(false);
     setError('');
     try {
       const project = await api<{ project_id: string; run_id: string }>('/projects', {
@@ -257,6 +334,59 @@ export default function App() {
       setStarting(false);
     }
   }
+  async function proposeImprovement(signalId: string) {
+    if (!currentUser) {
+      setModal('auth');
+      return;
+    }
+    if (!bundle.data || tour) return;
+    setInvestigationError('');
+    setProposalBusy(true);
+    setProposalId('');
+    try {
+      let analysisId = bundle.data.map.analysis_id;
+      if (ws.sampleId) {
+        if (ws.sampleId !== 'recorded-returns-before')
+          throw new Error('改善案はRepositoryの実解析、または返品サンプルから始めてください。');
+        const saved = await api<{ project_id: string; analysis_id: string }>(
+          '/samples/recorded-returns-before/projects',
+          {},
+        );
+        ws.set({ projectId: saved.project_id, sampleId: '', analysisId: saved.analysis_id });
+        analysisId = saved.analysis_id;
+      }
+      const next = await api<{ run_id: string }>(`/analyses/${analysisId}/proposals`, {
+        signal_id: signalId,
+      });
+      setProposalRunId(next.run_id);
+    } catch (e) {
+      setInvestigationError((e as Error).message);
+    } finally {
+      setProposalBusy(false);
+    }
+  }
+  async function decideImprovement(accept: boolean) {
+    if (!proposal.data || tour) return;
+    setProposalBusy(true);
+    setInvestigationError('');
+    try {
+      if (accept) {
+        const next = await api<{ run_id: string }>(`/proposals/${proposalId}/accept`, {});
+        setAcceptingImprovement(true);
+        setRunId(next.run_id);
+        setShowProposal(false);
+        ws.set({ unitId: '', eventId: '', codeSpan: null });
+      } else {
+        await api(`/proposals/${proposalId}/reject`, {});
+        setShowProposal(false);
+      }
+      cache.invalidateQueries({ queryKey: ['proposal', proposalId] });
+    } catch (e) {
+      setInvestigationError((e as Error).message);
+    } finally {
+      setProposalBusy(false);
+    }
+  }
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if ((e.target as HTMLElement).closest('input,textarea,button,.monaco-editor,[role="dialog"]')) return;
@@ -307,6 +437,38 @@ export default function App() {
         </a>
         <span className="product-purpose">コードの設計を、リズムで確認</span>
         <SampleSwitch openSample={openSample} />
+        {project.data?.previous_analysis_id && (
+          <div className="sample-switch" aria-label="採用した変更の比較">
+            <button
+              aria-pressed={ws.analysisId === project.data.previous_analysis_id}
+              onClick={() => {
+                engine.pause();
+                ws.set({
+                  analysisId: project.data!.previous_analysis_id!,
+                  unitId: '',
+                  eventId: '',
+                  codeSpan: null,
+                });
+              }}
+            >
+              変更前
+            </button>
+            <button
+              aria-pressed={ws.analysisId === project.data.latest_analysis_id}
+              onClick={() => {
+                engine.pause();
+                ws.set({
+                  analysisId: project.data!.latest_analysis_id!,
+                  unitId: '',
+                  eventId: '',
+                  codeSpan: null,
+                });
+              }}
+            >
+              採用後
+            </button>
+          </div>
+        )}
         <button onClick={() => setModal('open')}>
           <FolderGit2 size={14} />
           Repositoryを開く
@@ -331,6 +493,9 @@ export default function App() {
               });
               history.replaceState(null, '', '/');
               setRunId('');
+              setProposalId('');
+              setProposalRunId('');
+              setShowProposal(false);
             }}
           >
             <LogOut size={15} />
@@ -342,9 +507,13 @@ export default function App() {
       <Transport score={data?.score} onError={setError} />
       {user && ws.projectId && !ws.sampleId && (
         <div className="refresh-bar">
-          <span>保存済み結果を再生中 · Git更新時は変更と影響先だけ調査</span>
+          <span>
+            {project.data?.working_copy
+              ? 'アプリ内のスナップショット · 元のRepositoryは保持'
+              : '保存済み結果を再生中 · Git更新時は変更と影響先だけ調査'}
+          </span>
           <button disabled={pending} onClick={() => void refreshRepository()}>
-            Gitの差分を調べる
+            {project.data?.working_copy ? '保存したコードを再確認' : 'Gitの差分を調べる'}
           </button>
         </div>
       )}
@@ -357,7 +526,11 @@ export default function App() {
       {pending ? (
         <main className="analysis-progress">
           <ScanLine size={27} />
-          <h2>Agentがコードの関係を調べています</h2>
+          <h2>
+            {acceptingImprovement
+              ? '採用した変更を、Geminiが再確認しています'
+              : 'Agentがコードの関係を調べています'}
+          </h2>
           <p>
             {runEvents.data?.at(-1)?.payload.message ??
               runEvents.data?.at(-1)?.payload.purpose ??
@@ -388,8 +561,20 @@ export default function App() {
             key={data.map.analysis_id}
             bundle={data}
             result={result}
-            events={investigationEvents.data ?? []}
+            events={proposing ? (proposalEvents.data ?? []) : (investigationEvents.data ?? [])}
             pending={investigating}
+            proposing={proposing}
+            propose={(id) => void proposeImprovement(id)}
+            proposalTitle={
+              proposal.data?.status === 'draft' && proposal.data.base_analysis_id === data.map.analysis_id
+                ? proposal.data.title
+                : undefined
+            }
+            openProposal={() => setShowProposal(true)}
+            cancelProposal={() =>
+              proposalRunId &&
+              void api(`/runs/${proposalRunId}/cancel`, {}).catch((e) => setInvestigationError(e.message))
+            }
             investigate={(q) => void investigate(q)}
             activateLive={() => void openRepo()}
             error={investigationError}
@@ -420,7 +605,7 @@ export default function App() {
             比較サンプルを開く
             <ArrowRight size={15} />
           </button>
-          <small>保存した実際のGemini調査 · ログイン・新しいAI費用なし</small>
+          <small>保存したGemini調査を聴く · 改善案の作成はログイン後にあなたが依頼</small>
         </main>
       )}
       <footer className="statusbar">
@@ -436,7 +621,7 @@ export default function App() {
           {data
             ? `${data.map.coverage.inspected_units}/${data.map.coverage.indexed_units} 関数を確認`
             : 'TypeScript / Python'}{' '}
-          · 読み取り専用
+          · {project.data?.working_copy ? 'アプリ内の作業コピー' : '元コードを保持'}
         </span>
       </footer>
       {modal === 'open' && (
@@ -462,6 +647,16 @@ export default function App() {
         />
       )}
       {tour && <SpotlightTour ready={!!data && !!plan} close={() => setTour(false)} />}
+      {showProposal && proposal.data && (
+        <ImprovementDialog
+          proposal={proposal.data}
+          close={() => setShowProposal(false)}
+          accept={() => void decideImprovement(true)}
+          reject={() => void decideImprovement(false)}
+          pending={proposalBusy}
+          error={investigationError}
+        />
+      )}
     </div>
   );
 }

@@ -7,23 +7,10 @@ import { useWorkspace } from '../state';
 
 const CodePanel = lazy(() => import('./CodePanel').then((module) => ({ default: module.CodePanel })));
 export function SampleSwitch({ openSample }: { openSample: (id: string) => void }) {
-  const ws = useWorkspace();
   return (
-    <div className="sample-switch" aria-label="同じ仕様の比較サンプル">
-      <span>比較サンプル</span>
-      <button
-        data-tour="album"
-        aria-pressed={ws.sampleId === 'recorded-returns-before'}
-        onClick={() => openSample('recorded-returns-before')}
-      >
-        A 改善前
-      </button>
-      <button
-        data-tour="compare"
-        aria-pressed={ws.sampleId === 'recorded-returns-after'}
-        onClick={() => openSample('recorded-returns-after')}
-      >
-        B 改善後
+    <div className="sample-switch">
+      <button data-tour="album" onClick={() => openSample('recorded-returns-before')}>
+        サンプルを開く
       </button>
     </div>
   );
@@ -317,7 +304,6 @@ function Arrangement({
   const supports = [
     { name: 'Bass', voices: ['bass'], detail: '低音の土台' },
     { name: 'Piano', voices: ['piano'], detail: '和音の伴奏' },
-    { name: 'Drums', voices: ['snare', 'hat', 'kick', 'wood'], detail: 'スウィング' },
   ];
   const groups = [
     ...new Map(
@@ -333,7 +319,26 @@ function Arrangement({
           <b>Arrangement</b>
           <small>ファイルの演奏配置</small>
         </span>
-        <span className="music-spec">C major · 96 BPM · Swing 2:1</span>
+        <div className="arrangement-layout" aria-label="同じ解釈の演奏配置">
+          <button
+            aria-pressed={ws.mode === 'repo'}
+            onClick={() => {
+              engine.pause();
+              ws.set({ mode: 'repo' });
+            }}
+          >
+            ファイル順
+          </button>
+          <button
+            aria-pressed={ws.mode === 'theme'}
+            onClick={() => {
+              engine.pause();
+              ws.set({ mode: 'theme' });
+            }}
+          >
+            意味で揃える
+          </button>
+        </div>
       </div>
       <div className="score-overview" aria-label="実スコアの全発音">
         <svg viewBox="0 0 1000 30" preserveAspectRatio="none">
@@ -434,7 +439,15 @@ function Arrangement({
                     >
                       <span className="clip-title">
                         {unit.label}
-                        <small>{notes.some((n) => n.kind === 'cue') ? '重なる判断' : ''}</small>
+                        <small>
+                          {notes.some((n) => n.kind === 'cue')
+                            ? bundle.map.review_signals?.find(
+                                (s) => s.signal_id === notes.find((n) => n.kind === 'cue')?.signal_id,
+                              )?.category === 'data_flow_opacity'
+                              ? '途切れる応答'
+                              : '重なる判断'
+                            : ''}
+                        </small>
                       </span>
                       <svg viewBox="0 0 1000 50" preserveAspectRatio="none">
                         {notes.map((note) => (

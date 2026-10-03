@@ -152,7 +152,7 @@ class MetadataStore:
         self.atomic(operation)
 
     def delete_project_children(self, project_id: str) -> None:
-        for collection in ("analyses", "investigations", "run_events", "runs"):
+        for collection in ("analyses", "investigations", "proposals", "run_events", "runs"):
             if self.cloud:
                 query = self.db.collection(collection).where(
                     filter=FieldFilter("project_id", "==", project_id)

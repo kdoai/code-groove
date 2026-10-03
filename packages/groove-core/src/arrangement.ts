@@ -58,17 +58,6 @@ export function arrangeJazz(plan: ScorePlan, map: SemanticMap) {
         0.42,
         510,
       );
-      add(
-        `brush_${bar}_${beat}`,
-        start + beat * 480 + (beat % 2 ? 40 : 0),
-        'snare',
-        null,
-        beat % 2 ? 0.19 : 0.045,
-        220,
-      );
-      add(`ride_${bar}_${beat}`, start + beat * 480, 'hat', null, beat % 2 ? 0.085 : 0.1, 140);
-      if (beat === 1 || beat === 3)
-        add(`swing_${bar}_${beat}`, start + beat * 480 + 320, 'hat', null, 0.06, 110);
     }
     for (const step of [0, 10])
       chords[bar === plan.total_bars - 1 ? 0 : harmony].forEach((pitch, i) =>
@@ -119,10 +108,11 @@ export function arrangeJazz(plan: ScorePlan, map: SemanticMap) {
   for (const signal of map.review_signals ?? []) {
     if (signal.verdict !== 'concern') continue;
     for (const target of plan.mode === 'repo' ? signal.unit_ids : [undefined]) {
-      const event = plan.notes.find(
+      const signalEvents = plan.notes.filter(
         (n) =>
           n.kind === 'data' && signal.event_ids.includes(n.event_id!) && (!target || n.unit_id === target),
       );
+      const event = signalEvents[0];
       if (!event) continue;
       const phrase = plan.phrases.find(
         (p) => p.unit_id === event.unit_id || p.responsibility_id === event.responsibility_id,
@@ -133,42 +123,47 @@ export function arrangeJazz(plan: ScorePlan, map: SemanticMap) {
           ? [0, 160, 480, 640, 960, 1120, 1440, 1600]
           : signal.category === 'responsibility_mixing'
             ? [0, 320, 720, 1040, 1440, 1680]
-            : [0, 480, 720, 960, 1440];
+            : signal.category === 'data_flow_opacity'
+              ? [0, 320, 1120, 1440]
+              : [0, 480, 720, 960, 1440];
       for (const bar of [1, 2]) {
         const tick = start + bar * 1920;
         if (tick + 1920 > plan.total_bars * 1920) continue;
-        pattern.forEach((offset, i) =>
+        pattern.forEach((offset, i) => {
+          const sourceEvent = signalEvents[Math.floor(i / 2) % signalEvents.length];
           add(
             `cue_${signal.signal_id}_${target ?? 'theme'}_${bar}_${i}`,
             tick + offset,
             i % 2 ? 'vibes' : 'piano',
-            melody[
-              Number(
-                map.responsibilities
-                  .find((r) => r.responsibility_id === event.responsibility_id)!
-                  .motif_id.slice(1),
-              )
-            ][Math.floor(i / 2) % 4],
+            signal.category === 'data_flow_opacity' && i === pattern.length - 1
+              ? 71
+              : melody[
+                  Number(
+                    map.responsibilities
+                      .find((r) => r.responsibility_id === event.responsibility_id)!
+                      .motif_id.slice(1),
+                  )
+                ][Math.floor(i / 2) % 4],
             i % 2 ? 0.4 : 0.58,
-            320,
+            i % 2 ? 420 : 560,
             {
               kind: 'cue',
               signal_id: signal.signal_id,
-              event_id: event.event_id,
-              unit_id: event.unit_id,
-              responsibility_id: event.responsibility_id,
+              event_id: sourceEvent.event_id,
+              unit_id: sourceEvent.unit_id,
+              responsibility_id: sourceEvent.responsibility_id,
               evidence_ids: signal.evidence_ids,
             },
-          ),
-        );
+          );
+        });
         for (const note of plan.notes)
           if (
             note.kind === 'accompaniment' &&
             note.tick >= tick &&
             note.tick < tick + 1920 &&
-            (note.voice === 'piano' || note.voice === 'vibes')
+            (note.voice === 'piano' || note.voice === 'vibes' || note.voice === 'bass')
           )
-            note.velocity *= 0.4;
+            note.velocity *= note.voice === 'bass' ? 0.65 : 0.3;
       }
     }
   }

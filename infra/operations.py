@@ -9,6 +9,7 @@ def main():
         "projects",
         "analyses",
         "investigations",
+        "proposals",
         "runs",
         "run_events",
         "idempotency",

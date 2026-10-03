@@ -107,13 +107,8 @@ export function AuthDialog({ close, done }: { close: () => void; done: () => voi
 export const sampleLabels = [
   {
     id: 'recorded-returns-before',
-    label: 'A · 改善前 / TypeScript',
+    label: '設計レビューの実例 / TypeScript',
     detail: '長い実例 · Agentが共有ポリシーの散在を調査',
-  },
-  {
-    id: 'recorded-returns-after',
-    label: 'B · 改善後 / TypeScript',
-    detail: '動作を保ち、重複していた判断を一つに',
   },
   {
     id: 'recorded-scattered',
@@ -229,7 +224,7 @@ export function Onboarding({ close, loadSample }: { close: () => void; loadSampl
         <Music2 size={32} />
         <span className="eyebrow">LISTEN. LOCATE. ASK.</span>
         <h2>設計の違いを、聴いてみよう。</h2>
-        <p>実際の画面を動かす短いデモです。改善前を聴き、気になる音の根拠を開き、改善後と比べます。</p>
+        <p>実際の画面を動かす短い案内です。設計を聴き、音の根拠を開き、Agentへの依頼と採用の手順を見ます。</p>
         <small>保存したGemini調査を使用 · 新しいAI費用なし</small>
       </div>
       <label className="checkbox">

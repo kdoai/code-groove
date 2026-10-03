@@ -75,7 +75,7 @@ export function CodePanel({ bundle }: { bundle: Bundle }) {
         options={{
           readOnly: true,
           minimap: { enabled: false },
-          fontSize: 13,
+          fontSize: 14,
           fontFamily: 'Consolas, monospace',
           padding: { top: 10 },
           scrollBeyondLastLine: false,

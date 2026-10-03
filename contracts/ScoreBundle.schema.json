@@ -228,7 +228,8 @@
             "groove-v1",
             "groove-jazz-v2",
             "groove-rhythm-v3",
-            "groove-arrangement-v4"
+            "groove-arrangement-v4",
+            "groove-chamber-v5"
           ],
           "title": "Grammar Version",
           "type": "string"

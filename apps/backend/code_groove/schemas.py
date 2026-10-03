@@ -95,7 +95,13 @@ class RepositoryProfile(Contract):
 
 class ReviewSignal(Contract):
     signal_id: Id
-    category: Literal["policy_scattering", "responsibility_mixing", "change_coupling", "justified_boundary"]
+    category: Literal[
+        "policy_scattering",
+        "responsibility_mixing",
+        "change_coupling",
+        "data_flow_opacity",
+        "justified_boundary",
+    ]
     verdict: Literal["concern", "justified", "inconclusive"]
     label: str = Field(min_length=1, max_length=48)
     explanation: Text
@@ -159,7 +165,9 @@ class Phrase(Contract):
 class ScorePlan(Contract):
     mode: Literal["theme", "repo"]
     scene_id: Id
-    grammar_version: Literal["groove-v1", "groove-jazz-v2", "groove-rhythm-v3", "groove-arrangement-v4"]
+    grammar_version: Literal[
+        "groove-v1", "groove-jazz-v2", "groove-rhythm-v3", "groove-arrangement-v4", "groove-chamber-v5"
+    ]
     kit_id: Literal["paper-studio-v1", "midnight-jazz-v2", "midnight-jazz-v3"]
     kit_hash: str
     bpm: Literal[96]
@@ -215,3 +223,29 @@ class InvestigationResult(InvestigationCandidate):
     selected_unit_ids: Ids
     selected_event_ids: Ids
     evidence: list[Evidence]
+
+
+class SourceEdit(Contract):
+    path: str = Field(min_length=1, max_length=240)
+    before: str = Field(max_length=12000)
+    after: str = Field(min_length=1, max_length=16000)
+
+
+class ImprovementCandidate(Contract):
+    title: str = Field(min_length=1, max_length=80)
+    rationale: Text
+    tradeoffs: Text
+    verification: Text
+    signal_ids: Ids
+    evidence_ids: Ids
+    edits: list[SourceEdit] = Field(min_length=1, max_length=6)
+
+
+class ImprovementProposal(ImprovementCandidate):
+    proposal_id: Id
+    base_analysis_id: Id
+    base_snapshot_id: Id
+    source_hash: str
+    evidence: list[Evidence]
+    diff: str = Field(max_length=64000)
+    status: Literal["draft", "accepted", "rejected"] = "draft"

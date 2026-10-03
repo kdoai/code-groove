@@ -11,8 +11,9 @@ from google.cloud import tasks_v2
 
 from code_groove.agent import AgentContext, run_agent
 from code_groove.errors import GrooveError
+from code_groove.improvements import apply_edits, proposal_diff, source_hash
 from code_groove.incremental import INDEX_VERSION, PROMPT_VERSION, compatible, reuse_unchanged
-from code_groove.schemas import Coverage, Evidence, InvestigationResult, SemanticMap
+from code_groove.schemas import Coverage, Evidence, ImprovementProposal, InvestigationResult, SemanticMap
 from code_groove.settings import ROOT, Settings
 from code_groove.source import build_index, github_snapshot, run_node, sample_snapshot
 from code_groove.storage import ArtifactStore, MetadataStore, Transaction
@@ -42,7 +43,9 @@ class JobService:
         ).hexdigest()
         run_id = f"run_{uuid.uuid4().hex}"
         project_id = project["project_id"] if project else f"p_{uuid.uuid4().hex}"
-        reserved_input, reserved_output = (160000, 20000) if kind == "investigation" else (400000, 48000)
+        reserved_input, reserved_output = (
+            (160000, 20000) if kind in ("investigation", "proposal") else (400000, 48000)
+        )
 
         def operation(tx: Transaction) -> dict:
             previous = tx.get("idempotency", idem)
@@ -78,18 +81,27 @@ class JobService:
                 or current_project["expires_at"] <= now
             ):
                 raise GrooveError("NOT_FOUND", "projectを利用できません。", 404)
-            if (
-                kind == "investigation"
-                and (current_project or {}).get("latest_analysis_id") != body["analysis_id"]
+            if (kind in ("investigation", "proposal") or body.get("proposal_id")) and (
+                (current_project or {}).get("latest_analysis_id") != body["analysis_id"]
             ):
                 raise GrooveError("STALE_BASE_ANALYSIS", "解釈が更新されています。", 409)
             if active and active["status"] not in TERMINAL:
                 raise GrooveError("ACTIVE_RUN_LIMIT", "実行中の調査を完了または停止してください。", 429)
             refresh = kind == "analysis" and bool(body.get("refresh"))
-            counter = "refreshes" if refresh else "investigations" if kind == "investigation" else "analyses"
+            counter = (
+                "refreshes"
+                if refresh
+                else "investigations"
+                if kind in ("investigation", "proposal")
+                else "analyses"
+            )
             user_quota.setdefault("refreshes", 0)
-            if user_quota[counter] >= (10 if refresh or kind == "investigation" else 3):
+            if user_quota[counter] >= (10 if refresh or kind in ("investigation", "proposal") else 3):
                 raise GrooveError("DAILY_QUOTA", "本日（UTC）の実解析上限に達しました。", 429)
+            if body.get("proposal_id") and user_quota["analyses"] >= 3:
+                raise GrooveError(
+                    "DAILY_QUOTA", "改善後の実解析を予約できません。本日（UTC）の上限に達しました。", 429
+                )
             if (
                 global_quota["reserved_input"] + global_quota["consumed_input"] + reserved_input > 3000000
                 or global_quota["reserved_output"] + global_quota["consumed_output"] + reserved_output
@@ -116,11 +128,20 @@ class JobService:
                 "quota_id": quota_id,
                 "quota_date": date,
                 "quota_released": False,
-                "analysis_counted": not refresh,
+                "analysis_counted": not refresh or bool(body.get("proposal_id")),
                 "created_at": now,
                 "updated_at": now,
                 "expires_at": expires,
             }
+            if body.get("proposal_id"):
+                proposal = tx.get("proposals", body["proposal_id"])
+                if not proposal or proposal["owner_uid"] != uid or proposal.get("status", "draft") != "draft":
+                    raise GrooveError("INVALID_STATE", "この改善案は既に処理されています。", 409)
+                tx.put(
+                    "proposals",
+                    body["proposal_id"],
+                    {**proposal, "status": "accepted", "accepted_run_id": run_id, "updated_at": now},
+                )
             if not project:
                 tx.put(
                     "projects",
@@ -140,6 +161,12 @@ class JobService:
                 tx.put(
                     "projects", project_id, {**(current_project or {}), "run_id": run_id, "updated_at": now}
                 )
+            elif kind == "proposal":
+                tx.put(
+                    "projects",
+                    project_id,
+                    {**(current_project or {}), "proposal_run_id": run_id, "updated_at": now},
+                )
             for collection, identifier, quota in [
                 ("daily_quotas", quota_id, user_quota),
                 ("global_quotas", date, global_quota),
@@ -148,6 +175,8 @@ class JobService:
                 quota["reserved_output"] += reserved_output
                 if collection == "daily_quotas":
                     quota[counter] += 1
+                    if body.get("proposal_id"):
+                        quota["analyses"] += 1
                 quota.update(
                     updated_at=now, created_at=quota.get("created_at", now), expires_at=now + 2 * 86400
                 )
@@ -261,7 +290,7 @@ class JobService:
             raise GrooveError("CANCELLED", "新規モデル呼び出しを停止しました。")
         if not (self.store.get("accounts", run["owner_uid"]) or {}).get("enabled"):
             raise GrooveError("CANCELLED", "アカウントの利用を停止しました。")
-        limit = 180 if run["kind"] == "investigation" else 480
+        limit = 180 if run["kind"] in ("investigation", "proposal") else 480
         if time.time() - run["started_at"] > limit:
             raise GrooveError("MODEL_TIMEOUT", "調査の制限時間を超えました。", 408)
         return run
@@ -354,6 +383,11 @@ class JobService:
             project = self.store.get("projects", run["project_id"])
             if not project:
                 raise GrooveError("CANCELLED", "projectが削除されています。")
+            if run["kind"] in ("investigation", "proposal"):
+                base_meta = self.store.get("analyses", run["body"]["analysis_id"])
+                if not base_meta or not base_meta.get("snapshot_key"):
+                    raise GrooveError("STALE_BASE_ANALYSIS", "元のコードが見つかりません。", 409)
+                project = {**project, "snapshot_key": base_meta["snapshot_key"]}
             previous = None
             snapshot_key = project.get("snapshot_key")
             cached, changes = None, None
@@ -369,7 +403,29 @@ class JobService:
                     self.store.update(
                         "analyses", project["latest_analysis_id"], {"snapshot_key": project["snapshot_key"]}
                     )
-            if project.get("snapshot_key") and not run["body"].get("refresh"):
+            if run["body"].get("derived_sources_key"):
+                derived = await asyncio.to_thread(self.artifacts.get, run["body"]["derived_sources_key"])
+                sources = derived["sources"]
+                sha = source_hash(sources)
+                snapshot_id = f"snap_{sha[:24]}_{hashlib.sha256(INDEX_VERSION.encode()).hexdigest()[:6]}"
+                self.mutate(run_id, attempt, {"status": "indexing"})
+                index = await asyncio.to_thread(build_index, snapshot_id, sources)
+                snapshot = {
+                    "sha": sha,
+                    "snapshot_id": snapshot_id,
+                    "sources": sources,
+                    "index": index,
+                    "index_version": INDEX_VERSION,
+                }
+                snapshot_key = f"projects/{run['project_id']}/snapshots/{snapshot_id}/snapshot.json.gz"
+                await asyncio.to_thread(self.artifacts.put, snapshot_key, snapshot)
+                emit(
+                    "improvement_applied",
+                    {"proposal_id": run["body"]["proposal_id"], "snapshot_id": snapshot_id},
+                )
+            elif project.get("snapshot_key") and (
+                not run["body"].get("refresh") or project.get("working_copy")
+            ):
                 snapshot = await asyncio.to_thread(self.artifacts.get, project["snapshot_key"])
             else:
                 self.mutate(run_id, attempt, {"status": "fetching"})
@@ -447,7 +503,7 @@ class JobService:
 
                 self.store.atomic(count_refresh_analysis)
             base = None
-            if run["kind"] == "investigation":
+            if run["kind"] in ("investigation", "proposal"):
                 analysis = self.store.get("analyses", run["body"]["analysis_id"])
                 if not analysis:
                     raise GrooveError("STALE_BASE_ANALYSIS", "元の解析が見つかりません。", 409)
@@ -470,6 +526,11 @@ class JobService:
                 changes=changes,
                 evidence=cached_evidence,
                 selection=run["body"] if base else None,
+                proposing=run["kind"] == "proposal",
+                prior_motifs=[
+                    {k: r[k] for k in ("responsibility_id", "label", "motif_id", "change_reason")}
+                    for r in (prior_map or {}).get("responsibilities", [])
+                ],
                 input_tokens=run["input_tokens"],
                 output_tokens=run["output_tokens"],
                 model_count=run["model_requests"],
@@ -478,8 +539,22 @@ class JobService:
             )
             candidate = await run_agent(ctx)
             self.guard(run_id, attempt)
-            result_id = f"{'investigation' if base else 'analysis'}_{uuid.uuid4().hex}"
-            if base:
+            result_id = f"{'proposal' if ctx.proposing else 'investigation' if base else 'analysis'}_{uuid.uuid4().hex}"
+            if ctx.proposing:
+                assert base is not None
+                changed = apply_edits(candidate, snapshot["sources"], ctx.evidence)
+                result = ImprovementProposal(
+                    **candidate.model_dump(),
+                    proposal_id=result_id,
+                    base_analysis_id=base["analysis_id"],
+                    base_snapshot_id=ctx.snapshot_id,
+                    source_hash=source_hash(snapshot["sources"]),
+                    evidence=ctx.evidence,
+                    diff=proposal_diff(snapshot["sources"], changed),
+                ).model_dump(mode="json")
+                collection = "proposals"
+                artifact_key = f"projects/{run['project_id']}/proposals/{result_id}/proposal.json.gz"
+            elif base:
                 result = InvestigationResult(
                     **candidate.model_dump(),
                     investigation_id=result_id,
@@ -514,6 +589,7 @@ class JobService:
                     ),
                     model_id=self.settings.gemini_model,
                     prompt_version=PROMPT_VERSION,
+                    parent_analysis_id=run["body"].get("analysis_id"),
                     created_at=datetime.now(UTC).isoformat(),
                 ).model_dump(mode="json")
                 self.mutate(run_id, attempt, {"status": "compiling"})
@@ -540,6 +616,11 @@ class JobService:
                     raise GrooveError(
                         "STALE_BASE_ANALYSIS", "解釈が更新されています。選択を更新してください。", 409
                     )
+                if (
+                    run["body"].get("proposal_id")
+                    and target.get("latest_analysis_id") != run["body"]["analysis_id"]
+                ):
+                    raise GrooveError("STALE_BASE_ANALYSIS", "再解析中に元の解釈が変更されました。", 409)
                 tx.put(
                     collection,
                     result_id,
@@ -554,8 +635,21 @@ class JobService:
                         "created_at": time.time(),
                         "updated_at": time.time(),
                         "expires_at": run["expires_at"],
+                        **({"status": "draft"} if ctx.proposing else {}),
+                        **({"proposal_id": result_id} if ctx.proposing else {}),
                     },
                 )
+                if ctx.proposing:
+                    tx.put(
+                        "projects",
+                        run["project_id"],
+                        {
+                            **target,
+                            "latest_proposal_id": result_id,
+                            "proposal_run_id": "",
+                            "updated_at": time.time(),
+                        },
+                    )
                 if not base:
                     tx.put(
                         "projects",
@@ -565,6 +659,18 @@ class JobService:
                             "latest_analysis_id": result_id,
                             "status": "completed",
                             "updated_at": time.time(),
+                            **(
+                                {
+                                    "snapshot_key": snapshot_key,
+                                    "snapshot_id": snapshot["snapshot_id"],
+                                    "sha": snapshot["sha"],
+                                    "working_copy": True,
+                                    "approved_proposal_id": run["body"]["proposal_id"],
+                                    "previous_analysis_id": run["body"]["analysis_id"],
+                                }
+                                if run["body"].get("proposal_id")
+                                else {}
+                            ),
                         },
                     )
                 tx.put(
