@@ -49,6 +49,8 @@ CLIはコミット済みGit blobだけを読み、ignored `.local/repository-pre
 
 本日の実解析枠は既存3件で消費済み。Tsugiaiの新規Gemini解析、全範囲の実モデル品質・音楽、実モデルの1,219行関数検査は未検証。増枠・返金・別アカウントによる回避はしていない。
 
+配備済みruntimeは `808ee3e44cc9fecb1a97d18a0b9071aee4112ae0`。CIはbackend71 / indexer・music23 / E2E7成功、有料3件skip。GCP配備は成功した同一SHAのCIを再利用した。本番の認証境界・保存済み採用結果の再生・選択ファイルのブラウザE2Eが成功し、実IABで新しい取り込み上限と既存録音サンプルの再生進行を確認した。インフラ容量は従来のまま。詳細はEXECUTION_PLAN.mdとsource-free `artifacts/deployed-r10-*.json` に保存している。
+
 範囲別の責務分類・モチーフは独立である。全範囲の結果が保存されても `cross_partition_review: not_run` と全体 `partial` を維持する。範囲間の意味的統合と統合全体演奏は未実装。古い保存範囲は再生できるが、精密検査/提案/採用の競合防止は既存のproject最新analysis規則に従う。
 
 ## 参照した公式資料
