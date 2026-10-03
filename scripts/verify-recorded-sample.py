@@ -1,5 +1,6 @@
 """Verify deployed public replay and an owned copy. Never starts a model run."""
 
+import argparse
 import json
 import uuid
 from datetime import UTC, datetime
@@ -11,6 +12,9 @@ from infra.gcp import api as cloud_api
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--report", default="artifacts/deployed-r12-sample.json")
+    args = parser.parse_args()
     state = json.loads(STATE.read_text(encoding="utf-8"))
     expected = json.loads((ROOT / "fixtures/recorded-live/tsugiai-agents.json").read_text(encoding="utf-8"))
     password = cloud("secrets", "versions", "access", "latest", "--secret=reviewer-password-placeholder")
@@ -71,7 +75,7 @@ def main() -> None:
         "saved_project_id": copied["project_id"],
         "new_model_requests": 0,
     }
-    (ROOT / "artifacts/deployed-r12-sample.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
+    (ROOT / args.report).write_text(json.dumps(report, indent=2), encoding="utf-8")
     print(json.dumps(report))
     if not all(checks.values()):
         raise RuntimeError("Deployed recorded-sample verification failed")

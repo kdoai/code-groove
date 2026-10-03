@@ -185,7 +185,7 @@ test('human approval gates source changes and after comparison (mock API, no pai
   await expect(page.getByRole('dialog', { name: '改善案を確認' })).toBeVisible({ timeout: 15000 });
   expect(approved).toBe(false);
   await expect(page.getByRole('button', { name: '採用後', exact: true })).toHaveCount(0);
-  await page.screenshot({ path: 'artifacts/improvement-diff-r8-mock.png' });
+  await page.screenshot({ path: 'artifacts/improvement-diff-r13-mock.png' });
   await page.getByRole('button', { name: '差分を閉じる', exact: true }).click();
   expect(approved).toBe(false);
   await page.getByRole('button', { name: '差分を確認：E2Eの差分案', exact: true }).click();

@@ -59,6 +59,126 @@
       "title": "Coverage",
       "type": "object"
     },
+    "DesignComparison": {
+      "additionalProperties": false,
+      "properties": {
+        "pattern_id": {
+          "pattern": "^[a-zA-Z0-9_-]{1,80}$",
+          "title": "Pattern Id",
+          "type": "string"
+        },
+        "reference_unit_id": {
+          "pattern": "^[a-zA-Z0-9_-]{1,80}$",
+          "title": "Reference Unit Id",
+          "type": "string"
+        },
+        "reference_span": {
+          "$ref": "#/$defs/Span"
+        },
+        "reference_evidence_ids": {
+          "items": {
+            "pattern": "^[a-zA-Z0-9_-]{1,80}$",
+            "type": "string"
+          },
+          "maxItems": 96,
+          "title": "Reference Evidence Ids",
+          "type": "array"
+        },
+        "observed_difference": {
+          "maxLength": 160,
+          "minLength": 1,
+          "title": "Observed Difference",
+          "type": "string"
+        }
+      },
+      "required": [
+        "pattern_id",
+        "reference_unit_id",
+        "reference_span",
+        "reference_evidence_ids",
+        "observed_difference"
+      ],
+      "title": "DesignComparison",
+      "type": "object"
+    },
+    "DesignPattern": {
+      "additionalProperties": false,
+      "properties": {
+        "pattern_id": {
+          "pattern": "^[a-zA-Z0-9_-]{1,80}$",
+          "title": "Pattern Id",
+          "type": "string"
+        },
+        "label": {
+          "maxLength": 48,
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "domain_rule",
+            "responsibility",
+            "layer_boundary",
+            "dependency_direction",
+            "error_strategy",
+            "naming"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "description": {
+          "maxLength": 160,
+          "minLength": 1,
+          "title": "Description",
+          "type": "string"
+        },
+        "scope_note": {
+          "maxLength": 160,
+          "minLength": 1,
+          "title": "Scope Note",
+          "type": "string"
+        },
+        "peer_unit_ids": {
+          "items": {
+            "pattern": "^[a-zA-Z0-9_-]{1,80}$",
+            "type": "string"
+          },
+          "maxItems": 12,
+          "minItems": 2,
+          "title": "Peer Unit Ids",
+          "type": "array"
+        },
+        "evidence_ids": {
+          "items": {
+            "pattern": "^[a-zA-Z0-9_-]{1,80}$",
+            "type": "string"
+          },
+          "maxItems": 96,
+          "title": "Evidence Ids",
+          "type": "array"
+        },
+        "exceptions": {
+          "items": {
+            "$ref": "#/$defs/PatternException"
+          },
+          "maxItems": 6,
+          "title": "Exceptions",
+          "type": "array"
+        }
+      },
+      "required": [
+        "pattern_id",
+        "label",
+        "kind",
+        "description",
+        "scope_note",
+        "peer_unit_ids",
+        "evidence_ids"
+      ],
+      "title": "DesignPattern",
+      "type": "object"
+    },
     "Evidence": {
       "additionalProperties": false,
       "properties": {
@@ -344,6 +464,38 @@
       "title": "MeaningEvent",
       "type": "object"
     },
+    "PatternException": {
+      "additionalProperties": false,
+      "properties": {
+        "unit_id": {
+          "pattern": "^[a-zA-Z0-9_-]{1,80}$",
+          "title": "Unit Id",
+          "type": "string"
+        },
+        "reason": {
+          "maxLength": 160,
+          "minLength": 1,
+          "title": "Reason",
+          "type": "string"
+        },
+        "evidence_ids": {
+          "items": {
+            "pattern": "^[a-zA-Z0-9_-]{1,80}$",
+            "type": "string"
+          },
+          "maxItems": 96,
+          "title": "Evidence Ids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "unit_id",
+        "reason",
+        "evidence_ids"
+      ],
+      "title": "PatternException",
+      "type": "object"
+    },
     "RepositoryProfile": {
       "additionalProperties": false,
       "properties": {
@@ -468,9 +620,42 @@
             "responsibility_mixing",
             "change_coupling",
             "data_flow_opacity",
-            "justified_boundary"
+            "justified_boundary",
+            "implementation_risk"
           ],
           "title": "Category",
+          "type": "string"
+        },
+        "review_axis": {
+          "default": "coherence",
+          "enum": [
+            "correctness",
+            "quality",
+            "coherence"
+          ],
+          "title": "Review Axis",
+          "type": "string"
+        },
+        "comparison": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DesignComparison"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "human_review_required": {
+          "default": false,
+          "title": "Human Review Required",
+          "type": "boolean"
+        },
+        "human_review_reason": {
+          "default": "",
+          "maxLength": 160,
+          "title": "Human Review Reason",
           "type": "string"
         },
         "verdict": {
@@ -637,6 +822,14 @@
       },
       "maxItems": 12,
       "title": "Review Signals",
+      "type": "array"
+    },
+    "design_patterns": {
+      "items": {
+        "$ref": "#/$defs/DesignPattern"
+      },
+      "maxItems": 8,
+      "title": "Design Patterns",
       "type": "array"
     },
     "schema_version": {

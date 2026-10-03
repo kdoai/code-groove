@@ -5,7 +5,7 @@ import pytest
 from code_groove.agent import AgentContext, execute_tool
 from code_groove.app import create_app
 from code_groove.errors import GrooveError
-from code_groove.schemas import InvestigationCandidate
+from code_groove.schemas import DesignPattern, InvestigationCandidate
 from code_groove.settings import ROOT, Settings
 from code_groove.source import build_index
 from code_groove.validation import validate_investigation
@@ -125,6 +125,24 @@ def test_initial_detection_is_preserved_but_proposal_requires_focused_confirmati
     app.state.artifacts.put(meta["artifact_key"], bundle)
     snapshot = app.state.artifacts.get(meta["snapshot_key"])
     ctx, candidate = fresh_review(bundle["map"], snapshot["sources"])
+    peers = list(
+        {
+            u["primary_span"]["path"]: u
+            for u in bundle["map"]["units"]
+            if u["unit_id"] in candidate.review_signals[0].unit_ids
+        }.values()
+    )
+    candidate.design_patterns = [
+        DesignPattern(
+            pattern_id="pattern_health",
+            label="Checked contract peers",
+            kind="domain_rule",
+            description="Mock shared rule, not a quality verdict",
+            scope_note="Only the freshly read pair is covered",
+            peer_unit_ids=[u["unit_id"] for u in peers],
+            evidence_ids=[e.evidence_id for e in ctx.evidence],
+        )
+    ]
     signal_id = candidate.review_signals[0].signal_id
     assert (
         client.post(
@@ -161,6 +179,7 @@ def test_initial_detection_is_preserved_but_proposal_requires_focused_confirmati
     current = client.get(f"/api/v1/projects/{copied['project_id']}/bundle", headers=headers).json()["data"]
     assert current["map"]["analysis_depth"] == "focused"
     assert current["map"]["parent_analysis_id"] == copied["analysis_id"]
+    assert current["map"]["design_patterns"][0]["pattern_id"] == "pattern_health"
     assert current["sources"] == snapshot["sources"]
     assert app.state.artifacts.get(meta["artifact_key"])["map"]["analysis_depth"] == "overview"
     assert not app.state.store.list("runs")

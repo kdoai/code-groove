@@ -37,6 +37,12 @@ class ListArgs(PurposeArgs):
     limit: int = Field(default=50, ge=1, le=50, strict=True)
 
 
+class UnitListArgs(ListArgs):
+    scope: Literal["current", "repository"] = "current"
+    path_prefix: str = Field(default="", max_length=240)
+    label_query: str = Field(default="", max_length=80)
+
+
 class ReadArgs(PurposeArgs):
     file_id: str
     start_line: int = Field(ge=1, strict=True)
@@ -106,7 +112,7 @@ class AgentContext:
 
 
 TOOL_ARGS: dict[str, type[Contract]] = {
-    "list_units": ListArgs,
+    "list_units": UnitListArgs,
     "list_repository_files": ListArgs,
     "read_code": ReadArgs,
     "search_code": SearchArgs,
@@ -214,13 +220,13 @@ def execute_tool(ctx: AgentContext, name: str, args: dict, event_id: str) -> Any
                 ctx.check()
             elif name == "submit_analysis" and not ctx.investigating:
                 candidate = AnalysisCandidate.model_validate(args["candidate"])
-                validate_candidate(candidate, ctx.index, ctx.evidence)
+                validate_candidate(candidate, ctx.index, ctx.evidence, ctx.repository_index)
                 if {u.unit_id for u in candidate.units} != {u["unit_id"] for u in ctx.index["units"]}:
                     raise GrooveError("INVALID_ANALYSIS", "全unitを分類または未確認として含めてください。")
             elif name == "submit_investigation" and ctx.investigating and not ctx.proposing:
                 candidate = InvestigationCandidate.model_validate(args["candidate"])  # type: ignore[assignment]
                 assert ctx.base is not None
-                validate_investigation(candidate, ctx.evidence, ctx.base)  # type: ignore[arg-type]
+                validate_investigation(candidate, ctx.evidence, ctx.base, ctx.repository_index)  # type: ignore[arg-type]
             else:
                 raise GrooveError("INVALID_ANALYSIS", "このrunでは利用できない提出ツールです。")
             return candidate
@@ -244,12 +250,25 @@ def execute_tool(ctx: AgentContext, name: str, args: dict, event_id: str) -> Any
                 if len(rows) > parsed.cursor + parsed.limit
                 else None,
             }
+        assert isinstance(parsed, UnitListArgs)
+        unit_index = source_index if parsed.scope == "repository" else ctx.index
+        rows = [
+            u
+            for u in unit_index["units"]
+            if u["primary_span"]["path"].startswith(parsed.path_prefix)
+            and parsed.label_query.casefold() in u["label"].casefold()
+        ]
+        page = rows[parsed.cursor : parsed.cursor + parsed.limit]
+        current_ids = {u["unit_id"] for u in ctx.index["units"]}
         return {
-            "units": ctx.index["units"][parsed.cursor : parsed.cursor + parsed.limit],
-            "files": ctx.index["files"],
-            "next_cursor": parsed.cursor + parsed.limit
-            if len(ctx.index["units"]) > parsed.cursor + parsed.limit
-            else None,
+            "units": [{**u, "in_current_partition": u["unit_id"] in current_ids} for u in page],
+            "files": [
+                f for f in unit_index["files"] if f["file_id"] in {u["primary_span"]["file_id"] for u in page}
+            ],
+            "scope": parsed.scope,
+            "total_matches": len(rows),
+            "truncated": len(rows) > parsed.cursor + parsed.limit,
+            "next_cursor": parsed.cursor + parsed.limit if len(rows) > parsed.cursor + parsed.limit else None,
         }
     if isinstance(parsed, ReadArgs):
         file = files.get(parsed.file_id)
@@ -320,7 +339,7 @@ def execute_tool(ctx: AgentContext, name: str, args: dict, event_id: str) -> Any
             else None,
         }
     if isinstance(parsed, RelationsArgs):
-        unit = next((u for u in ctx.index["units"] if u["unit_id"] == parsed.unit_id), None)
+        unit = next((u for u in source_index["units"] if u["unit_id"] == parsed.unit_id), None)
         if not unit:
             raise GrooveError("NOT_FOUND", "unitが存在しません。", 404)
         if parsed.direction == "tests":
@@ -343,11 +362,15 @@ def execute_tool(ctx: AgentContext, name: str, args: dict, event_id: str) -> Any
             }
         rows = [
             r
-            for r in ctx.index["relations"]
+            for r in source_index["relations"]
             if r["caller" if parsed.direction == "callees" else "callee"] == parsed.unit_id
         ]
+        page = rows[parsed.cursor : parsed.cursor + 20]
+        neighbors = {r.get("callee") for r in page} | {r.get("caller") for r in page}
         return {
-            "relations": rows[parsed.cursor : parsed.cursor + 20],
+            "relations": page,
+            "units": [u for u in source_index["units"] if u["unit_id"] in neighbors],
+            "scope": "repository",
             "truncated": len(rows) > parsed.cursor + 20,
             "next_cursor": parsed.cursor + 20 if len(rows) > parsed.cursor + 20 else None,
         }
@@ -387,7 +410,7 @@ async def run_agent(ctx: AgentContext) -> Any:
         "prior_motif_assignments": ctx.prior_motifs,
     }
     if ctx.repository_index:
-        prompt += "\nThis is a repository partition. Classify only the supplied units. Nested callbacks belong to their indexed lexical owner; use member_symbol_ids=[unit_id]. Repository context is static inventory, not a semantic verdict. Use list_repository_files/search_code/read_code to verify dependencies outside the partition. Do not claim cross-partition consistency or whole-repository completion. For long units read adjacent bounded ranges and cite all ranges covering the unit. Unit calls are paginated through inspect_relations."
+        prompt += "\nThis is a repository partition. Classify only the supplied units. Nested callbacks belong to their indexed lexical owner; use member_symbol_ids=[unit_id]. Repository context is static inventory, not a semantic verdict. Use list_units(scope=repository), list_repository_files/search_code/read_code and inspect_relations to follow dependencies and comparison peers outside the partition. Outside reads do not mean those partitions are fully classified. Do not claim cross-partition consistency or whole-repository completion. For long units read adjacent bounded ranges and cite all ranges covering the unit. Unit calls are paginated through inspect_relations."
     history = [types.Content(role="user", parts=[types.Part(text=json.dumps(payload, ensure_ascii=False))])]
     output_limit = 8192 if ctx.investigating else 16384
     max_input, max_output = (160000, 20000) if ctx.investigating else (400000, 48000)

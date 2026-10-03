@@ -41,9 +41,8 @@ test('whole-health listening and real-screen tour keep investigation human-direc
   await expect(page.locator('.code-panel .panel-heading')).toContainText('agents/models/checklist.py');
   await page.getByTestId('data-note').first().click();
   await expect(page.locator('.agent-panel')).toContainText('この音が表す役割');
-  await page.getByRole('textbox', { name: '選択した範囲への質問' }).fill('この旋律が戻る理由は？');
-  await page.getByRole('button', { name: '質問を送信' }).click();
-  await expect(page.locator('.saved-answer')).toContainText('新しいAgent調査が必要');
+  await page.getByRole('button', { name: '選択箇所の保存された説明を見る' }).click();
+  await expect(page.locator('.saved-answer')).toContainText('新しいモデル呼び出しなし');
   await expect(page.locator('.backing-track')).toHaveCount(0);
   await page.getByText('再生設定', { exact: true }).click();
   await page.getByRole('button', { name: '伴奏トラックを表示', exact: true }).click();
@@ -58,7 +57,7 @@ test('whole-health listening and real-screen tour keep investigation human-direc
     { width: 980, height: 600 },
   ]) {
     await page.setViewportSize(viewport);
-    await expect(page.getByRole('textbox', { name: '選択した範囲への質問' })).toBeInViewport();
+    await expect(page.getByRole('button', { name: '選択箇所の保存された説明を見る' })).toBeInViewport();
     await expect(page.getByRole('button', { name: 'Play', exact: true })).toBeInViewport();
     await expect(page.locator('.backing-track')).toHaveCount(0);
     const size = await page.evaluate(() => [
@@ -69,7 +68,7 @@ test('whole-health listening and real-screen tour keep investigation human-direc
     ]);
     expect(size[0]).toBe(size[1]);
     expect(size[2]).toBe(size[3]);
-    await page.screenshot({ path: `artifacts/workspace-r12-${viewport.width}.png` });
+    await page.screenshot({ path: `artifacts/workspace-r13-${viewport.width}.png` });
   }
   expect(
     await page.locator('.review-code').evaluate((e) => e.getBoundingClientRect().height),
@@ -124,7 +123,7 @@ test('selected-file listening, supporting files and theme switching preserve the
   await expect(page.locator('.time-display small')).toHaveText(fullLength);
   await page.getByRole('button', { name: 'ダークモードに切り替え', exact: true }).click();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
-  await page.screenshot({ path: 'artifacts/workspace-r8-dark.png' });
+  await page.screenshot({ path: 'artifacts/workspace-r13-dark.png' });
   await page.reload();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
   await page.getByRole('button', { name: 'ライトモードに切り替え', exact: true }).click();
@@ -132,15 +131,15 @@ test('selected-file listening, supporting files and theme switching preserve the
   await expect(page.locator('footer.statusbar')).toHaveCount(0);
   await expect(page.locator('.file-scope summary')).toContainText('解析済み 13/13 実装');
   const width = await page.locator('.review-center').evaluate((e) => e.getBoundingClientRect().width);
-  const question = page.getByRole('textbox', { name: '選択した範囲への質問' });
-  await question.fill('この境界を保つ理由は？');
+  const question = page.getByRole('button', { name: '選択箇所の保存された説明を見る' });
+  await question.click();
   await page.getByRole('button', { name: 'Agentを閉じる', exact: true }).click();
   await expect(question).toBeHidden();
   expect(
     await page.locator('.review-center').evaluate((e) => e.getBoundingClientRect().width),
   ).toBeGreaterThan(width + 250);
   await page.getByRole('button', { name: 'Agentを開く', exact: true }).press('Space');
-  await expect(question).toHaveValue('この境界を保つ理由は？');
+  await expect(page.locator('.saved-answer')).toContainText('新しいモデル呼び出しなし');
   await expect(page.getByRole('button', { name: 'Play', exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Agentを閉じる', exact: true }).click();
   await page.reload();

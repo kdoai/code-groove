@@ -29,6 +29,14 @@ const roleRhythms = [
   [0, 480, 1120, 1440],
   [0, 640, 1120, 1600],
 ];
+const patternRhythms = {
+  domain_rule: 0,
+  responsibility: 1,
+  layer_boundary: 2,
+  dependency_direction: 3,
+  error_strategy: 4,
+  naming: 5,
+} as const;
 
 export function arrangeJazz(plan: ScorePlan, map: SemanticMap) {
   const add = (
@@ -87,7 +95,11 @@ export function arrangeJazz(plan: ScorePlan, map: SemanticMap) {
       const motif = Number(responsibility.motif_id.slice(1));
       const anchor = owners.find((n) => n.responsibility_id === rid)!;
       const localBar = bar - (phrase?.start_bar ?? 0);
-      roleRhythms[motif].forEach((offset, beat) => {
+      const designPattern = [...(map.design_patterns ?? [])]
+        .sort((a, b) => (a.pattern_id < b.pattern_id ? -1 : a.pattern_id > b.pattern_id ? 1 : 0))
+        .find((p) => p.peer_unit_ids.includes(anchor.unit_id!));
+      const rhythm = roleRhythms[designPattern ? patternRhythms[designPattern.kind] : motif];
+      rhythm.forEach((offset, beat) => {
         const anchors = owners.filter((n) => n.responsibility_id === rid);
         const linked = anchors[(localBar * 4 + beat) % anchors.length] ?? anchor;
         const position = localBar * 4 + beat;
@@ -95,9 +107,7 @@ export function arrangeJazz(plan: ScorePlan, map: SemanticMap) {
           `melody_${bar}_${rid}_${beat}`,
           start + offset + index * 40,
           motif % 2 ? 'vibes' : 'piano',
-          bar === plan.total_bars - 1 && beat === roleRhythms[motif].length - 1
-            ? 72
-            : melody[motif][position % 8],
+          bar === plan.total_bars - 1 && beat === rhythm.length - 1 ? 72 : melody[motif][position % 8],
           (beat === 0 ? 0.28 : 0.2) / Math.sqrt(rids.length),
           localBar % 4 === 3 && beat === 2 ? 1000 : 620,
           {
@@ -115,7 +125,12 @@ export function arrangeJazz(plan: ScorePlan, map: SemanticMap) {
   for (const signal of [...(map.review_signals ?? [])].sort((a, b) =>
     a.signal_id.localeCompare(b.signal_id),
   )) {
-    if (map.analysis_depth === 'overview') continue;
+    if ((signal.review_axis ?? 'coherence') !== 'coherence' || signal.human_review_required) continue;
+    const comparedPattern = signal.comparison
+      ? map.design_patterns?.find((p) => p.pattern_id === signal.comparison!.pattern_id)
+      : undefined;
+    if (signal.comparison && !comparedPattern) continue;
+    if (map.analysis_depth === 'overview' && !comparedPattern) continue;
     if (signal.verdict !== 'concern') continue;
     for (const phrase of plan.phrases) {
       if (plan.mode === 'repo' && !signal.unit_ids.includes(phrase.unit_id!)) continue;
@@ -131,8 +146,9 @@ export function arrangeJazz(plan: ScorePlan, map: SemanticMap) {
       const bar = phrase.start_bar + (phrase.bar_count > 1 ? 1 : 0);
       if (responseBars.has(bar)) continue;
       responseBars.add(bar);
-      const pattern =
-        signal.category === 'policy_scattering'
+      const pattern = comparedPattern
+        ? roleRhythms[patternRhythms[comparedPattern.kind]].map((offset, i) => offset + (i === 1 ? 160 : 0))
+        : signal.category === 'policy_scattering'
           ? [0, 160, 480, 640, 960, 1120, 1440, 1600]
           : signal.category === 'responsibility_mixing'
             ? [0, 320, 720, 1040, 1440, 1680]
@@ -168,7 +184,9 @@ export function arrangeJazz(plan: ScorePlan, map: SemanticMap) {
               event_id: sourceEvent.event_id,
               unit_id: sourceEvent.unit_id,
               responsibility_id: sourceEvent.responsibility_id,
-              evidence_ids: signal.evidence_ids,
+              evidence_ids: [
+                ...new Set([...signal.evidence_ids, ...(signal.comparison?.reference_evidence_ids ?? [])]),
+              ],
             },
           );
         });

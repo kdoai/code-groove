@@ -1,5 +1,12 @@
 from code_groove.errors import GrooveError
-from code_groove.schemas import AnalysisCandidate, Evidence, InvestigationCandidate, Span
+from code_groove.schemas import (
+    AnalysisCandidate,
+    DesignPattern,
+    Evidence,
+    InvestigationCandidate,
+    ReviewSignal,
+    Span,
+)
 
 
 def contains(outer: Span, inner: Span) -> bool:
@@ -30,7 +37,101 @@ def covers(proofs: list[Evidence], span: Span, code_only: bool = False) -> bool:
     return False
 
 
-def validate_candidate(candidate: AnalysisCandidate, index: dict, evidence: list[Evidence]) -> None:
+def validate_design_review(
+    patterns: list[DesignPattern], signals: list[ReviewSignal], index: dict, evidence: list[Evidence]
+) -> None:
+    units = {u["unit_id"]: u for u in index["units"]}
+    proofs = {e.evidence_id: e for e in evidence}
+    by_id = {p.pattern_id: p for p in patterns}
+    errors = []
+    if len(by_id) != len(patterns):
+        errors.append("Duplicate design pattern IDs")
+    for pattern in patterns:
+        if len(set(pattern.peer_unit_ids)) != len(pattern.peer_unit_ids):
+            errors.append("Pattern requires distinct peer implementations")
+        if any(e not in proofs for e in pattern.evidence_ids):
+            errors.append("Pattern requires actual read evidence")
+        peer_spans: list[Span] = []
+        for uid in pattern.peer_unit_ids:
+            unit = units.get(uid)
+            if not unit or not covers(
+                [proofs[e] for e in pattern.evidence_ids if e in proofs], Span(**unit["primary_span"]), True
+            ):
+                errors.append("Pattern peers require covering code reads")
+            if unit:
+                span = Span(**unit["primary_span"])
+                if any(
+                    other.file_id == span.file_id
+                    and other.start_line <= span.end_line
+                    and span.start_line <= other.end_line
+                    for other in peer_spans
+                ):
+                    errors.append("Nested or overlapping symbols are not independent pattern peers")
+                peer_spans.append(span)
+        exception_ids = [e.unit_id for e in pattern.exceptions]
+        if len(set(exception_ids)) != len(exception_ids):
+            errors.append("Duplicate pattern exceptions")
+        for exception in pattern.exceptions:
+            unit = units.get(exception.unit_id)
+            if (
+                exception.unit_id in pattern.peer_unit_ids
+                or any(e not in proofs for e in exception.evidence_ids)
+                or not unit
+                or not covers(
+                    [proofs[e] for e in exception.evidence_ids if e in proofs],
+                    Span(**unit["primary_span"]),
+                    True,
+                )
+            ):
+                errors.append("Pattern exception requires a separate implementation and covering reads")
+    for signal in signals:
+        if signal.human_review_required and (
+            not signal.human_review_reason or signal.verdict != "inconclusive"
+        ):
+            errors.append("Human review requires an explicit unanswered question and inconclusive verdict")
+        if signal.category == "implementation_risk" and signal.review_axis == "coherence":
+            errors.append("Implementation risk must be classified separately from coherence")
+        comparison = signal.comparison
+        if not comparison:
+            continue
+        compared_pattern = by_id.get(comparison.pattern_id)
+        reference = units.get(comparison.reference_unit_id)
+        if (
+            signal.review_axis != "coherence"
+            or not compared_pattern
+            or comparison.reference_unit_id not in compared_pattern.peer_unit_ids
+            or comparison.reference_unit_id in signal.unit_ids
+            or not reference
+            or comparison.reference_span.model_dump() != reference["primary_span"]
+            or any(
+                e not in proofs or e not in compared_pattern.evidence_ids
+                for e in comparison.reference_evidence_ids
+            )
+            or not covers(
+                [proofs[e] for e in comparison.reference_evidence_ids if e in proofs],
+                Span(**reference["primary_span"]),
+                True,
+            )
+        ):
+            errors.append(
+                "Comparison requires a distinct, read peer from its observed design compared_pattern"
+            )
+        if (
+            signal.verdict == "concern"
+            and compared_pattern
+            and any(exception.unit_id in signal.unit_ids for exception in compared_pattern.exceptions)
+        ):
+            errors.append("A justified compared_pattern exception cannot also be an unexplained deviation")
+    if errors:
+        raise GrooveError("INVALID_ANALYSIS", "; ".join(errors[:10]))
+
+
+def validate_candidate(
+    candidate: AnalysisCandidate, index: dict, evidence: list[Evidence], repository_index: dict | None = None
+) -> None:
+    validate_design_review(
+        candidate.design_patterns, candidate.review_signals, repository_index or index, evidence
+    )
     known_units = {u["unit_id"]: u for u in index["units"]}
     known_files = {f["file_id"]: f for f in index["files"]}
     proofs = {e.evidence_id: e for e in evidence}
@@ -117,10 +218,12 @@ def validate_candidate(candidate: AnalysisCandidate, index: dict, evidence: list
             errors.append("Review signal requires known units, events and read evidence")
         if not any(e in proofs and proofs[e].source_kind == "code" for e in signal.evidence_ids):
             errors.append("Review signal requires code evidence")
-        if signal.verdict == "concern" and not signal.event_ids:
+        if signal.verdict == "concern" and signal.review_axis == "coherence" and not signal.event_ids:
             errors.append("Audible concern requires a grounded meaning event")
-        if signal.verdict == "concern" and (
-            not signal.change_scenario or not signal.alternative_evidence_ids
+        if (
+            signal.verdict == "concern"
+            and signal.review_axis == "coherence"
+            and (not signal.change_scenario or not signal.alternative_evidence_ids)
         ):
             errors.append(
                 "Audible concern requires a concrete change scenario and checked alternative evidence"
@@ -143,7 +246,21 @@ def validate_candidate(candidate: AnalysisCandidate, index: dict, evidence: list
         raise GrooveError("INVALID_ANALYSIS", "; ".join(errors[:10]))
 
 
-def validate_investigation(candidate: InvestigationCandidate, evidence: list[Evidence], base: dict) -> None:
+def validate_investigation(
+    candidate: InvestigationCandidate,
+    evidence: list[Evidence],
+    base: dict,
+    repository_index: dict | None = None,
+) -> None:
+    patterns = {p["pattern_id"]: DesignPattern(**p) for p in base.get("design_patterns", [])}
+    patterns.update({p.pattern_id: p for p in candidate.design_patterns})
+    if len(patterns) > 8:
+        raise GrooveError("INVALID_ANALYSIS", "設計パターンは8件以内です。")
+    all_proofs = [Evidence(**e) for e in base["evidence"]] + evidence
+    index = repository_index or {"units": base["units"]}
+    # A new or revised pattern must be established by this investigation's actual reads.
+    validate_design_review(candidate.design_patterns, [], index, evidence)
+    validate_design_review(list(patterns.values()), candidate.review_signals, index, all_proofs)
     proofs = {e.evidence_id for e in evidence} | {e["evidence_id"] for e in base["evidence"]}
     fresh = {e.evidence_id for e in evidence}
     if not fresh or not any(e.source_kind == "code" for e in evidence):
@@ -195,13 +312,14 @@ def validate_investigation(candidate: InvestigationCandidate, evidence: list[Evi
         for signal in candidate.review_signals:
             if (
                 not signal.unit_ids
-                or not signal.event_ids
+                or (signal.review_axis == "coherence" and not signal.event_ids)
                 or any(u not in units for u in signal.unit_ids)
                 or any(e not in events for e in signal.event_ids)
                 or any(e not in proofs for e in signal.evidence_ids)
                 or any(e not in signal.evidence_ids for e in signal.alternative_evidence_ids)
                 or (
                     signal.verdict == "concern"
+                    and signal.review_axis == "coherence"
                     and (not signal.change_scenario or not signal.alternative_evidence_ids)
                 )
             ):

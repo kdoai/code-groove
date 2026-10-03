@@ -15,7 +15,26 @@ export type ReviewSignals =
   | [ReviewSignal, ReviewSignal, ReviewSignal, ReviewSignal, ReviewSignal, ReviewSignal];
 export type SignalId = string;
 export type Category =
-  "policy_scattering" | "responsibility_mixing" | "change_coupling" | "data_flow_opacity" | "justified_boundary";
+  | "policy_scattering"
+  | "responsibility_mixing"
+  | "change_coupling"
+  | "data_flow_opacity"
+  | "justified_boundary"
+  | "implementation_risk";
+export type ReviewAxis = "correctness" | "quality" | "coherence";
+export type PatternId = string;
+export type ReferenceUnitId = string;
+export type FileId = string;
+export type Path = string;
+export type StartLine = number;
+export type EndLine = number;
+/**
+ * @maxItems 96
+ */
+export type ReferenceEvidenceIds = string[];
+export type ObservedDifference = string;
+export type HumanReviewRequired = boolean;
+export type HumanReviewReason = string;
 export type Verdict = "concern" | "justified" | "inconclusive";
 export type Label = string;
 export type Explanation = string;
@@ -52,6 +71,7 @@ export type EvidenceIds1 = string[];
 export type Justification = string;
 export type Limitation = string | null;
 export type DiscussionQuestion = string | null;
+export type ReviewAxis1 = "correctness" | "quality" | "coherence";
 /**
  * @maxItems 16
  */
@@ -212,6 +232,58 @@ export type ChangeReason = string;
 export type EvidenceIds4 = string[];
 export type MotifId = "M0" | "M1" | "M2" | "M3" | "M4" | "M5";
 export type DisplayOrder = number;
+/**
+ * @maxItems 4
+ */
+export type DesignPatterns =
+  | []
+  | [DesignPattern]
+  | [DesignPattern, DesignPattern]
+  | [DesignPattern, DesignPattern, DesignPattern]
+  | [DesignPattern, DesignPattern, DesignPattern, DesignPattern];
+export type PatternId1 = string;
+export type Label2 = string;
+export type Kind =
+  "domain_rule" | "responsibility" | "layer_boundary" | "dependency_direction" | "error_strategy" | "naming";
+export type Description = string;
+export type ScopeNote = string;
+/**
+ * @minItems 2
+ * @maxItems 12
+ */
+export type PeerUnitIds =
+  | [string, string]
+  | [string, string, string]
+  | [string, string, string, string]
+  | [string, string, string, string, string]
+  | [string, string, string, string, string, string]
+  | [string, string, string, string, string, string, string]
+  | [string, string, string, string, string, string, string, string]
+  | [string, string, string, string, string, string, string, string, string]
+  | [string, string, string, string, string, string, string, string, string, string]
+  | [string, string, string, string, string, string, string, string, string, string, string]
+  | [string, string, string, string, string, string, string, string, string, string, string, string];
+/**
+ * @maxItems 96
+ */
+export type EvidenceIds5 = string[];
+/**
+ * @maxItems 6
+ */
+export type Exceptions =
+  | []
+  | [PatternException]
+  | [PatternException, PatternException]
+  | [PatternException, PatternException, PatternException]
+  | [PatternException, PatternException, PatternException, PatternException]
+  | [PatternException, PatternException, PatternException, PatternException, PatternException]
+  | [PatternException, PatternException, PatternException, PatternException, PatternException, PatternException];
+export type UnitId = string;
+export type Reason1 = string;
+/**
+ * @maxItems 96
+ */
+export type EvidenceIds6 = string[];
 export type InvestigationId = string;
 export type BaseAnalysisId = string;
 /**
@@ -224,10 +296,6 @@ export type SelectedUnitIds = string[];
 export type SelectedEventIds = string[];
 export type EvidenceId = string;
 export type SnapshotId = string;
-export type FileId = string;
-export type Path = string;
-export type StartLine = number;
-export type EndLine = number;
 export type ProjectionSha256 = string;
 export type SourceKind = "code" | "test" | "document";
 export type Observation = string;
@@ -241,6 +309,7 @@ export interface InvestigationResult {
   hypotheses: Hypotheses;
   suggested_reclassification?: SuggestedReclassification;
   new_responsibilities?: NewResponsibilities;
+  design_patterns?: DesignPatterns;
   investigation_id: InvestigationId;
   base_analysis_id: BaseAnalysisId;
   selected_unit_ids: SelectedUnitIds;
@@ -250,6 +319,10 @@ export interface InvestigationResult {
 export interface ReviewSignal {
   signal_id: SignalId;
   category: Category;
+  review_axis?: ReviewAxis;
+  comparison?: DesignComparison | null;
+  human_review_required?: HumanReviewRequired;
+  human_review_reason?: HumanReviewReason;
   verdict: Verdict;
   label: Label;
   explanation: Explanation;
@@ -260,6 +333,19 @@ export interface ReviewSignal {
   event_ids: EventIds;
   evidence_ids: EvidenceIds;
 }
+export interface DesignComparison {
+  pattern_id: PatternId;
+  reference_unit_id: ReferenceUnitId;
+  reference_span: Span;
+  reference_evidence_ids: ReferenceEvidenceIds;
+  observed_difference: ObservedDifference;
+}
+export interface Span {
+  file_id: FileId;
+  path: Path;
+  start_line: StartLine;
+  end_line: EndLine;
+}
 export interface Finding {
   finding_id: FindingId;
   verdict: Verdict1;
@@ -268,6 +354,7 @@ export interface Finding {
   justification: Justification;
   limitation?: Limitation;
   discussion_question?: DiscussionQuestion;
+  review_axis?: ReviewAxis1;
 }
 export interface Hypothesis {
   hypothesis_id: HypothesisId;
@@ -292,6 +379,21 @@ export interface Responsibility {
   motif_id: MotifId;
   display_order: DisplayOrder;
 }
+export interface DesignPattern {
+  pattern_id: PatternId1;
+  label: Label2;
+  kind: Kind;
+  description: Description;
+  scope_note: ScopeNote;
+  peer_unit_ids: PeerUnitIds;
+  evidence_ids: EvidenceIds5;
+  exceptions?: Exceptions;
+}
+export interface PatternException {
+  unit_id: UnitId;
+  reason: Reason1;
+  evidence_ids: EvidenceIds6;
+}
 export interface Evidence1 {
   evidence_id: EvidenceId;
   snapshot_id: SnapshotId;
@@ -300,10 +402,4 @@ export interface Evidence1 {
   source_kind: SourceKind;
   observation: Observation;
   created_by_tool_event_id: CreatedByToolEventId;
-}
-export interface Span {
-  file_id: FileId;
-  path: Path;
-  start_line: StartLine;
-  end_line: EndLine;
 }

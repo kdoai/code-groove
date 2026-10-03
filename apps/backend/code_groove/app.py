@@ -58,7 +58,7 @@ def studio_score(serialized_map: str, kit_hash: str) -> dict:
 
 def current_music(bundle: dict) -> dict:
     plan = bundle["score"]["scenes"][0]["repo"]
-    if plan["kit_id"] == "midnight-jazz-v4" and plan["grammar_version"] == "groove-chamber-v8":
+    if plan["kit_id"] == "midnight-jazz-v4" and plan["grammar_version"] == "groove-chamber-v9":
         return bundle
     kit = json.loads(
         (ROOT / "apps/web/public/audio/midnight-jazz-v4/manifest.json").read_text(encoding="utf-8")
@@ -644,7 +644,10 @@ def create_app(settings: Settings | None = None, verifier: Callable[[str], str] 
             (
                 s
                 for s in base.get("review_signals", [])
-                if s["signal_id"] == body.signal_id and s["verdict"] == "concern"
+                if s["signal_id"] == body.signal_id
+                and s["verdict"] == "concern"
+                and s.get("review_axis", "coherence") == "coherence"
+                and not s.get("human_review_required")
             ),
             None,
         )
@@ -729,13 +732,20 @@ def create_app(settings: Settings | None = None, verifier: Callable[[str], str] 
             not result["suggested_reclassification"]
             and not result.get("review_signals")
             and not result.get("replaced_signal_ids")
+            and not result.get("design_patterns")
         ):
             raise GrooveError("NO_RECLASSIFICATION", "反映する解釈の更新がありません。", 409)
         semantic = copy.deepcopy(bundle_for(previous, user)["map"])
         candidate = InvestigationCandidate.model_validate(
             {k: result[k] for k in InvestigationCandidate.model_fields if k in result}
         )
-        validate_investigation(candidate, [Evidence(**e) for e in result["evidence"]], semantic)
+        repository_index = artifacts.get(base_meta["snapshot_key"])["index"]
+        validate_investigation(
+            candidate, [Evidence(**e) for e in result["evidence"]], semantic, repository_index
+        )
+        patterns = {p["pattern_id"]: p for p in semantic.get("design_patterns", [])}
+        patterns.update({p["pattern_id"]: p for p in result.get("design_patterns", [])})
+        semantic["design_patterns"] = list(patterns.values())
         updates = {s["signal_id"]: s for s in result.get("review_signals", [])}
         semantic["review_signals"] = [
             s
@@ -766,7 +776,7 @@ def create_app(settings: Settings | None = None, verifier: Callable[[str], str] 
         model = SemanticMap.model_validate(semantic)
         validate_candidate(
             model,
-            artifacts.get(base_meta["snapshot_key"])["index"],
+            repository_index,
             [Evidence(**e) for e in semantic["evidence"]],
         )
         kit = json.loads((ROOT / "apps/web/public/audio/midnight-jazz-v4/manifest.json").read_text())

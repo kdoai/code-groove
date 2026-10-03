@@ -176,6 +176,7 @@ export function ReviewWorkspace({
     ws.set({
       eventId: note.event_id,
       unitId: note.unit_id!,
+      signalId: note.signal_id ?? '',
       codeSpan: null,
       scene: Math.max(
         0,

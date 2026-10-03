@@ -11,7 +11,9 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def case():
     value = json.loads((ROOT / "fixtures/mixed.json").read_text(encoding="utf-8"))["map"]
-    candidate = AnalysisCandidate.model_validate({k: value[k] for k in AnalysisCandidate.model_fields})
+    candidate = AnalysisCandidate.model_validate(
+        {k: value[k] for k in AnalysisCandidate.model_fields if k in value}
+    )
     index = {
         "units": [{"unit_id": u["unit_id"], "primary_span": u["primary_span"]} for u in value["units"]],
         "files": [

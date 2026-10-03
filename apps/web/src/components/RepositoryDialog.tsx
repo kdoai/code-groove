@@ -43,11 +43,17 @@ export function RepositoryDialog({
                   : chunk.status === 'partial'
                     ? `一部未解決 (${chunk.unresolved_units})`
                     : '検査済み'}
+                {chunk.analysis_id && chunk.cache_compatible === false && ' · 以前のAgent版の保存結果'}
               </small>
             </span>
             {chunk.analysis_id ? (
               <span className="repository-actions">
                 <button onClick={() => open(chunk.analysis_id!)}>保存結果を開く</button>
+                {chunk.cache_compatible === false && (
+                  <button disabled={pending} onClick={() => analyze(chunk.chunk_id)}>
+                    現行Agentで再検査
+                  </button>
+                )}
                 {chunk.status === 'partial' && (
                   <button disabled={pending} onClick={() => analyze(chunk.chunk_id, true)}>
                     未解決を再検査

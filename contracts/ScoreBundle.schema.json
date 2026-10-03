@@ -232,7 +232,8 @@
             "groove-chamber-v5",
             "groove-chamber-v6",
             "groove-chamber-v7",
-            "groove-chamber-v8"
+            "groove-chamber-v8",
+            "groove-chamber-v9"
           ],
           "title": "Grammar Version",
           "type": "string"

@@ -245,7 +245,7 @@
   },
   "score": {
     "analysis_id": "analysis_orchestrator",
-    "score_hash": "f445a3b9088e909c2879ddb19461ec1e29ceed0a7628c5f5b78f671138e56f32",
+    "score_hash": "63762880e0df918c0208502208e9643c5d78a3b6d9a4a4762b8056212be8dc62",
     "scenes": [
       {
         "scene_id": "scene_1",
@@ -256,7 +256,7 @@
         ],
         "theme": {
           "scene_id": "scene_1",
-          "grammar_version": "groove-chamber-v8",
+          "grammar_version": "groove-chamber-v9",
           "kit_id": "midnight-jazz-v4",
           "kit_hash": "a302b56825512936a014a556a88819affd50de65c9d68ff3acb544702dc919f7",
           "bpm": 96,
@@ -980,7 +980,7 @@
         },
         "repo": {
           "scene_id": "scene_1",
-          "grammar_version": "groove-chamber-v8",
+          "grammar_version": "groove-chamber-v9",
           "kit_id": "midnight-jazz-v4",
           "kit_hash": "a302b56825512936a014a556a88819affd50de65c9d68ff3acb544702dc919f7",
           "bpm": 96,

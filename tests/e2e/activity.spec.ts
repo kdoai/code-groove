@@ -98,7 +98,7 @@ test('actual Agent actions remain visible across dialogs and samples; indexing i
   await page.getByRole('button', { name: 'Repositoryを開く', exact: true }).click();
   await expect(page.getByRole('dialog')).toBeVisible();
   await expect(activity).toBeInViewport();
-  await page.screenshot({ path: 'artifacts/agent-activity-r8-mock.png' });
+  await page.screenshot({ path: 'artifacts/agent-activity-r13-mock.png' });
   await page.getByRole('button', { name: /実解析を再生 · 例外/ }).click();
   await expect(activity).toContainText('Gemini Agentが調査中');
   status = null;

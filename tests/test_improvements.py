@@ -166,6 +166,8 @@ def test_exact_edits_require_read_evidence_and_safe_paths(workspace):
     candidate = draft(ctx)
     changed = apply_edits(candidate, ctx.sources, ctx.evidence)
     assert source_hash(changed) != source_hash(ctx.sources)
+    large_sources = {**ctx.sources, **{f"context-{i}.md": "x" * 150000 for i in range(4)}}
+    assert apply_edits(candidate, large_sources, ctx.evidence)["context-0.md"] == large_sources["context-0.md"]
     for path in (
         "../src/store-return.ts",
         ".github/workflows/deploy.yml",
@@ -202,7 +204,7 @@ def test_recorded_adoption_keeps_origin_and_static_contracts(workspace):
     from code_groove.validation import validate_candidate
 
     candidate = AnalysisCandidate.model_validate(
-        {k: stored["map"][k] for k in AnalysisCandidate.model_fields}
+        {k: stored["map"][k] for k in AnalysisCandidate.model_fields if k in stored["map"]}
     )
     validate_candidate(
         candidate,
@@ -226,7 +228,7 @@ async def test_accepted_snapshot_is_reanalysed_without_overwriting_original(work
     async def inspect_changed(ctx):
         assert "const elapsedDays" in ctx.sources["src/store-return.ts"]
         assert ctx.prior_motifs
-        value = {k: before["map"][k] for k in AnalysisCandidate.model_fields}
+        value = {k: before["map"][k] for k in AnalysisCandidate.model_fields if k in before["map"]}
         import copy
 
         value = copy.deepcopy(value)

@@ -310,7 +310,22 @@ export type ReviewSignals =
     ];
 export type SignalId = string;
 export type Category =
-  "policy_scattering" | "responsibility_mixing" | "change_coupling" | "data_flow_opacity" | "justified_boundary";
+  | "policy_scattering"
+  | "responsibility_mixing"
+  | "change_coupling"
+  | "data_flow_opacity"
+  | "justified_boundary"
+  | "implementation_risk";
+export type ReviewAxis = "correctness" | "quality" | "coherence";
+export type PatternId = string;
+export type ReferenceUnitId = string;
+/**
+ * @maxItems 96
+ */
+export type ReferenceEvidenceIds = string[];
+export type ObservedDifference = string;
+export type HumanReviewRequired = boolean;
+export type HumanReviewReason = string;
 export type Verdict = "concern" | "justified" | "inconclusive";
 export type Label3 = string;
 export type Explanation = string;
@@ -332,6 +347,71 @@ export type EventIds = string[];
  * @maxItems 96
  */
 export type EvidenceIds4 = string[];
+/**
+ * @maxItems 8
+ */
+export type DesignPatterns =
+  | []
+  | [DesignPattern]
+  | [DesignPattern, DesignPattern]
+  | [DesignPattern, DesignPattern, DesignPattern]
+  | [DesignPattern, DesignPattern, DesignPattern, DesignPattern]
+  | [DesignPattern, DesignPattern, DesignPattern, DesignPattern, DesignPattern]
+  | [DesignPattern, DesignPattern, DesignPattern, DesignPattern, DesignPattern, DesignPattern]
+  | [DesignPattern, DesignPattern, DesignPattern, DesignPattern, DesignPattern, DesignPattern, DesignPattern]
+  | [
+      DesignPattern,
+      DesignPattern,
+      DesignPattern,
+      DesignPattern,
+      DesignPattern,
+      DesignPattern,
+      DesignPattern,
+      DesignPattern
+    ];
+export type PatternId1 = string;
+export type Label4 = string;
+export type Kind1 =
+  "domain_rule" | "responsibility" | "layer_boundary" | "dependency_direction" | "error_strategy" | "naming";
+export type Description = string;
+export type ScopeNote = string;
+/**
+ * @minItems 2
+ * @maxItems 12
+ */
+export type PeerUnitIds =
+  | [string, string]
+  | [string, string, string]
+  | [string, string, string, string]
+  | [string, string, string, string, string]
+  | [string, string, string, string, string, string]
+  | [string, string, string, string, string, string, string]
+  | [string, string, string, string, string, string, string, string]
+  | [string, string, string, string, string, string, string, string, string]
+  | [string, string, string, string, string, string, string, string, string, string]
+  | [string, string, string, string, string, string, string, string, string, string, string]
+  | [string, string, string, string, string, string, string, string, string, string, string, string];
+/**
+ * @maxItems 96
+ */
+export type EvidenceIds5 = string[];
+/**
+ * @maxItems 6
+ */
+export type Exceptions =
+  | []
+  | [PatternException]
+  | [PatternException, PatternException]
+  | [PatternException, PatternException, PatternException]
+  | [PatternException, PatternException, PatternException, PatternException]
+  | [PatternException, PatternException, PatternException, PatternException, PatternException]
+  | [PatternException, PatternException, PatternException, PatternException, PatternException, PatternException];
+export type UnitId2 = string;
+export type Reason = string;
+/**
+ * @maxItems 96
+ */
+export type EvidenceIds6 = string[];
 export type SchemaVersion = "1.0";
 export type AnalysisId = string;
 export type ProjectId = string;
@@ -355,7 +435,7 @@ export type InspectedUnits = number;
  */
 export type UnresolvedUnitIds = string[];
 export type Path1 = string;
-export type Reason = string;
+export type Reason1 = string;
 export type ExcludedPaths = ExcludedPath[];
 export type InspectedLineRanges = Span[];
 export type ModelId = string;
@@ -369,6 +449,7 @@ export interface SemanticMap {
   events: Events;
   hypotheses: Hypotheses;
   review_signals?: ReviewSignals;
+  design_patterns?: DesignPatterns;
   schema_version: SchemaVersion;
   analysis_id: AnalysisId;
   project_id: ProjectId;
@@ -436,6 +517,10 @@ export interface Hypothesis {
 export interface ReviewSignal {
   signal_id: SignalId;
   category: Category;
+  review_axis?: ReviewAxis;
+  comparison?: DesignComparison | null;
+  human_review_required?: HumanReviewRequired;
+  human_review_reason?: HumanReviewReason;
   verdict: Verdict;
   label: Label3;
   explanation: Explanation;
@@ -445,6 +530,28 @@ export interface ReviewSignal {
   unit_ids: UnitIds;
   event_ids: EventIds;
   evidence_ids: EvidenceIds4;
+}
+export interface DesignComparison {
+  pattern_id: PatternId;
+  reference_unit_id: ReferenceUnitId;
+  reference_span: Span;
+  reference_evidence_ids: ReferenceEvidenceIds;
+  observed_difference: ObservedDifference;
+}
+export interface DesignPattern {
+  pattern_id: PatternId1;
+  label: Label4;
+  kind: Kind1;
+  description: Description;
+  scope_note: ScopeNote;
+  peer_unit_ids: PeerUnitIds;
+  evidence_ids: EvidenceIds5;
+  exceptions?: Exceptions;
+}
+export interface PatternException {
+  unit_id: UnitId2;
+  reason: Reason;
+  evidence_ids: EvidenceIds6;
 }
 export interface Evidence1 {
   evidence_id: EvidenceId;
@@ -466,5 +573,5 @@ export interface Coverage {
 }
 export interface ExcludedPath {
   path: Path1;
-  reason: Reason;
+  reason: Reason1;
 }

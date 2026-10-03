@@ -93,6 +93,33 @@ class RepositoryProfile(Contract):
     unknowns: list[Text] = Field(max_length=16)
 
 
+class PatternException(Contract):
+    unit_id: Id
+    reason: Text
+    evidence_ids: Ids
+
+
+class DesignPattern(Contract):
+    pattern_id: Id
+    label: str = Field(min_length=1, max_length=48)
+    kind: Literal[
+        "domain_rule", "responsibility", "layer_boundary", "dependency_direction", "error_strategy", "naming"
+    ]
+    description: Text
+    scope_note: Text
+    peer_unit_ids: list[Id] = Field(min_length=2, max_length=12)
+    evidence_ids: Ids
+    exceptions: list[PatternException] = Field(default_factory=list, max_length=6)
+
+
+class DesignComparison(Contract):
+    pattern_id: Id
+    reference_unit_id: Id
+    reference_span: Span
+    reference_evidence_ids: Ids
+    observed_difference: Text
+
+
 class ReviewSignal(Contract):
     signal_id: Id
     category: Literal[
@@ -101,7 +128,12 @@ class ReviewSignal(Contract):
         "change_coupling",
         "data_flow_opacity",
         "justified_boundary",
+        "implementation_risk",
     ]
+    review_axis: Literal["correctness", "quality", "coherence"] = "coherence"
+    comparison: DesignComparison | None = None
+    human_review_required: bool = False
+    human_review_reason: str = Field(default="", max_length=160)
     verdict: Literal["concern", "justified", "inconclusive"]
     label: str = Field(min_length=1, max_length=48)
     explanation: Text
@@ -120,6 +152,7 @@ class AnalysisCandidate(Contract):
     events: list[MeaningEvent] = Field(max_length=96)
     hypotheses: list[Hypothesis] = Field(max_length=16)
     review_signals: list[ReviewSignal] = Field(default_factory=list, max_length=12)
+    design_patterns: list[DesignPattern] = Field(default_factory=list, max_length=8)
 
 
 class SemanticMap(AnalysisCandidate):
@@ -175,6 +208,7 @@ class ScorePlan(Contract):
         "groove-chamber-v6",
         "groove-chamber-v7",
         "groove-chamber-v8",
+        "groove-chamber-v9",
     ]
     kit_id: Literal["paper-studio-v1", "midnight-jazz-v2", "midnight-jazz-v3", "midnight-jazz-v4"]
     kit_hash: str
@@ -208,6 +242,7 @@ class Finding(Contract):
     justification: Text
     limitation: Text | None = None
     discussion_question: Text | None = None
+    review_axis: Literal["correctness", "quality", "coherence"] = "coherence"
 
 
 class Reclassification(Contract):
@@ -225,6 +260,7 @@ class InvestigationCandidate(Contract):
     hypotheses: list[Hypothesis] = Field(max_length=16)
     suggested_reclassification: list[Reclassification] = Field(default_factory=list, max_length=96)
     new_responsibilities: list[Responsibility] = Field(default_factory=list, max_length=6)
+    design_patterns: list[DesignPattern] = Field(default_factory=list, max_length=4)
 
 
 class InvestigationResult(InvestigationCandidate):

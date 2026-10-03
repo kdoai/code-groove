@@ -53,6 +53,7 @@ export type RepositoryStatus = {
     analysis_id?: string;
     inspected_units: number;
     unresolved_units: number;
+    cache_compatible?: boolean;
   }[];
 };
 export type ImportSnapshot = { revision: string; label: string; sources: Record<string, string> };

@@ -11,6 +11,7 @@ type Workspace = {
   screen: 'arrange' | 'inspect';
   eventId: string;
   unitId: string;
+  signalId: string;
   volume: number;
   loop: boolean;
   codeSpan: Span | null;
@@ -37,6 +38,7 @@ export const useWorkspace = create<Workspace>()(
       screen: 'arrange',
       eventId: '',
       unitId: '',
+      signalId: '',
       codeSpan: null,
       volume: 0.45,
       loop: false,
@@ -50,7 +52,8 @@ export const useWorkspace = create<Workspace>()(
       showBacking: false,
       theme: 'light',
       agentVisible: true,
-      set: (values) => set(values),
+      set: (values) =>
+        set({ ...('eventId' in values || 'unitId' in values ? { signalId: '' } : {}), ...values }),
     }),
     { name: 'code-groove-workspace-v1' },
   ),

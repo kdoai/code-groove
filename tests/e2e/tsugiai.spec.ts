@@ -30,7 +30,7 @@ test('real scoped recording connects notes, source receipts and honest provenanc
   await expect(page.locator('.code-highlight')).not.toHaveCount(0);
   for (const width of [1440, 1280, 980]) {
     await page.setViewportSize({ width, height: width === 980 ? 600 : 900 });
-    await expect(page.getByRole('textbox', { name: '選択した範囲への質問' })).toBeInViewport();
+    await expect(page.getByRole('button', { name: '選択箇所の保存された説明を見る' })).toBeInViewport();
     await expect(page.getByRole('button', { name: 'Play', exact: true })).toBeInViewport();
     const bounds = await page.evaluate(() => [
       document.documentElement.scrollWidth,
@@ -42,7 +42,11 @@ test('real scoped recording connects notes, source receipts and honest provenanc
     expect(bounds[2]).toBe(bounds[3]);
   }
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.screenshot({ path: 'artifacts/tsugiai-r12-evidence.png' });
+  await page.screenshot({
+    path: process.env.E2E_BASE_URL
+      ? 'artifacts/deployed-tsugiai-r13.png'
+      : 'artifacts/tsugiai-r13-evidence.png',
+  });
   await page.getByRole('button', { name: 'Repositoryを開く', exact: true }).click();
   const dialog = page.getByRole('dialog');
   await expect(dialog.getByTestId('analysis-budget')).toContainText('1ユーザー1日10回');

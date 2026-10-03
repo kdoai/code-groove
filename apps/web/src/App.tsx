@@ -87,6 +87,7 @@ export default function App() {
         analysisId: new URLSearchParams(location.search).get('analysis') ?? '',
         unitId: new URLSearchParams(location.search).get('unit') ?? '',
         eventId: new URLSearchParams(location.search).get('event') ?? '',
+        signalId: new URLSearchParams(location.search).get('signal') ?? '',
         scene: Math.max(0, Math.min(7, Number(new URLSearchParams(location.search).get('scene') ?? 1) - 1)),
         codeSpan: null,
       });
@@ -96,9 +97,9 @@ export default function App() {
       history.replaceState(
         null,
         '',
-        `/projects/${ws.projectId}/${ws.screen}?scene=${ws.scene + 1}${ws.analysisId ? `&analysis=${ws.analysisId}` : ''}${ws.unitId ? `&unit=${ws.unitId}` : ''}${ws.eventId ? `&event=${ws.eventId}` : ''}`,
+        `/projects/${ws.projectId}/${ws.screen}?scene=${ws.scene + 1}${ws.analysisId ? `&analysis=${ws.analysisId}` : ''}${ws.unitId ? `&unit=${ws.unitId}` : ''}${ws.eventId ? `&event=${ws.eventId}` : ''}${ws.signalId ? `&signal=${ws.signalId}` : ''}`,
       );
-  }, [ws.projectId, ws.screen, ws.scene, ws.analysisId, ws.unitId, ws.eventId]);
+  }, [ws.projectId, ws.screen, ws.scene, ws.analysisId, ws.unitId, ws.eventId, ws.signalId]);
   const project = useQuery({
     queryKey: ['project', ws.projectId],
     queryFn: () =>
@@ -168,7 +169,7 @@ export default function App() {
     cache.invalidateQueries({ queryKey: ['project', ws.projectId] });
   }, [proposalRun.data]);
   const bundle = useQuery({
-    queryKey: ['bundle', ws.projectId, ws.analysisId, 'groove-chamber-v8'],
+    queryKey: ['bundle', ws.projectId, ws.analysisId, 'groove-chamber-v9'],
     queryFn: () =>
       api<Bundle>(
         ws.sampleId

@@ -54,7 +54,9 @@ def apply_edits(
         ):
             raise GrooveError("INVALID_PROPOSAL", "変更範囲全体を読み取ってから提案してください。")
         result[path] = original.replace(edit.before, edit.after, 1)
-    if sum(len(v.encode()) for v in result.values()) > 512000:
+    if sum(len(v.encode()) for v in result.values()) > 4 * 1024 * 1024 or any(
+        len(v.encode()) > 200 * 1024 for v in result.values()
+    ):
         raise GrooveError("INVALID_PROPOSAL", "変更後のソースが上限を超えています。")
     if len(proposal_diff(sources, result)) > 64000:
         raise GrooveError("INVALID_PROPOSAL", "差分が大きすぎます。変更範囲を縮小してください。")

@@ -235,9 +235,14 @@ def select_chunk(snapshot: dict, chunk_id: str) -> dict:
 def repository_status(snapshot: dict, analyses: list[dict], model_id: str) -> dict:
     plan = snapshot["repository_plan"]
     cached = cached_chunks(plan, analyses, model_id)
+    saved = dict(cached)
+    chunk_ids = {c["chunk_id"] for c in plan["chunks"]}
+    for analysis in sorted(analyses, key=lambda a: a["created_at"]):
+        if analysis.get("snapshot_id") == snapshot["snapshot_id"] and analysis.get("chunk_id") in chunk_ids:
+            saved[analysis["chunk_id"]] = analysis
     chunks = []
     for chunk in plan["chunks"]:
-        analysis = cached.get(chunk["chunk_id"], {})
+        analysis = saved.get(chunk["chunk_id"], {})
         chunks.append(
             {
                 **{k: chunk[k] for k in ("chunk_id", "label", "paths", "symbol_count")},
@@ -251,6 +256,7 @@ def repository_status(snapshot: dict, analyses: list[dict], model_id: str) -> di
                 "snapshot_id": analysis.get("snapshot_id"),
                 "inspected_units": analysis.get("inspected_units", 0),
                 "unresolved_units": analysis.get("unresolved_units", 0),
+                "cache_compatible": bool(analysis) and analysis == cached.get(chunk["chunk_id"]),
             }
         )
     return {
@@ -268,7 +274,7 @@ def repository_status(snapshot: dict, analyses: list[dict], model_id: str) -> di
                 "cache_dependency_uncertainty",
             )
         },
-        "analyzed_chunks": len(cached),
+        "analyzed_chunks": len(saved),
         "inspected_units": sum(c["inspected_units"] for c in chunks),
         "pending_units": sum(c["units"] for c in chunks if c["status"] == "pending"),
         "unresolved_units": sum(c["unresolved_units"] for c in chunks),

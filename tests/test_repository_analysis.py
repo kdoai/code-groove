@@ -305,3 +305,29 @@ def test_partition_cache_does_not_use_stale_prompt_or_model():
     assert len(select_chunk(snapshot, chunk["chunk_id"])["units"]) == 1
     with pytest.raises(GrooveError):
         select_chunk(snapshot, "chunk_missing")
+
+
+def test_same_snapshot_old_agent_result_remains_readable_without_becoming_a_current_cache():
+    sources = {"run.py": "def run():\n    return 1\n"}
+    index = build_index("snap_history", sources, repository=True)
+    plan = plan_repository(index, sources)
+    meta = {
+        "chunk_id": plan["chunks"][0]["chunk_id"],
+        "snapshot_id": "snap_history",
+        "created_at": time.time(),
+        "prompt_version": "old-agent",
+        "model_id": "model",
+        "analysis_id": "analysis_saved",
+        "inspected_units": 1,
+        "unresolved_units": 0,
+        "chunk_fingerprint": "old-fingerprint",
+    }
+    snapshot = {"snapshot_id": "snap_history", "repository_plan": plan, "index": index}
+    status = repository_status(snapshot, [meta], "model")
+    assert status["analyzed_chunks"] == 1
+    assert status["chunks"][0]["analysis_id"] == "analysis_saved"
+    assert status["chunks"][0]["cache_compatible"] is False
+    assert (
+        repository_status({**snapshot, "snapshot_id": "different_source"}, [meta], "model")["analyzed_chunks"]
+        == 0
+    )

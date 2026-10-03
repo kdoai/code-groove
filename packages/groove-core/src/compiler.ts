@@ -13,7 +13,7 @@ const motifs = [
 const velocity = [0.58, 0.52, 0.55, 0.48, 0.52, 0.5, 0.48, 0.54];
 const duration = [650, 520, 540, 700, 580, 520, 560, 820];
 const pan = [-0.25, 0.2, -0.08, 0.3, -0.3, 0.08];
-export const grammarVersion = 'groove-chamber-v8' as const;
+export const grammarVersion = 'groove-chamber-v9' as const;
 export const tickSeconds = (tick: number) => ((tick / 480) * 60) / 96;
 function occupiedBars(steps: number[]) {
   return new Map(
@@ -212,8 +212,25 @@ export async function compileGroove(map: SemanticMap, kitHash: string): Promise<
     events: map.events.map((value) => ({ ...value, evidence_ids: normalizedEvidence(value.evidence_ids) })),
     review_signals: (map.review_signals ?? []).map((value) => ({
       ...value,
+      review_axis: value.review_axis ?? 'coherence',
+      human_review_required: value.human_review_required ?? false,
+      human_review_reason: value.human_review_reason ?? '',
+      comparison: value.comparison
+        ? {
+            ...value.comparison,
+            reference_evidence_ids: normalizedEvidence(value.comparison.reference_evidence_ids),
+          }
+        : null,
       evidence_ids: normalizedEvidence(value.evidence_ids),
       alternative_evidence_ids: normalizedEvidence(value.alternative_evidence_ids ?? []),
+    })),
+    design_patterns: (map.design_patterns ?? []).map((pattern) => ({
+      ...pattern,
+      evidence_ids: normalizedEvidence(pattern.evidence_ids),
+      exceptions: (pattern.exceptions ?? []).map((exception) => ({
+        ...exception,
+        evidence_ids: normalizedEvidence(exception.evidence_ids),
+      })),
     })),
     evidence: map.evidence.map((e) => ({ span: e.span, projection_sha256: e.projection_sha256 })),
   };

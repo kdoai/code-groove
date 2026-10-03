@@ -2543,3 +2543,11 @@ html[data-theme='dark'] .agent-toggle[aria-expanded='true'] {
   flex-wrap: wrap;
   justify-content: flex-end;
 }
+.review-axis { display: block; font-size: 11px; color: var(--muted); margin: 6px 0; }
+.human-review, .design-patterns, .design-comparison { border-top: 1px solid var(--line); padding: 12px 0; font-size: 12px; }
+.human-review { border-left: 3px solid var(--accent); padding-left: 10px; }
+.design-patterns summary { cursor: pointer; font-weight: 600; }
+.comparison-sources { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 10px 0; }
+.comparison-source { min-width: 0; border: 1px solid var(--line); padding: 8px; border-radius: 4px; }
+.comparison-source pre { font: 11px/1.6 Consolas, monospace; white-space: pre-wrap; overflow-wrap: anywhere; max-height: 180px; overflow: auto; background: var(--bg); padding: 6px; }
+.comparison-source .evidence-link { overflow-wrap: anywhere; }

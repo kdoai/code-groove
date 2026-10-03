@@ -166,7 +166,7 @@ test('local import, repository coverage, saved playback and explicit continuatio
   await expect(page.locator('.refresh-bar')).toContainText('2/2範囲に保存結果 · 全体は未判定');
   await page.getByRole('button', { name: '検査範囲と続きを選ぶ' }).click();
   await expect(page.getByRole('dialog')).toContainText('一部未解決 (1)');
-  await page.screenshot({ path: 'artifacts/repository-r10-mock.png' });
+  await page.screenshot({ path: 'artifacts/repository-r13-mock.png' });
   expect(posts).toEqual(['/projects/import', '/projects/p_repository/chunks']);
   await page.getByRole('button', { name: '未解決を再検査', exact: true }).click();
   await page.getByRole('button', { name: '検査範囲と続きを選ぶ' }).click();

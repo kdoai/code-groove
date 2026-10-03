@@ -81,7 +81,7 @@ async def test_original_content_signature_and_function_id_are_preserved(monkeypa
     def response(number):
         if number == 1:
             return first
-        candidate = {k: value[k] for k in AnalysisCandidate.model_fields}
+        candidate = {k: value[k] for k in AnalysisCandidate.model_fields if k in value}
         proofs = {
             old["evidence_id"]: next(
                 e.evidence_id for e in ctx.evidence if e.span.path == old["span"]["path"]

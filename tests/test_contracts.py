@@ -36,7 +36,7 @@ def test_tsugiai_recording_has_valid_source_evidence_and_reproducible_music():
         "repository_plan": plan_repository(index, bundle["sources"]),
     }
     candidate = AnalysisCandidate.model_validate(
-        {k: bundle["map"][k] for k in AnalysisCandidate.model_fields}
+        {k: bundle["map"][k] for k in AnalysisCandidate.model_fields if k in bundle["map"]}
     )
     validate_candidate(
         candidate,
@@ -76,7 +76,7 @@ def test_saved_grammar_upgrade_preserves_examination_and_never_calls_agent(monke
     assert {key: value for key, value in upgraded.items() if key != "score"} == {
         key: value for key, value in saved.items() if key != "score"
     }
-    assert all(s["repo"]["grammar_version"] == "groove-chamber-v8" for s in upgraded["score"]["scenes"])
+    assert all(s["repo"]["grammar_version"] == "groove-chamber-v9" for s in upgraded["score"]["scenes"])
     assert [s["repo"]["notes"] for s in upgraded["score"]["scenes"]] == [
         s["repo"]["notes"] for s in saved["score"]["scenes"]
     ]

@@ -3,6 +3,7 @@ import { ArrowUpRight, Send, ScanLine } from 'lucide-react';
 import type { InvestigationResult, SemanticMap } from '../../../../packages/contracts';
 import type { Bundle } from '../api';
 import { useWorkspace } from '../state';
+import { DesignReview, reviewAxes } from './DesignReview';
 export type TraceEvent = { seq: number; type: string; timestamp: string; payload: Record<string, any> };
 
 function EvidenceTrail({ bundle, evidenceIds }: { bundle: Bundle; evidenceIds: string[] }) {
@@ -26,7 +27,7 @@ function EvidenceTrail({ bundle, evidenceIds }: { bundle: Bundle; evidenceIds: s
               {proof.span.path}:{proof.span.start_line}–{proof.span.end_line}
               <ArrowUpRight size={14} />
             </button>
-            <p>{proof.observation}</p>
+            <p>読取の目的：{proof.observation}</p>
             {receipt && (
               <small>
                 Agentの読取記録 #{receipt.seq} · {receipt.payload.purpose}
@@ -72,15 +73,19 @@ export function AgentPanel({
 }) {
   const ws = useWorkspace(),
     [question, setQuestion] = useState(''),
-    [savedAnswer, setSavedAnswer] = useState('');
+    [savedExplanation, setSavedExplanation] = useState({ selection: '', text: '' });
+  const selectionKey = `${bundle.map.analysis_id}:${ws.unitId}:${ws.eventId}`;
+  const savedAnswer = savedExplanation.selection === selectionKey ? savedExplanation.text : '';
   const event = bundle.map.events.find((e) => e.event_id === ws.eventId);
   const unit = bundle.map.units.find((u) => u.unit_id === ws.unitId) ?? bundle.map.units[0];
   const supportingFile =
     !!ws.codeSpan && !bundle.map.units.some((u) => u.primary_span.path === ws.codeSpan?.path);
-  const selectedSignal = supportingFile
-    ? undefined
-    : (bundle.map.review_signals?.find((s) => s.event_ids.includes(ws.eventId)) ??
-      bundle.map.review_signals?.find((s) => s.unit_ids.includes(unit.unit_id)));
+  const selectedSignal =
+    bundle.map.review_signals?.find((s) => s.signal_id === ws.signalId) ??
+    (supportingFile
+      ? undefined
+      : (bundle.map.review_signals?.find((s) => s.event_ids.includes(ws.eventId)) ??
+        bundle.map.review_signals?.find((s) => s.unit_ids.includes(unit.unit_id))));
   const fixture = bundle.map.origin === 'fixture';
   const recorded = bundle.map.origin === 'recorded_live' && !!ws.sampleId;
   const overview = bundle.map.analysis_depth === 'overview';
@@ -164,6 +169,7 @@ export function AgentPanel({
         {!supportingFile && (
           <EvidenceTrail bundle={bundle} evidenceIds={event?.evidence_ids ?? unit.evidence_ids} />
         )}
+        <DesignReview bundle={bundle} signal={selectedSignal} />
         {overview && role && (
           <div className="motif-map" data-tour="investigate">
             <div className="section-label">
@@ -192,8 +198,11 @@ export function AgentPanel({
             {bundle.map.review_signals.map((s) => (
               <div key={s.signal_id}>
                 <b>
+                  <span className="review-axis">{reviewAxes[s.review_axis ?? 'coherence']}</span>
                   {s.verdict === 'concern'
-                    ? '将来の負担候補'
+                    ? s.review_axis === 'correctness'
+                      ? '動作の確認事項'
+                      : '将来の負担候補'
                     : s.verdict === 'justified'
                       ? '境界の理由'
                       : '要確認'}{' '}
@@ -204,11 +213,14 @@ export function AgentPanel({
                 <button
                   className="evidence-link"
                   onClick={() => {
-                    const target = bundle.map.events.find((e) => s.event_ids.includes(e.event_id));
+                    const target =
+                      bundle.map.events.find((e) => s.event_ids.includes(e.event_id)) ??
+                      bundle.map.units.find((u) => s.unit_ids.includes(u.unit_id));
                     if (target)
                       ws.set({
                         unitId: target.unit_id,
-                        eventId: target.event_id,
+                        eventId: 'event_id' in target ? target.event_id : '',
+                        signalId: s.signal_id,
                         codeSpan: null,
                         screen: 'inspect',
                         scene: Math.max(
@@ -232,18 +244,22 @@ export function AgentPanel({
             ))}
           </details>
         )}
-        {selectedSignal && !overview && (
+        {selectedSignal && (!overview || selectedSignal.comparison || ws.signalId) && (
           <div className={`structural-finding ${selectedSignal.verdict}`}>
             <div className="finding-label">
-              {selectedSignal.verdict === 'concern'
-                ? selectedSignal.category === 'data_flow_opacity'
-                  ? '処理の流れを追う負担'
-                  : selectedSignal.category === 'responsibility_mixing'
-                    ? '異なる判断が混ざる箇所'
-                    : '同じ変更で、一緒に直す箇所'
-                : selectedSignal.verdict === 'justified'
-                  ? '理由のある境界'
-                  : '判断は保留'}
+              {selectedSignal.review_axis === 'correctness'
+                ? '動作の正しさの確認'
+                : selectedSignal.review_axis === 'quality'
+                  ? '設計上の品質の確認'
+                  : selectedSignal.verdict === 'concern'
+                    ? selectedSignal.category === 'data_flow_opacity'
+                      ? '処理の流れを追う負担'
+                      : selectedSignal.category === 'responsibility_mixing'
+                        ? '異なる判断が混ざる箇所'
+                        : '同じ変更で、一緒に直す箇所'
+                    : selectedSignal.verdict === 'justified'
+                      ? '理由のある境界'
+                      : '判断は保留'}
             </div>
             <p>{selectedSignal.explanation}</p>
             {selectedSignal.change_scenario && (
@@ -289,19 +305,23 @@ export function AgentPanel({
             })}
           </div>
         )}
-        {selectedSignal?.verdict === 'concern' && !fixture && !overview && (
-          <div className="improvement-action" data-tour="improve">
-            <button
-              className="primary wide"
-              disabled={pending || proposing}
-              onClick={() => propose(selectedSignal.signal_id)}
-            >
-              <ScanLine size={15} />
-              {proposing ? 'Geminiが改善案を作成中…' : 'Geminiに改善案を依頼'}
-            </button>
-            <small>コードの書き方と責務を検討 → 差分を確認 → あなたが採用</small>
-          </div>
-        )}
+        {selectedSignal?.verdict === 'concern' &&
+          (selectedSignal.review_axis ?? 'coherence') === 'coherence' &&
+          !selectedSignal.human_review_required &&
+          !fixture &&
+          !overview && (
+            <div className="improvement-action" data-tour="improve">
+              <button
+                className="primary wide"
+                disabled={pending || proposing}
+                onClick={() => propose(selectedSignal.signal_id)}
+              >
+                <ScanLine size={15} />
+                {proposing ? 'Geminiが改善案を作成中…' : 'Geminiに改善案を依頼'}
+              </button>
+              <small>コードの書き方と責務を検討 → 差分を確認 → あなたが採用</small>
+            </div>
+          )}
         {proposing && (
           <p className="progress-line">
             <span className="spinner" />
@@ -376,7 +396,8 @@ export function AgentPanel({
             {result &&
             (result.suggested_reclassification?.length ||
               result.review_signals?.length ||
-              result.replaced_signal_ids?.length) ? (
+              result.replaced_signal_ids?.length ||
+              result.design_patterns?.length) ? (
               <button className="primary wide" onClick={publish}>
                 調査結果を演奏に反映
                 <ArrowUpRight size={15} />
@@ -422,79 +443,89 @@ export function AgentPanel({
       </div>
       {savedAnswer && (
         <div className="saved-answer">
-          <small>保存済み解釈からの回答 · 新しいモデル呼び出しなし</small>
+          <small>保存された説明 · 新しいモデル呼び出しなし</small>
           <p>{savedAnswer}</p>
         </div>
       )}
-      <form
-        className="question-form"
-        onSubmit={(e) => {
-          e.preventDefault();
-          if (fixture || recorded) {
-            const signal =
-              bundle.map.review_signals?.find((s) => s.unit_ids.includes(ws.unitId)) ??
-              bundle.map.review_signals?.[0];
-            setSavedAnswer(
-              signal && !overview
-                ? `${signal.explanation} ${signal.verdict === 'concern' ? '同じ判断の管理が重なるため、同じ旋律の応答を重ねて表しています。根拠のファイル行から確認できます。' : '独立した変更理由が確認されているため、懸念のリズムは追加していません。'}`
-                : `${event?.meaning ?? unit?.boundary_reason ?? bundle.map.profile.purpose} 保存された範囲を超える質問には、新しいAgent調査が必要です。`,
-            );
-          } else
+      {fixture || recorded ? (
+        <div className="question-form">
+          <button
+            className="wide"
+            onClick={() =>
+              setSavedExplanation({
+                selection: selectionKey,
+                text: `${event?.meaning ?? unit?.boundary_reason ?? bundle.map.profile.purpose}${selectedSignal ? ` ${selectedSignal.explanation}` : ''}`,
+              })
+            }
+          >
+            選択箇所の保存された説明を見る
+          </button>
+          <small>この記録への新しい質問は、保存してAgentに調査を依頼できます。</small>
+          <button className="live-question" onClick={activateLive}>
+            この記録を保存して精密検査
+          </button>
+        </div>
+      ) : (
+        <form
+          className="question-form"
+          onSubmit={(e) => {
+            e.preventDefault();
             investigate(
               question ||
                 'この旋律が複数箇所で戻る理由と、将来の変更・理解の負担を調べてください。分離を保つ正当な理由も確認し、経過観察かリファクタリング候補かを説明してください。',
             );
-          setQuestion('');
-        }}
-      >
-        <details className="question-presets">
-          <summary>質問の例</summary>
-          <button
-            type="button"
-            disabled={pending || proposing}
-            onClick={() =>
-              setQuestion(
-                'この旋律が別のファイルでも戻るのはなぜ？関連する処理を読み直し、将来の負担と分離を保つ理由を調べてください。',
-              )
-            }
-          >
-            この旋律の関係は？
-          </button>
-          <button
-            type="button"
-            disabled={pending || proposing}
-            onClick={() =>
-              setQuestion(
-                '今は正常に動く前提で、ここの書き方・処理の流れが将来の変更や理解の負担になる可能性は？抽出による複雑化も含めて検討してください。',
-              )
-            }
-          >
-            将来の負担は？
-          </button>
-        </details>
-        <div>
-          <input
-            aria-label="選択した範囲への質問"
-            maxLength={1000}
-            value={question}
-            onChange={(e) => setQuestion(e.target.value)}
-            placeholder="聴いて気になった関係を質問…"
-          />
-          <button aria-label="質問を送信" disabled={pending || proposing}>
-            <Send size={16} />
-          </button>
-        </div>
-        <small>
-          {fixture || recorded
-            ? '保存済み根拠を読む · 新規Agent調査はログイン後'
-            : '選択範囲と関連コードだけ調査 · 読み取り専用'}
-        </small>
-        {(fixture || recorded) && (
-          <button type="button" className="live-question" onClick={activateLive}>
-            この記録を保存して精密検査
-          </button>
-        )}
-      </form>
+            setQuestion('');
+          }}
+        >
+          <details className="question-presets">
+            <summary>質問の例</summary>
+            <button
+              type="button"
+              disabled={pending || proposing}
+              onClick={() =>
+                setQuestion(
+                  'この旋律が別のファイルでも戻るのはなぜ？関連する処理を読み直し、将来の負担と分離を保つ理由を調べてください。',
+                )
+              }
+            >
+              この旋律の関係は？
+            </button>
+            <button
+              type="button"
+              disabled={pending || proposing}
+              onClick={() =>
+                setQuestion(
+                  '今は正常に動く前提で、ここの書き方・処理の流れが将来の変更や理解の負担になる可能性は？抽出による複雑化も含めて検討してください。',
+                )
+              }
+            >
+              将来の負担は？
+            </button>
+          </details>
+          <div>
+            <input
+              aria-label="選択した範囲への質問"
+              maxLength={1000}
+              value={question}
+              onChange={(e) => setQuestion(e.target.value)}
+              placeholder="聴いて気になった関係を質問…"
+            />
+            <button aria-label="質問を送信" disabled={pending || proposing}>
+              <Send size={16} />
+            </button>
+          </div>
+          <small>
+            {fixture || recorded
+              ? '保存済み根拠を読む · 新規Agent調査はログイン後'
+              : '選択範囲と関連コードだけ調査 · 読み取り専用'}
+          </small>
+          {(fixture || recorded) && (
+            <button type="button" className="live-question" onClick={activateLive}>
+              この記録を保存して精密検査
+            </button>
+          )}
+        </form>
+      )}
     </section>
   );
 }
@@ -504,7 +535,7 @@ function FindingCards({ result, map }: { result?: InvestigationResult; map: Sema
   const titles = {
     concern: '将来の負担候補',
     justified_difference: '理由のある違い',
-    inconclusive: '判断保留',
+    inconclusive: 'Human Review Required · 判断保留',
     no_specific_concern: '注目点なし',
   };
   return (
@@ -512,6 +543,7 @@ function FindingCards({ result, map }: { result?: InvestigationResult; map: Sema
       {result?.findings.map((finding) => (
         <div className="finding" key={finding.finding_id}>
           <div className="finding-label">{titles[finding.verdict]}</div>
+          <div className="review-axis">{reviewAxes[finding.review_axis ?? 'coherence']}</div>
           <p>{finding.summary}</p>
           <small>{finding.justification}</small>
           <div className="section-label">EVIDENCE</div>
