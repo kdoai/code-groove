@@ -2,7 +2,7 @@ import json
 from types import SimpleNamespace
 
 import pytest
-from code_groove.agent import AgentContext, execute_tool, run_agent
+from code_groove.agent import AgentContext, execute_tool, model_error_reason, run_agent
 from code_groove.errors import GrooveError
 from code_groove.schemas import AnalysisCandidate
 from code_groove.settings import ROOT, Settings
@@ -204,6 +204,15 @@ async def test_long_exploration_only_allows_grounded_submission(monkeypatch):
     with pytest.raises(GrooveError, match="AGENT_DID_NOT_SUBMIT"):
         await run_agent(ctx)
     policy = client.calls[0]["config"].tool_config.function_calling_config
-    assert policy.mode == types.FunctionCallingConfigMode.ANY
-    assert policy.allowed_function_names == ["submit_analysis"]
+    assert policy.mode == types.FunctionCallingConfigMode.AUTO
+    assert [d.name for t in client.calls[0]["config"].tools for d in t.function_declarations] == [
+        "submit_analysis"
+    ]
     assert client.closed
+
+
+def test_provider_error_diagnostics_never_include_raw_source_or_credentials():
+    assert model_error_reason("Schema is too complex: private source text") == "schema_validation"
+    assert model_error_reason("Invalid thought_signature: secret bytes") == "signature_validation"
+    assert model_error_reason("Request ending with a model turn") == "conversation_validation"
+    assert model_error_reason("password=private provider detail") == "provider_rejected"

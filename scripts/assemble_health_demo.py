@@ -65,7 +65,9 @@ def main():
         + "concat=n=9:v=1:a=0,pad=1440:980:0:0:color=0x202636,subtitles=artifacts/demo-captions.ass[out]"
     )
     pcm = np.zeros((RATE * 180, 2))
-    for i, name, offset in [(0, "before", times["before_offset_seconds"]), (6, "after", 0)]:
+    passages = [(0, "before"), (2, "focused"), (6, "after")]
+    for i, name in passages:
+        offset = times[f"{name}_offset_seconds"]
         bundle = json.loads((ROOT / f".local/deployed-r5-{name}-bundle.json").read_text(encoding="utf-8"))
         rendered = render_plan(bundle["score"]["scenes"][0]["repo"])
         segment = segments[i]

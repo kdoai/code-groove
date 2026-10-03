@@ -33,13 +33,22 @@ test('paid whole-health passage investigation and optional human-approved refact
     if (!r.ok() || !r.url().includes('/api/v1/')) return;
     const path = new URL(r.url()).pathname.replace('/api/v1', '');
     const data = (await r.json()).data;
-    if (/^\/runs\/[^/]+$/.test(path)) runs[data.run_id] = data;
+    if (/^\/runs\/[^/]+$/.test(path)) {
+      runs[data.run_id] = data;
+      writeFileSync('.local/deployed-r5-runs.json', JSON.stringify(runs, null, 2));
+    }
     if (path.startsWith('/projects/') && path.endsWith('/bundle')) bundles.push(data);
     if (/^\/analyses\/[^/]+\/investigations$/.test(path)) investigation = data;
-    if (/^\/investigations\/[^/]+$/.test(path)) result = data;
+    if (/^\/investigations\/[^/]+$/.test(path)) {
+      result = data;
+      writeFileSync('.local/deployed-r5-investigation.json', JSON.stringify(result, null, 2));
+    }
     if (/^\/analyses\/[^/]+\/proposals$/.test(path)) proposed = data;
     if (/^\/proposals\/[^/]+\/accept$/.test(path)) approved = data;
-    if (/^\/proposals\/[^/]+$/.test(path)) proposal = data;
+    if (/^\/proposals\/[^/]+$/.test(path)) {
+      proposal = data;
+      writeFileSync('.local/deployed-r5-proposal.json', JSON.stringify(proposal, null, 2));
+    }
   });
   await page.goto('/projects/sample-checkout-flow/inspect?scene=1');
   await page.getByRole('checkbox', { name: '今後このメッセージを表示しない', exact: true }).check();
@@ -93,10 +102,21 @@ test('paid whole-health passage investigation and optional human-approved refact
     timings.reflected = time();
     const focused = bundles.find((b) => b.map.analysis_depth === 'focused');
     expect(focused.sources).toEqual(initial.sources);
+    writeFileSync('.local/deployed-r5-focused-bundle.json', JSON.stringify(focused, null, 2));
     const concern = focused.map.review_signals.find((s: any) => s.verdict === 'concern');
     if (concern) {
       const unit = focused.map.units.find((u: any) => u.unit_id === concern.unit_ids[0]);
       await page.getByRole('button', { name: unit.primary_span.path.split('/').at(-1), exact: true }).click();
+      await page.getByRole('button', { name: 'この区間を聴く', exact: true }).click();
+      await expect(page.getByRole('button', { name: 'Pause', exact: true })).toBeVisible();
+      timings.focused_play = time();
+      const focusNote = focused.score.scenes
+        .flatMap((s: any) => s.repo.notes)
+        .find((n: any) => n.signal_id === concern.signal_id);
+      timings.focused_offset_seconds = Math.max(0, focusNote.tick - 1920) / 768;
+      await page.waitForTimeout(10000);
+      await page.getByRole('button', { name: 'この区間を選ぶ', exact: true }).click();
+      timings.focused_pause = time();
       await page.getByRole('button', { name: 'Geminiに改善案を依頼', exact: true }).click();
       timings.requested = time();
       await expect(page.getByRole('dialog', { name: '改善案を確認' })).toBeVisible({ timeout: 220000 });
@@ -135,7 +155,17 @@ test('paid whole-health passage investigation and optional human-approved refact
               .motif_id === r.motif_id,
         ),
       ).toBe(true);
-      await page.getByRole('button', { name: 'Play', exact: true }).click();
+      await page.getByRole('button', { name: unit.primary_span.path.split('/').at(-1), exact: true }).click();
+      const afterUnit = new URL(page.url()).searchParams.get('unit');
+      const afterNote =
+        after.score.scenes
+          .flatMap((s: any) => s.repo.notes)
+          .find((n: any) => n.unit_id === afterUnit && n.kind === 'cue') ??
+        after.score.scenes
+          .flatMap((s: any) => s.repo.notes)
+          .find((n: any) => n.unit_id === afterUnit && n.event_id);
+      timings.after_offset_seconds = Math.max(0, afterNote.tick - 1920) / 768;
+      await page.getByRole('button', { name: 'この区間を聴く', exact: true }).click();
       await expect(page.getByRole('button', { name: 'Pause', exact: true })).toBeVisible();
       timings.after_play = time();
       await page.waitForTimeout(16000);

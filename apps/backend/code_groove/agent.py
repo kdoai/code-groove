@@ -159,6 +159,21 @@ def declarations(investigating: bool, proposing: bool = False) -> list[types.Fun
     return result
 
 
+def model_error_reason(message: str | None) -> str:
+    text = (message or "").lower()
+    for fragment, reason in (
+        ("signature", "signature_validation"),
+        ("schema", "schema_validation"),
+        ("turn", "conversation_validation"),
+        ("thinking", "thinking_configuration"),
+        ("function", "tool_configuration"),
+        ("tool", "tool_configuration"),
+    ):
+        if fragment in text:
+            return reason
+    return "provider_rejected"
+
+
 def execute_tool(ctx: AgentContext, name: str, args: dict, event_id: str) -> Any:
     ctx.check()
     if ctx.tool_count >= (20 if ctx.investigating else 48):
@@ -375,16 +390,23 @@ async def run_agent(ctx: AgentContext) -> Any:
                             ],
                         )
                     )
+                final_name = (
+                    "submit_proposal"
+                    if ctx.proposing
+                    else "submit_investigation"
+                    if ctx.investigating
+                    else "submit_analysis"
+                )
+                config.tools = [
+                    types.Tool(
+                        function_declarations=[
+                            d for d in declarations(ctx.investigating, ctx.proposing) if d.name == final_name
+                        ]
+                    )
+                ]
                 config.tool_config = types.ToolConfig(
                     function_calling_config=types.FunctionCallingConfig(
-                        mode=types.FunctionCallingConfigMode.ANY,
-                        allowed_function_names=[
-                            "submit_proposal"
-                            if ctx.proposing
-                            else "submit_investigation"
-                            if ctx.investigating
-                            else "submit_analysis"
-                        ],
+                        mode=types.FunctionCallingConfigMode.AUTO,
                     )
                 )
             try:
@@ -442,7 +464,15 @@ async def run_agent(ctx: AgentContext) -> Any:
                     break
                 except errors.APIError as exc:
                     if exc.code not in (429, 503, 504) or retry == 2:
-                        ctx.emit("model_error", {"code": exc.code, "error_type": type(exc).__name__})
+                        ctx.emit(
+                            "model_error",
+                            {
+                                "code": exc.code,
+                                "error_type": type(exc).__name__,
+                                "phase": "submission" if closing else "exploration",
+                                "reason": model_error_reason(exc.message),
+                            },
+                        )
                         code = "MODEL_UNAVAILABLE" if exc.code in (401, 403, 404) else "MODEL_ERROR"
                         raise GrooveError(
                             code, "モデルの接続・権限・利用可能性を確認してください。", 503
