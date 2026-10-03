@@ -12,8 +12,8 @@ describe('meaningful jazz arrangements', () => {
     const after = await compileGroove(load('after'), 'kit');
     const a = playbackPlan(before, 'repo', 0, true)!;
     const b = playbackPlan(after, 'repo', 0, true)!;
-    expect(a.total_bars * 2.5).toBeGreaterThanOrEqual(40);
-    expect(b.total_bars * 2.5).toBeGreaterThanOrEqual(40);
+    expect(a.bpm).toBe(96);
+    expect(b.bpm).toBe(96);
     expect(new Set(a.notes.filter((n) => n.kind === 'cue').map((n) => n.unit_id)).size).toBe(2);
     expect(b.notes.filter((n) => n.kind === 'cue')).toEqual([]);
     const cueBar = a.notes.filter(

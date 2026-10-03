@@ -34,29 +34,33 @@ export function playbackPlan(
   const selected = new Set(unitIds);
   const semantic = result.notes.filter((n) => n.unit_id && selected.has(n.unit_id));
   if (!semantic.length) return undefined;
-  const bars = new Set<number>();
-  for (const note of semantic) {
-    const phraseStart = Math.floor(note.tick / 7680) * 4;
-    for (let bar = phraseStart; bar < Math.min(phraseStart + 4, result.total_bars); bar++) bars.add(bar);
-  }
+  const bars = new Set(semantic.map((note) => Math.floor(note.tick / 1920)));
   const ordered = [...bars].sort((a, b) => a - b);
   const positions = new Map(ordered.map((bar, index) => [bar, index]));
+  const phrases = result.phrases
+    .filter((p) => !p.unit_id || selected.has(p.unit_id))
+    .flatMap((p) => {
+      const kept = ordered.filter((bar) => bar >= p.start_bar && bar < p.start_bar + p.bar_count);
+      return kept.length ? [{ ...p, start_bar: positions.get(kept[0])!, bar_count: kept.length }] : [];
+    });
   return {
     ...result,
     scene_id: 'selected_file',
     total_bars: ordered.length,
     notes: result.notes
       .filter((n) => positions.has(Math.floor(n.tick / 1920)) && (!n.unit_id || selected.has(n.unit_id)))
-      .map((n) => ({
-        ...n,
-        tick: positions.get(Math.floor(n.tick / 1920))! * 1920 + (n.tick % 1920),
-      })),
-    phrases: result.phrases
-      .filter((p) => (!p.unit_id || selected.has(p.unit_id)) && positions.has(p.start_bar))
-      .map((p) => ({
-        ...p,
-        start_bar: positions.get(p.start_bar)!,
-        bar_count: ordered.filter((bar) => bar >= p.start_bar && bar < p.start_bar + p.bar_count).length,
-      })),
+      .map((n) => {
+        const tick = positions.get(Math.floor(n.tick / 1920))! * 1920 + (n.tick % 1920);
+        const phrase = phrases.find(
+          (p) => p.start_bar * 1920 <= tick && tick < (p.start_bar + p.bar_count) * 1920,
+        );
+        const end = (phrase ? phrase.start_bar + phrase.bar_count : ordered.length) * 1920;
+        return {
+          ...n,
+          tick,
+          duration_ms: Math.min(n.duration_ms, Math.floor(((end - tick) * 1000) / 768)),
+        };
+      }),
+    phrases,
   };
 }

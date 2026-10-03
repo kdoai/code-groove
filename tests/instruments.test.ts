@@ -48,6 +48,15 @@ describe('recorded instruments and bounded file listening', () => {
       expect(file.notes.some((n) => n.kind === 'accompaniment')).toBe(true);
       expect(file.notes.every((n) => n.tick < file.total_bars * 1920)).toBe(true);
       expect(file.phrases.every((p) => p.start_bar + p.bar_count <= file.total_bars)).toBe(true);
+      expect(file.notes.every((n) => n.tick + n.duration_ms * 0.768 <= file.total_bars * 1920)).toBe(true);
+      for (let bar = 0; bar < file.total_bars; bar++)
+        expect(file.notes.some((n) => n.unit_id && Math.floor(n.tick / 1920) === bar)).toBe(true);
+      if (mode === 'repo')
+        expect(file.total_bars).toBe(
+          whole.phrases
+            .filter((p) => p.unit_id && selected.includes(p.unit_id))
+            .reduce((sum, p) => sum + p.bar_count, 0),
+        );
     }
     expect(playbackPlan(score, 'repo', 0, true, [])).toBeUndefined();
     expect(JSON.stringify(score)).toBe(saved);

@@ -180,7 +180,7 @@ def main():
         "2 / Musical arrangement",
         [
             "Same M0-M5 identity / data notes",
-            "Four-bar question and answer",
+            "Code clips only / no empty bars",
             "Rootless voicing / walking bass",
             "Swing / rests / no drums",
             "Response cues after focused review",

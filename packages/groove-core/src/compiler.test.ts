@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { compileGroove } from './compiler';
 import type { SemanticMap } from '../../contracts';
 const load = (name: string) => JSON.parse(readFileSync(`fixtures/${name}.json`, 'utf8')).map as SemanticMap;
-describe('groove-v1 invariants', () => {
+describe('deterministic musical invariants', () => {
   for (const name of ['cohesive', 'scattered', 'mixed', 'justified', 'orchestrator'])
     it(`${name} preserves every event, voice and evidence`, async () => {
       const map = load(name);
@@ -31,8 +31,10 @@ describe('groove-v1 invariants', () => {
   it('moves dispersed material in time without losing occurrences', async () => {
     const map = load('scattered');
     const score = await compileGroove(map, 'kit');
-    expect(score.scenes[0].theme.notes.filter((n) => n.kind === 'data').map((n) => n.tick)).not.toEqual(
-      score.scenes[0].repo.notes.filter((n) => n.kind === 'data').map((n) => n.tick),
+    expect(
+      score.scenes[0].theme.notes.filter((n) => n.kind === 'data').map((n) => [n.event_id, n.tick]),
+    ).not.toEqual(
+      score.scenes[0].repo.notes.filter((n) => n.kind === 'data').map((n) => [n.event_id, n.tick]),
     );
   });
   it('reproduces score hash excluding analysis and creation metadata', async () => {
@@ -64,7 +66,7 @@ describe('groove-v1 invariants', () => {
       (await compileGroove(changed, 'kit')).score_hash,
     );
   });
-  it('shows an unresolved unit as silent space without making a data note', async () => {
+  it('keeps unvoiced units in the examination without allocating backing-only time', async () => {
     const map = load('mixed');
     map.units.push({
       ...map.units[0],
@@ -73,9 +75,39 @@ describe('groove-v1 invariants', () => {
       evidence_ids: [],
     });
     const score = await compileGroove(map, 'kit');
-    expect(score.scenes.some((scene) => scene.unit_ids.includes('unresolved_unit'))).toBe(true);
+    expect(score.scenes.some((scene) => scene.unit_ids.includes('unresolved_unit'))).toBe(false);
     expect(
       score.scenes.flatMap((scene) => scene.repo.notes).some((note) => note.unit_id === 'unresolved_unit'),
     ).toBe(false);
+    expect(map.units.find((u) => u.unit_id === 'unresolved_unit')?.review_state).toBe('unresolved');
+  });
+  it('plays only grounded bars and confines each note to its actual code clip', async () => {
+    for (const name of ['checkout-flow', 'returns-before', 'returns-after']) {
+      const { map } = JSON.parse(readFileSync(`fixtures/recorded-live/${name}.json`, 'utf8')) as {
+        map: SemanticMap;
+      };
+      const before = JSON.stringify(map);
+      const score = await compileGroove(map, 'kit');
+      for (const scene of score.scenes) {
+        for (const plan of [scene.repo, scene.theme]) {
+          for (let bar = 0; bar < plan.total_bars; bar++)
+            expect(plan.notes.some((n) => n.kind === 'data' && Math.floor(n.tick / 1920) === bar)).toBe(true);
+          for (const note of plan.notes) {
+            const phrase = plan.phrases.find(
+              (p) => p.start_bar * 1920 <= note.tick && note.tick < (p.start_bar + p.bar_count) * 1920,
+            )!;
+            expect(phrase).toBeDefined();
+            expect(note.tick + note.duration_ms * 0.768).toBeLessThanOrEqual(
+              (phrase.start_bar + phrase.bar_count) * 1920,
+            );
+            if (note.unit_id && plan.mode === 'repo') expect(note.unit_id).toBe(phrase.unit_id);
+          }
+          expect(plan.notes.filter((n) => n.kind === 'data')).toHaveLength(
+            map.events.filter((e) => e.state === 'grounded' && scene.unit_ids.includes(e.unit_id)).length,
+          );
+        }
+      }
+      expect(JSON.stringify(map)).toBe(before);
+    }
   });
 });

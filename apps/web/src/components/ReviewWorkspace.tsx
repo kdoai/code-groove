@@ -303,7 +303,12 @@ function Arrangement({
     const cue =
       musical.find((n) => n.kind === 'cue' && n.signal_id === signal?.signal_id) ??
       musical.find((n) => n.event_id && n.unit_id === ws.unitId);
-    if (!cue) return;
+    if (
+      !cue ||
+      (ws.playbackFile &&
+        ws.playbackFile !== bundle.map.events.find((e) => e.event_id === cue.event_id)?.span.path)
+    )
+      return;
     select(cue, false);
     followPlayback();
     engine.stop();
@@ -343,7 +348,7 @@ function Arrangement({
         <span>
           <Headphones size={16} />
           <b>Arrangement</b>
-          <small>ファイルの演奏配置</small>
+          <small>コードのある区間だけ演奏</small>
         </span>
         <div className="arrangement-layout" aria-label="同じ解釈の演奏配置">
           <button

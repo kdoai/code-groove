@@ -32,6 +32,10 @@ export function arrangeJazz(plan: ScorePlan, map: SemanticMap) {
     duration: number,
     extras: Partial<ScheduledNote> = {},
   ) => {
+    const phrase = plan.phrases.find(
+      (p) => p.start_bar * 1920 <= tick && tick < (p.start_bar + p.bar_count) * 1920,
+    );
+    const end = (phrase ? phrase.start_bar + phrase.bar_count : plan.total_bars) * 1920;
     plan.notes.push({
       note_id: id,
       kind: 'accompaniment',
@@ -40,7 +44,7 @@ export function arrangeJazz(plan: ScorePlan, map: SemanticMap) {
       midi,
       variant: 0,
       velocity,
-      duration_ms: duration,
+      duration_ms: Math.min(duration, Math.max(1, Math.floor(((end - tick) * 60 * 1000) / (96 * 480)))),
       pan: voice === 'bass' ? -0.12 : 0.12,
       evidence_ids: [],
       ...extras,
@@ -127,9 +131,10 @@ export function arrangeJazz(plan: ScorePlan, map: SemanticMap) {
             : signal.category === 'data_flow_opacity'
               ? [0, 320, 1120, 1440]
               : [0, 480, 720, 960, 1440];
-      for (const bar of [1, 2]) {
+      const cueBars = (phrase?.bar_count ?? 1) === 1 ? [0] : [1, 2];
+      for (const bar of cueBars) {
         const tick = start + bar * 1920;
-        if (tick + 1920 > plan.total_bars * 1920) continue;
+        if (tick + 1920 > start + (phrase?.bar_count ?? 1) * 1920) continue;
         pattern.forEach((offset, i) => {
           const sourceEvent = signalEvents[Math.floor(i / 2) % signalEvents.length];
           add(

@@ -158,7 +158,7 @@ export default function App() {
     cache.invalidateQueries({ queryKey: ['project', ws.projectId] });
   }, [proposalRun.data]);
   const bundle = useQuery({
-    queryKey: ['bundle', ws.projectId, ws.analysisId, 'midnight-jazz-v4'],
+    queryKey: ['bundle', ws.projectId, ws.analysisId, 'groove-chamber-v6'],
     queryFn: () =>
       api<Bundle>(
         ws.sampleId

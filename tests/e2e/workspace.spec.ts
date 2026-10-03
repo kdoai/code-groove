@@ -68,7 +68,7 @@ test('whole-health listening and real-screen tour keep investigation human-direc
     ]);
     expect(size[0]).toBe(size[1]);
     expect(size[2]).toBe(size[3]);
-    await page.screenshot({ path: `artifacts/workspace-r6-${viewport.width}.png` });
+    await page.screenshot({ path: `artifacts/workspace-r7-${viewport.width}.png` });
   }
   expect(
     await page.locator('.review-code').evaluate((e) => e.getBoundingClientRect().height),
@@ -88,9 +88,28 @@ test('selected-file listening, supporting files and theme switching preserve the
   await page.getByRole('checkbox', { name: '今後このメッセージを表示しない', exact: true }).check();
   await page.getByRole('button', { name: 'あとで見る', exact: true }).click();
   await page.getByRole('button', { name: 'pricing.ts', exact: true }).click();
+  async function expectContinuousCodeClips() {
+    const clips = await page.locator('.midi-clip').evaluateAll((elements) =>
+      elements
+        .map((element) => ({
+          start: parseFloat((element as HTMLElement).style.left),
+          length: parseFloat((element as HTMLElement).style.width),
+        }))
+        .sort((a, b) => a.start - b.start),
+    );
+    expect(clips.length).toBeGreaterThan(0);
+    let end = 0;
+    for (const clip of clips) {
+      expect(clip.start).toBeCloseTo(end);
+      end += clip.length;
+    }
+    expect(end).toBeCloseTo(100);
+  }
+  await expectContinuousCodeClips();
   const fullLength = await page.locator('.time-display small').innerText();
   await page.getByRole('combobox', { name: '再生範囲', exact: true }).selectOption('file');
   await expect(page.locator('.time-display small')).not.toHaveText(fullLength);
+  await expectContinuousCodeClips();
   await page.getByRole('button', { name: 'Play', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Pause', exact: true })).toBeVisible();
   await expect.poll(() => page.locator('.time-display b').innerText()).not.toBe('00:00');
@@ -104,7 +123,7 @@ test('selected-file listening, supporting files and theme switching preserve the
   await expect(page.locator('.time-display small')).toHaveText(fullLength);
   await page.getByRole('button', { name: 'ダークモードに切り替え', exact: true }).click();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
-  await page.screenshot({ path: 'artifacts/workspace-r6-dark.png' });
+  await page.screenshot({ path: 'artifacts/workspace-r7-dark.png' });
   await page.reload();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
   await page.getByRole('button', { name: 'ライトモードに切り替え', exact: true }).click();
@@ -116,18 +135,19 @@ test('whole-work playback continues when code selection crosses scenes', async (
   const fixture = JSON.parse(readFileSync('fixtures/recorded-live/returns-before.json', 'utf8'));
   fixture.map.origin = 'fixture';
   const original = fixture.score.scenes[0],
-    cut = 8 * 1920;
+    splitBar = original.repo.phrases[1].start_bar,
+    cut = splitBar * 1920;
   fixture.score.scenes = [0, 1].map((index) => {
     const first = index === 0,
       start = first ? 0 : cut;
     const repo = structuredClone(original.repo);
     repo.scene_id = `scene_${index + 1}`;
-    repo.total_bars = first ? 8 : original.repo.total_bars - 8;
+    repo.total_bars = first ? splitBar : original.repo.total_bars - splitBar;
     repo.notes = repo.notes
       .filter((n: { tick: number }) => (first ? n.tick < cut : n.tick >= cut))
       .map((n: { tick: number }) => ({ ...n, tick: n.tick - start }));
     repo.phrases = repo.phrases
-      .filter((p: { start_bar: number }) => (first ? p.start_bar < 8 : p.start_bar >= 8))
+      .filter((p: { start_bar: number }) => (first ? p.start_bar < splitBar : p.start_bar >= splitBar))
       .map((p: { start_bar: number }) => ({ ...p, start_bar: p.start_bar - start / 1920 }));
     return {
       ...original,

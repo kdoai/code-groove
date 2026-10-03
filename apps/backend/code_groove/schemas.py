@@ -167,7 +167,12 @@ class ScorePlan(Contract):
     mode: Literal["theme", "repo"]
     scene_id: Id
     grammar_version: Literal[
-        "groove-v1", "groove-jazz-v2", "groove-rhythm-v3", "groove-arrangement-v4", "groove-chamber-v5"
+        "groove-v1",
+        "groove-jazz-v2",
+        "groove-rhythm-v3",
+        "groove-arrangement-v4",
+        "groove-chamber-v5",
+        "groove-chamber-v6",
     ]
     kit_id: Literal["paper-studio-v1", "midnight-jazz-v2", "midnight-jazz-v3", "midnight-jazz-v4"]
     kit_hash: str

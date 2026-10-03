@@ -13,7 +13,15 @@ const motifs = [
 const velocity = [0.58, 0.52, 0.55, 0.48, 0.52, 0.5, 0.48, 0.54];
 const duration = [650, 520, 540, 700, 580, 520, 560, 820];
 const pan = [-0.25, 0.2, -0.08, 0.3, -0.3, 0.08];
+export const grammarVersion = 'groove-chamber-v6' as const;
 export const tickSeconds = (tick: number) => ((tick / 480) * 60) / 96;
+function occupiedBars(steps: number[]) {
+  return new Map(
+    [...new Set(steps.map((step) => Math.floor(step / 16)))]
+      .sort((a, b) => a - b)
+      .map((bar, index) => [bar, index]),
+  );
+}
 export const canonical = (value: unknown): string => {
   if (Array.isArray(value)) return `[${value.map(canonical).join(',')}]`;
   if (value && typeof value === 'object')
@@ -43,7 +51,7 @@ export async function compileGroove(map: SemanticMap, kitHash: string): Promise<
   if (new Set(map.responsibilities.map((r) => r.motif_id)).size !== map.responsibilities.length)
     throw new Error('DUPLICATE_MOTIF');
   const units = map.units
-    .filter((u) => u.review_state !== 'excluded')
+    .filter((u) => u.review_state !== 'excluded' && events.some((e) => e.unit_id === u.unit_id))
     .sort(
       (a, b) =>
         a.primary_span.path.localeCompare(b.primary_span.path, 'en') ||
@@ -53,16 +61,38 @@ export async function compileGroove(map: SemanticMap, kitHash: string): Promise<
   const responsibilities = [...map.responsibilities].sort((a, b) => a.display_order - b.display_order);
   function layout(unitIds: string[]) {
     const sceneEvents = events.filter((e) => unitIds.includes(e.unit_id));
-    const counts = responsibilities.map(
-      (r) => Math.ceil(sceneEvents.filter((e) => e.responsibility_id === r.responsibility_id).length / 8) * 4,
+    const placements = responsibilities.flatMap((responsibility) => {
+      const variant = Number(responsibility.motif_id.slice(1));
+      return sceneEvents
+        .filter((e) => e.responsibility_id === responsibility.responsibility_id)
+        .sort((a, b) => a.semantic_order - b.semantic_order)
+        .map((event, index) => ({
+          event,
+          variant,
+          slot: index % 8,
+          step: Math.floor(index / 8) * 64 + motifs[variant][index % 8] * 4,
+        }));
+    });
+    const unitBars = new Map(
+      unitIds.map((id) => [
+        id,
+        occupiedBars(placements.filter((p) => p.event.unit_id === id).map((p) => p.step)),
+      ]),
     );
-    const q = Math.max(4, ...counts);
+    const roleBars = new Map(
+      responsibilities.map((r) => [
+        r.responsibility_id,
+        occupiedBars(
+          placements.filter((p) => p.event.responsibility_id === r.responsibility_id).map((p) => p.step),
+        ),
+      ]),
+    );
     return {
-      sceneEvents,
-      counts,
-      q,
-      repoBars: q * unitIds.length,
-      themeBars: counts.reduce((a, b) => a + b, 0),
+      placements,
+      unitBars,
+      roleBars,
+      repoBars: [...unitBars.values()].reduce((sum, bars) => sum + bars.size, 0),
+      themeBars: [...roleBars.values()].reduce((sum, bars) => sum + bars.size, 0),
     };
   }
   const groups: string[][] = [];
@@ -80,11 +110,11 @@ export async function compileGroove(map: SemanticMap, kitHash: string): Promise<
   }
   if (group.length) groups.push(group);
   const scenes = groups.map((unitIds, index) => {
-    const { sceneEvents, counts, q, repoBars, themeBars } = layout(unitIds);
+    const { placements, unitBars, roleBars, repoBars, themeBars } = layout(unitIds);
     const sceneId = `scene_${index + 1}`;
     const base = {
       scene_id: sceneId,
-      grammar_version: 'groove-chamber-v5' as const,
+      grammar_version: grammarVersion,
       kit_id: 'midnight-jazz-v4' as const,
       kit_hash: kitHash,
       bpm: 96 as const,
@@ -97,40 +127,44 @@ export async function compileGroove(map: SemanticMap, kitHash: string): Promise<
       ...base,
       mode: 'repo',
       total_bars: repoBars,
-      phrases: unitIds.map((id, i) => ({
-        phrase_id: `repo_${i}`,
-        start_bar: i * q,
-        bar_count: q,
-        label: units.find((u) => u.unit_id === id)!.label,
-        unit_id: id,
-      })),
+      phrases: [],
       notes: [],
     };
+    let unitStartBar = 0;
+    unitIds.forEach((id, i) => {
+      const count = unitBars.get(id)!.size;
+      repo.phrases.push({
+        phrase_id: `repo_${i}`,
+        start_bar: unitStartBar,
+        bar_count: count,
+        label: units.find((u) => u.unit_id === id)!.label,
+        unit_id: id,
+      });
+      unitStartBar += count;
+    });
     let startBar = 0;
     responsibilities.forEach((r, ri) => {
-      const ordered = sceneEvents
-        .filter((e) => e.responsibility_id === r.responsibility_id)
-        .sort((a, b) => a.semantic_order - b.semantic_order);
+      const ordered = placements.filter((p) => p.event.responsibility_id === r.responsibility_id);
       if (!ordered.length) return;
       theme.phrases.push({
         phrase_id: `theme_${ri}`,
         start_bar: startBar,
-        bar_count: counts[ri],
+        bar_count: roleBars.get(r.responsibility_id)!.size,
         label: r.label,
         responsibility_id: r.responsibility_id,
       });
-      const variant = Number(r.motif_id.slice(1));
-      ordered.forEach((event, j) => {
+      ordered.forEach(({ event, slot, variant, step }) => {
         if (!event.evidence_ids.length) throw new Error('INVALID_EVIDENCE');
-        const slot = j % 8;
-        const localStep = Math.floor(j / 8) * 64 + motifs[variant][slot] * 4;
+        const bar = Math.floor(step / 16),
+          offset = (step % 16) * 120;
+        const phrase = repo.phrases.find((p) => p.unit_id === event.unit_id)!;
         const note = {
           note_id: `note_${event.event_id}`,
           kind: 'data' as const,
           event_id: event.event_id,
           responsibility_id: r.responsibility_id,
           unit_id: event.unit_id,
-          duration_ms: duration[slot],
+          duration_ms: Math.min(duration[slot], Math.floor(tickSeconds(1920 - offset) * 1000)),
           voice: (variant % 2 ? 'vibes' : 'piano') as ScheduledNote['voice'],
           midi: melody[variant][slot],
           variant,
@@ -138,10 +172,16 @@ export async function compileGroove(map: SemanticMap, kitHash: string): Promise<
           pan: pan[variant],
           evidence_ids: event.evidence_ids,
         };
-        theme.notes.push({ ...note, tick: (startBar * 16 + localStep) * 120 });
-        repo.notes.push({ ...note, tick: (unitIds.indexOf(event.unit_id) * q * 16 + localStep) * 120 });
+        theme.notes.push({
+          ...note,
+          tick: (startBar + roleBars.get(r.responsibility_id)!.get(bar)!) * 1920 + offset,
+        });
+        repo.notes.push({
+          ...note,
+          tick: (phrase.start_bar + unitBars.get(event.unit_id)!.get(bar)!) * 1920 + offset,
+        });
       });
-      startBar += counts[ri];
+      startBar += roleBars.get(r.responsibility_id)!.size;
     });
     for (const plan of [theme, repo]) {
       arrangeJazz(plan, map);
@@ -177,7 +217,7 @@ export async function compileGroove(map: SemanticMap, kitHash: string): Promise<
     analysis_id: map.analysis_id,
     score_hash: await sha256({
       semanticContent,
-      grammar: 'groove-chamber-v5',
+      grammar: grammarVersion,
       kitHash,
       scenes: scenes.map((scene) => ({
         ...scene,
