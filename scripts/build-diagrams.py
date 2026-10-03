@@ -106,7 +106,7 @@ def main():
         335,
         155,
         "Private Worker",
-        ["OIDC / durable lease", "Read-only bounded tools", "Reverified change reuse"],
+        ["OIDC / durable lease", "Read tools / bounded drafts", "Reverified change reuse"],
     )
     box(
         parts,
@@ -133,7 +133,7 @@ def main():
             "Gen AI SDK / ADC",
             "Sanitized selected evidence",
             "Structured claims / alternatives",
-            "No tool-based write authority",
+            "No source write / approval tools",
         ],
     )
     arrow(parts, 380, 275, 510, 275, "source / question")
@@ -168,7 +168,7 @@ def main():
             "Ask: same reason to change?",
             "Check alternative contracts",
             "Concern / justified / unknown",
-            "Concrete hypothetical change",
+            "Concrete changes / reading tasks",
         ],
     )
     box(
@@ -182,7 +182,7 @@ def main():
             "Same M0-M5 identity / data notes",
             "Four-bar question and answer",
             "Rootless voicing / walking bass",
-            "2:1 swing, explicit rests",
+            "Swing / rests / no drums",
             "Fixed evidence-linked echo cues",
         ],
     )

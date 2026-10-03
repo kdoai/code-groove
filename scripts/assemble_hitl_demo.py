@@ -1,6 +1,5 @@
 """Edit a deployed HITL recording and replay saved PCM without model calls."""
 
-import argparse
 import json
 import subprocess
 from pathlib import Path
@@ -23,14 +22,9 @@ def srt_time(seconds: float) -> str:
 
 
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--edited-source", type=Path, help="Re-edit an earlier render when raw video was removed"
-    )
-    args = parser.parse_args()
     recording = json.loads((ROOT / ".local/deployed-r4-video.json").read_text())
     times = recording["timings"]
-    video = (args.edited_source or Path(recording["video_path"])).resolve()
+    video = Path(recording["video_path"]).resolve()
     before, after = (
         json.loads((ROOT / f".local/deployed-r4-{name}-bundle.json").read_text(encoding="utf-8"))
         for name in ("before", "after")
@@ -51,18 +45,13 @@ def main():
     remainder = 180 - fixed - waiting * factor
     filters, segments = [], []
     position = 0.0
-    previous_holds = 0.0
     for i, (start, end, hold) in enumerate(ranges):
         speed = factor if i in (1, 3) else 1
         if i == 5:
             hold += remainder
         duration = (end - start) * speed + hold
-        video_start = position - previous_holds if args.edited_source else start
-        video_end = video_start + (end - start) * speed if args.edited_source else end
-        video_speed = 1 if args.edited_source else speed
-        crop = "crop=1440:900:0:0," if args.edited_source else ""
         filters.append(
-            f"[0:v]trim=start={video_start:.6f}:end={video_end:.6f},{crop}setpts={video_speed:.9f}*(PTS-STARTPTS),"
+            f"[0:v]trim=start={start:.6f}:end={end:.6f},setpts={speed:.9f}*(PTS-STARTPTS),"
             f"fps=30,tpad=stop_mode=clone:stop_duration={hold:.6f},setsar=1[v{i}]"
         )
         segments.append(
@@ -76,7 +65,6 @@ def main():
             }
         )
         position += duration
-        previous_holds += hold
     filters.append(
         "[1:v]scale=1440:900:force_original_aspect_ratio=decrease,pad=1440:900:(ow-iw)/2:(oh-ih)/2:color=0x202636,setsar=1,fps=30,trim=duration=20,setpts=PTS-STARTPTS[v6]"
     )

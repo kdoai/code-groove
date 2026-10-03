@@ -34,11 +34,11 @@
   <text x="1102" y="291" class="small">Private · lease / heartbeat</text>
   <text x="1102" y="319" class="small">Bounded agent tool loop</text>
   <text x="1102" y="347" class="small">Read / search / relations</text>
-  <text x="1102" y="375" class="small">Validate / reuse → compose</text>
+  <text x="1102" y="375" class="small">Draft / review / compose</text>
   <text x="1102" y="406" class="small">Min 0 / max 1 instance</text>
   <rect x="431" y="568" width="253" height="155" class="box"/>
   <text x="453" y="607" class="label">Firestore</text>
-  <text x="453" y="640" class="small">Projects · runs · events</text>
+  <text x="453" y="640" class="small">Projects · runs · drafts</text>
   <text x="453" y="668" class="small">Atomic token reservations</text>
   <text x="453" y="697" class="small">API expiry 7 days · TTL</text>
   <rect x="715" y="568" width="254" height="155" class="box"/>
@@ -49,7 +49,7 @@
   <rect x="1001" y="568" width="343" height="155" class="box"/>
   <text x="1024" y="607" class="label">Gemini API on Vertex</text>
   <text x="1024" y="640" class="small">Google Gen AI SDK · global endpoint</text>
-  <text x="1024" y="668" class="small">Read-only tools · original function IDs</text>
+  <text x="1024" y="668" class="small">Read / draft tools · human approval</text>
   <text x="1024" y="697" class="small">Token / call limits · kill switch</text>
   <path d="M342 252H431" class="line"/>
   <path d="M200 338V407" class="line"/>
