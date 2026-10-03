@@ -238,7 +238,8 @@
           "enum": [
             "paper-studio-v1",
             "midnight-jazz-v2",
-            "midnight-jazz-v3"
+            "midnight-jazz-v3",
+            "midnight-jazz-v4"
           ],
           "title": "Kit Id",
           "type": "string"

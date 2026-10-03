@@ -1,6 +1,11 @@
 import * as Tone from 'tone';
 import type { ScorePlan } from '../../../../packages/contracts/ScoreBundle';
 import { tickSeconds } from '../../../../packages/groove-core/src/compiler';
+import {
+  instrumentEnvelope,
+  instrumentSample,
+  type KitSample,
+} from '../../../../packages/groove-core/src/instruments';
 
 class GrooveEngine {
   private buffers = new Map<string, Tone.ToneAudioBuffer>();
@@ -17,13 +22,18 @@ class GrooveEngine {
   private kit = '';
   private instruments = new Set<string>();
   private supportMuted = false;
+  private samples: KitSample[] = [];
   loading?: Promise<void>;
 
   async load() {
     if (!this.plan) return;
     const kit = this.plan.kit_id;
-    const needed = new Set(this.plan.notes.map((note) => `${note.voice}-${note.variant}`));
-    if (this.kit === kit && [...needed].every((key) => this.buffers.has(key))) return;
+    const ready = () =>
+      this.plan?.notes.every((note) => {
+        const sample = instrumentSample(note, this.samples, this.kit);
+        return sample && this.buffers.has(`${sample.voice}-${sample.variant}`);
+      });
+    if (this.kit === kit && ready()) return;
     this.loading ??= (async () => {
       if (this.kit !== kit) {
         for (const buffer of this.buffers.values()) buffer.dispose();
@@ -35,6 +45,13 @@ class GrooveEngine {
       const response = await fetch(`/audio/${kit}/manifest.json`);
       if (!response.ok) throw new Error('AUDIO_LOAD_FAILED');
       const manifest = await response.json();
+      this.samples = manifest.samples;
+      const needed = new Set(
+        this.plan!.notes.map((note) => {
+          const sample = instrumentSample(note, this.samples, kit);
+          return sample ? `${sample.voice}-${sample.variant}` : '';
+        }),
+      );
       await Promise.all(
         manifest.samples
           .filter(
@@ -61,11 +78,7 @@ class GrooveEngine {
       throw error;
     });
     await this.loading;
-    if (
-      this.plan?.kit_id !== this.kit ||
-      this.plan.notes.some((note) => !this.buffers.has(`${note.voice}-${note.variant}`))
-    )
-      await this.load();
+    if (this.plan?.kit_id !== this.kit || !ready()) await this.load();
   }
   configure(plan: ScorePlan) {
     this.stop();
@@ -90,14 +103,16 @@ class GrooveEngine {
                 (this.muted.has(responsibility) || (this.solo.size > 0 && !this.solo.has(responsibility)))
           )
             return;
-          const buffer = this.buffers.get(`${note.voice}-${note.variant}`);
+          const sample = instrumentSample(note, this.samples, this.kit);
+          const buffer = sample && this.buffers.get(`${sample.voice}-${sample.variant}`);
           if (!buffer || !this.master) return;
           const panner = new Tone.Panner(note.pan).connect(this.master);
           const player = new Tone.Player(buffer).connect(panner);
-          if (note.midi != null)
-            player.playbackRate = 2 ** ((note.midi - (note.voice === 'bass' ? 36 : 60)) / 12);
-          player.fadeIn = note.midi != null ? 0.015 : 0.01;
-          player.fadeOut = note.kind === 'cue' ? 0.05 : 0.08;
+          if (note.midi != null) player.playbackRate = 2 ** ((note.midi - sample!.base_midi) / 12);
+          const duration = Math.min(buffer.duration / player.playbackRate, note.duration_ms / 1000);
+          const envelope = instrumentEnvelope(note.voice, duration);
+          player.fadeIn = envelope.attack;
+          player.fadeOut = envelope.release;
           player.volume.value = Tone.gainToDb(note.velocity);
           this.active.add(player);
           player.onstop = () => {

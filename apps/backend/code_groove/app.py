@@ -6,6 +6,7 @@ import time
 import uuid
 from collections.abc import Callable
 from datetime import UTC, datetime
+from functools import lru_cache
 from typing import Annotated, Literal
 
 from fastapi import Depends, FastAPI, Header, Query, Request
@@ -29,7 +30,7 @@ from code_groove.schemas import (
     SemanticMap,
 )
 from code_groove.settings import ROOT, Settings
-from code_groove.source import build_index, parse_github_url, run_node
+from code_groove.source import build_index, parse_github_url, run_node, validate_scope
 from code_groove.storage import ArtifactStore, MetadataStore, Transaction
 from code_groove.validation import validate_candidate, validate_investigation
 
@@ -48,10 +49,28 @@ SAMPLES = (
 )
 
 
+@lru_cache(maxsize=24)
+def studio_score(serialized_map: str, kit_hash: str) -> dict:
+    return run_node("groove-core", {"map": json.loads(serialized_map), "kit_hash": kit_hash})
+
+
+def current_music(bundle: dict) -> dict:
+    if bundle["score"]["scenes"][0]["repo"]["kit_id"] == "midnight-jazz-v4":
+        return bundle
+    kit = json.loads(
+        (ROOT / "apps/web/public/audio/midnight-jazz-v4/manifest.json").read_text(encoding="utf-8")
+    )
+    return {
+        **bundle,
+        "score": copy.deepcopy(studio_score(json.dumps(bundle["map"], sort_keys=True), kit["kit_hash"])),
+    }
+
+
 class Source(Contract):
     kind: Literal["github_public", "sample"]
     url: str | None = Field(default=None, max_length=300)
     ref: str | None = Field(default=None, max_length=120, pattern=r"^[\w./-]+$")
+    scope_path: str | None = Field(default=None, max_length=200)
     sample_id: (
         Literal[
             "cohesive",
@@ -254,10 +273,7 @@ def create_app(settings: Settings | None = None, verifier: Callable[[str], str] 
         if not file.is_file():
             raise GrooveError("NOT_FOUND", "保存済みサンプルはまだありません。", 404)
         bundle = json.loads(file.read_text(encoding="utf-8"))
-        if bundle["score"]["scenes"][0]["repo"]["grammar_version"] != "groove-chamber-v5":
-            kit = json.loads((ROOT / "apps/web/public/audio/midnight-jazz-v3/manifest.json").read_text())
-            bundle["score"] = run_node("groove-core", {"map": bundle["map"], "kit_hash": kit["kit_hash"]})
-        return {"data": bundle}
+        return {"data": current_music(bundle)}
 
     @app.post("/api/v1/projects", status_code=202)
     def create_project(body: CreateProject, user: User, key: Key) -> dict:
@@ -265,7 +281,8 @@ def create_app(settings: Settings | None = None, verifier: Callable[[str], str] 
             if not body.source.url or body.source.sample_id:
                 raise GrooveError("INVALID_SOURCE_URL", "公開GitHub URLを指定してください。")
             parse_github_url(body.source.url)
-        elif not body.source.sample_id or body.source.url or body.source.ref:
+            body.source.scope_path = validate_scope(body.source.scope_path)
+        elif not body.source.sample_id or body.source.url or body.source.ref or body.source.scope_path:
             raise GrooveError("INVALID_SOURCE", "内蔵サンプルを指定してください。")
         return {"data": jobs.create(user, body.model_dump(mode="json"), key)}
 
@@ -344,6 +361,27 @@ def create_app(settings: Settings | None = None, verifier: Callable[[str], str] 
         project_id, analysis_id = store.atomic(publish_copy)
         return {"data": {"project_id": project_id, "analysis_id": analysis_id}}
 
+    @app.get("/api/v1/account/activity")
+    def account_activity(user: User) -> dict:
+        account = store.get("accounts", user) or {}
+        run = store.get("runs", account["active_run_id"]) if account.get("active_run_id") else None
+        if (
+            not run
+            or run.get("owner_uid") != user
+            or run["status"] in ("completed", "partial", "failed", "cancelled")
+            or run["expires_at"] <= time.time()
+        ):
+            return {"data": None}
+        project = store.get("projects", run["project_id"])
+        if (
+            not project
+            or project.get("owner_uid") != user
+            or project["expires_at"] <= time.time()
+            or project["status"] in ("deleting", "deleted")
+        ):
+            return {"data": None}
+        return {"data": {key: run[key] for key in ("run_id", "project_id", "kind", "status")}}
+
     @app.get("/api/v1/projects")
     def list_projects(user: User) -> dict:
         return {
@@ -400,7 +438,7 @@ def create_app(settings: Settings | None = None, verifier: Callable[[str], str] 
         }
 
     def bundle_for(analysis_id: str, user: str) -> dict:
-        return artifacts.get(own("analyses", analysis_id, user)["artifact_key"])
+        return current_music(artifacts.get(own("analyses", analysis_id, user)["artifact_key"]))
 
     @app.get("/api/v1/projects/{project_id}/bundle")
     def project_bundle(project_id: str, user: User, analysis: str | None = None) -> dict:
@@ -413,9 +451,7 @@ def create_app(settings: Settings | None = None, verifier: Callable[[str], str] 
             raise GrooveError("NOT_FOUND", "対象が見つかりません。", 404)
         snapshot = artifacts.get(meta["snapshot_key"]) if meta.get("snapshot_key") else snapshot_for(project)
         bundle = artifacts.get(meta["artifact_key"])
-        if bundle["score"]["scenes"][0]["repo"]["grammar_version"] != "groove-chamber-v5":
-            kit = json.loads((ROOT / "apps/web/public/audio/midnight-jazz-v3/manifest.json").read_text())
-            bundle["score"] = run_node("groove-core", {"map": bundle["map"], "kit_hash": kit["kit_hash"]})
+        bundle = current_music(bundle)
         trace = bundle.get("trace", [])
         if meta.get("run_id"):
             source_run = own("runs", meta["run_id"], user)
@@ -603,7 +639,7 @@ def create_app(settings: Settings | None = None, verifier: Callable[[str], str] 
             artifacts.get(base_meta["snapshot_key"])["index"],
             [Evidence(**e) for e in semantic["evidence"]],
         )
-        kit = json.loads((ROOT / "apps/web/public/audio/midnight-jazz-v3/manifest.json").read_text())
+        kit = json.loads((ROOT / "apps/web/public/audio/midnight-jazz-v4/manifest.json").read_text())
         score = run_node("groove-core", {"map": semantic, "kit_hash": kit["kit_hash"]})
         artifact_key = f"projects/{project['project_id']}/analyses/{identifier}/bundle.json.gz"
         artifacts.put(artifact_key, {"map": semantic, "score": score})

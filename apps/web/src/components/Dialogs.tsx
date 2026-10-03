@@ -135,7 +135,7 @@ export function OpenDialog({
 }: {
   close: () => void;
   openSample: (id: string) => void;
-  openRepo: (url: string) => void;
+  openRepo: (url: string, scope?: string) => void;
   openProject: (id: string) => void;
   pending: boolean;
 }) {
@@ -159,15 +159,24 @@ export function OpenDialog({
       <form
         onSubmit={(e) => {
           e.preventDefault();
-          openRepo(String(new FormData(e.currentTarget).get('url')));
+          const form = new FormData(e.currentTarget);
+          openRepo(String(form.get('url')), String(form.get('scope') ?? '').trim());
         }}
       >
         <label>
           公開GitHubリポジトリ
           <input name="url" type="url" placeholder="https://github.com/owner/repository" required autoFocus />
         </label>
+        <details className="scope-options">
+          <summary>大きなリポジトリの検査範囲</summary>
+          <label>
+            対象フォルダー
+            <input name="scope" placeholder="例: packages/billing/src" maxLength={200} />
+          </label>
+          <small>指定フォルダーとルートの説明・設定を読みます。範囲外のコードは未検査です。</small>
+        </details>
         <small className="dialog-footnote">
-          TypeScript / TSX · 最大40ファイル / 6,000行。認証情報を含めないでください。
+          TypeScript / Python · 最大40ファイル / 6,000行 / 32関数。大きい場合は対象フォルダーを指定。
         </small>
         <button className="primary wide" disabled={pending}>
           Agentで調査する

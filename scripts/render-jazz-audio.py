@@ -9,7 +9,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "apps/backend"))
 from code_groove.source import run_node  # noqa: E402
 
-kit = json.loads((ROOT / "apps/web/public/audio/midnight-jazz-v3/manifest.json").read_text())
+kit = json.loads((ROOT / "apps/web/public/audio/midnight-jazz-v4/manifest.json").read_text())
 reports = []
 for name in (
     "cohesive",

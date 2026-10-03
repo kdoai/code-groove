@@ -1,5 +1,7 @@
 # Musical grammar v5 / whole-repository health examination
 
+R6 uses the new immutable `midnight-jazz-v4` recorded piano/bass kit while preserving grammar v5. Provenance, envelopes, file playback and module scope: [WORKSPACE_R6.md](WORKSPACE_R6.md). Historical videos retain their earlier kit.
+
 Gemini examines the whole eligible snapshot for role ownership, readability and future change friction, with full reasoning capability. It records all grounded concerns it can establish and explicit unknowns. This is not a claim that audio detects something Gemini cannot know. Present bugs and security issues, when encountered, are disclosed for ordinary review/testing; they are not turned into a musical quality score.
 
 The overview performance encodes structural observations: the same role returns as the same motif across files, and several roles can coexist in a function. These relationships may be healthy. Initial health notes stay available; no upfront improvement action is presented. A human selects a heard/visible passage, then Gemini rereads its related source and checks future debt and legitimate boundaries. A confirmed focused result can be reflected into a separate saved map, adding the fixed response cues below where appropriate. Justified, inconclusive and observation-only outcomes are useful too.

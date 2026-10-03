@@ -20,6 +20,9 @@ type Workspace = {
   wholeWork: boolean;
   instrumentMutes: string[];
   focusEvidence: boolean;
+  playbackFile: string;
+  showBacking: boolean;
+  theme: 'light' | 'dark';
   set: (values: Partial<Omit<Workspace, 'set'>>) => void;
 };
 export const useWorkspace = create<Workspace>()(
@@ -42,6 +45,9 @@ export const useWorkspace = create<Workspace>()(
       wholeWork: true,
       instrumentMutes: [],
       focusEvidence: false,
+      playbackFile: '',
+      showBacking: false,
+      theme: 'light',
       set: (values) => set(values),
     }),
     { name: 'code-groove-workspace-v1' },

@@ -26,7 +26,7 @@ const backend = contracts || files.some((path) => /^(apps\/backend\/|tests\/test
 const music =
   contracts ||
   files.some((path) =>
-    /^(packages\/(groove-core|repo-indexer)\/|fixtures\/|apps\/web\/public\/audio\/)/.test(path),
+    /^(packages\/(groove-core|repo-indexer)\/|fixtures\/|apps\/web\/public\/audio\/|assets\/audio-source\/|tests\/.*\.test\.ts|scripts\/(build-clean-kit|audio_render))/.test(path),
   );
 const web =
   contracts || music || files.some((path) => /^(apps\/web\/|tests\/e2e\/|playwright.config)/.test(path));
@@ -45,6 +45,7 @@ if (music) {
   run('pnpm', ['test']);
   run('uv', ['run', 'python', 'scripts/build-kit.py', '--verify']);
   run('uv', ['run', 'python', 'scripts/build-jazz-kit.py', '--verify']);
+  run('uv', ['run', 'python', 'scripts/build-clean-kit.py', '--verify']);
 }
 if (web) {
   run('pnpm', ['typecheck']);

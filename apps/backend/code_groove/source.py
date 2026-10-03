@@ -71,7 +71,24 @@ def parse_github_url(url: str) -> tuple[str, str]:
     return owner, repo
 
 
-def safe_archive(data: bytes) -> dict[str, str]:
+def validate_scope(value: str | None) -> str | None:
+    if not value:
+        return None
+    path = value.rstrip("/")
+    if (
+        not path
+        or path.startswith("/")
+        or any(part in ("", ".", "..") for part in path.split("/"))
+        or any(char in path for char in ("\\", ":", "\0"))
+        or any(ord(char) < 32 for char in path)
+        or len(path) > 200
+    ):
+        raise GrooveError("INVALID_SOURCE_URL", "対象フォルダーは安全な相対パスで指定してください。")
+    return path
+
+
+def safe_archive(data: bytes, scope_path: str | None = None) -> dict[str, str]:
+    scope_path = validate_scope(scope_path)
     if len(data) > 10 * 1024 * 1024:
         raise GrooveError("SOURCE_TOO_LARGE", "圧縮リポジトリは10 MiB以内にしてください。")
     sources: dict[str, str] = {}
@@ -107,13 +124,19 @@ def safe_archive(data: bytes) -> dict[str, str]:
                 if entry.size < 0 or total > 40 * 1024 * 1024 or count > 1000:
                     raise GrooveError("SOURCE_TOO_LARGE", "展開サイズまたはファイル数の上限を超えています。")
                 if any(p in EXCLUDED or p.startswith(".env") for p in parts) or not path.endswith(
-                    (".ts", ".tsx", ".py", ".md", ".json")
+                    (".ts", ".tsx", ".py", ".md", ".json", ".toml")
                 ):
                     continue
                 if (
                     path.endswith((".d.ts", ".min.ts", "lock.json"))
                     or "credential" in path.lower()
                     or "private" in path.lower()
+                ):
+                    continue
+                if (
+                    scope_path
+                    and not path.startswith(scope_path + "/")
+                    and path not in ("README.md", "package.json", "tsconfig.json", "pyproject.toml")
                 ):
                     continue
                 if entry.size > 200 * 1024:
@@ -130,10 +153,14 @@ def safe_archive(data: bytes) -> dict[str, str]:
                     continue
     except (tarfile.TarError, EOFError, OSError) as exc:
         raise GrooveError("UNSAFE_ARCHIVE", "アーカイブが破損しています。") from exc
+    if scope_path and not any(path.startswith(scope_path + "/") for path in sources):
+        raise GrooveError("NOT_FOUND", "対象フォルダーに対応コードがありません。", 404)
     return sources
 
 
-async def github_snapshot(url: str, ref: str | None) -> tuple[str, dict[str, str]]:
+async def github_snapshot(
+    url: str, ref: str | None, scope_path: str | None = None
+) -> tuple[str, dict[str, str]]:
     owner, repo = parse_github_url(url)
     async with httpx.AsyncClient(
         timeout=30,
@@ -185,7 +212,7 @@ async def github_snapshot(url: str, ref: str | None) -> tuple[str, dict[str, str
                     if size > 10 * 1024 * 1024:
                         raise GrooveError("SOURCE_TOO_LARGE", "圧縮リポジトリの上限は10 MiBです。")
                     chunks.append(chunk)
-                return sha, safe_archive(b"".join(chunks))
+                return sha, safe_archive(b"".join(chunks), scope_path)
     raise GrooveError("UNSAFE_ARCHIVE", "redirect回数の上限を超えました。")
 
 

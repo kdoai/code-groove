@@ -60,6 +60,32 @@ def test_idempotency_single_active_and_cancel_quota(setup):
     assert create(client, key="request003").status_code == 202
 
 
+def test_account_activity_is_owned_bounded_and_hides_terminal_runs(setup):
+    client, state = setup
+    path = "/api/v1/account/activity"
+    alice = {"Authorization": "Bearer alice"}
+    bob = {"Authorization": "Bearer bob"}
+    assert client.get(path).status_code == 401
+    assert client.get(path, headers=alice).json()["data"] is None
+    created = create(client).json()["data"]
+    activity = client.get(path, headers=alice).json()["data"]
+    assert activity["run_id"] == created["run_id"]
+    assert set(activity) == {"run_id", "project_id", "kind", "status"}
+    assert client.get(path, headers=bob).json()["data"] is None
+    state.store.update("accounts", "bob", {"active_run_id": created["run_id"]})
+    assert client.get(path, headers=bob).json()["data"] is None
+    for status in ("completed", "partial", "failed", "cancelled"):
+        state.store.update("runs", created["run_id"], {"status": status})
+        assert client.get(path, headers=alice).json()["data"] is None
+    state.store.update("runs", created["run_id"], {"status": "investigating"})
+    assert client.get(path, headers=alice).json()["data"]["status"] == "investigating"
+    state.store.update("projects", created["project_id"], {"status": "deleting"})
+    assert client.get(path, headers=alice).json()["data"] is None
+    state.store.update("projects", created["project_id"], {"status": "queued"})
+    state.store.update("runs", created["run_id"], {"expires_at": time.time() - 1})
+    assert client.get(path, headers=alice).json()["data"] is None
+
+
 def test_lease_preserves_consumption_and_stale_worker_cannot_publish(setup):
     client, state = setup
     created = create(client).json()["data"]

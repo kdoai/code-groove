@@ -138,7 +138,7 @@ semantic = SemanticMap(
     created_at="2026-10-03T00:00:00Z",
 )
 validate_candidate(semantic, index, ctx.evidence)
-kit = json.loads((ROOT / "apps/web/public/audio/midnight-jazz-v3/manifest.json").read_text())
+kit = json.loads((ROOT / "apps/web/public/audio/midnight-jazz-v4/manifest.json").read_text())
 payload = semantic.model_dump(mode="json")
 bundle = {
     "map": payload,

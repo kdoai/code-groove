@@ -70,7 +70,7 @@ export function CodePanel({ bundle }: { bundle: Bundle }) {
         height="100%"
         language={span.path.endsWith('.py') ? 'python' : 'typescript'}
         value={bundle.sources[span.path] ?? ''}
-        theme="vs"
+        theme={ws.theme === 'dark' ? 'vs-dark' : 'vs'}
         onMount={mount}
         options={{
           readOnly: true,

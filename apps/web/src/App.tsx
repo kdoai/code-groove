@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { User } from 'firebase/auth';
-import { FolderGit2, ArrowRight, HelpCircle, LogOut, ScanLine } from 'lucide-react';
+import { FolderGit2, ArrowRight, HelpCircle, LogOut, ScanLine, Sun, Moon } from 'lucide-react';
+import { AgentActivity } from './components/AgentActivity';
 import { api, currentUser, logout, setupAuth, type Bundle, type PublicConfig } from './api';
 import { useWorkspace } from './state';
 import { Transport } from './components/Transport';
@@ -43,6 +44,20 @@ export default function App() {
   const [showProposal, setShowProposal] = useState(false),
     [proposalBusy, setProposalBusy] = useState(false);
   const [acceptingImprovement, setAcceptingImprovement] = useState(false);
+  const activity = useQuery({
+    queryKey: ['account-activity', user?.uid],
+    queryFn: () =>
+      api<{ run_id: string; project_id: string; kind: string; status: string } | null>('/account/activity'),
+    enabled: !!user,
+    refetchInterval: (q) => (q.state.data ? 1500 : 15000),
+    retry: false,
+  });
+  useEffect(() => {
+    document.documentElement.dataset.theme = ws.theme;
+  }, [ws.theme]);
+  useEffect(() => {
+    if (user) void cache.invalidateQueries({ queryKey: ['account-activity'] });
+  }, [runId, investigationRunId, proposalRunId, user]);
   const config = useQuery({
     queryKey: ['config'],
     queryFn: () => api<PublicConfig>('/config'),
@@ -87,6 +102,7 @@ export default function App() {
         investigation_analysis_id?: string;
         latest_investigation_id?: string;
         working_copy?: boolean;
+        source?: { scope_path?: string };
       }>(`/projects/${ws.projectId}`),
     enabled: !!ws.projectId && !ws.sampleId && !!user,
     retry: false,
@@ -142,7 +158,7 @@ export default function App() {
     cache.invalidateQueries({ queryKey: ['project', ws.projectId] });
   }, [proposalRun.data]);
   const bundle = useQuery({
-    queryKey: ['bundle', ws.projectId, ws.analysisId, 'groove-chamber-v5'],
+    queryKey: ['bundle', ws.projectId, ws.analysisId, 'midnight-jazz-v4'],
     queryFn: () =>
       api<Bundle>(
         ws.sampleId
@@ -210,6 +226,18 @@ export default function App() {
   }, [investigationRun.data]);
   const pending = starting || (!!runId && active.includes(run.data?.status ?? 'queued'));
   const investigating = !!investigationRunId && active.includes(investigationRun.data?.status ?? 'queued');
+  const activityRunId = activity.data?.run_id || proposalRunId || investigationRunId || runId;
+  const activityEvents = useRunEvents(
+    activityRunId,
+    !!user,
+    !!activity.data || pending || investigating || proposing,
+  );
+  const activityStatus =
+    activity.data?.status ||
+    proposalRun.data?.status ||
+    investigationRun.data?.status ||
+    run.data?.status ||
+    'queued';
   function openSample(id: string) {
     setInvestigationRunId('');
     setProposalId('');
@@ -233,6 +261,7 @@ export default function App() {
       pulseMuted: true,
       instrumentMutes: [],
       focusEvidence: false,
+      playbackFile: '',
     });
     setModal('');
     setRunId('');
@@ -262,6 +291,7 @@ export default function App() {
         screen: 'inspect',
         muted: [],
         solo: [],
+        playbackFile: '',
       });
       setRunId(saved.latest_analysis_id ? '' : saved.run_id);
     } catch (e) {
@@ -270,7 +300,7 @@ export default function App() {
       setStarting(false);
     }
   }
-  async function openRepo(url?: string) {
+  async function openRepo(url?: string, scopePath?: string) {
     if (!currentUser) {
       setModal('auth');
       return;
@@ -284,7 +314,7 @@ export default function App() {
     try {
       const project = await api<{ project_id: string; run_id: string }>('/projects', {
         source: url
-          ? { kind: 'github_public', url }
+          ? { kind: 'github_public', url, scope_path: scopePath || null }
           : { kind: 'sample', sample_id: ws.sampleId.replace(/^recorded-/, '') || 'mixed' },
       });
       ws.set({
@@ -296,6 +326,7 @@ export default function App() {
         codeSpan: null,
         scene: 0,
         screen: 'inspect',
+        playbackFile: '',
       });
       setRunId(project.run_id);
       setModal('');
@@ -424,10 +455,27 @@ export default function App() {
     return () => window.removeEventListener('keydown', handler);
   }, [bundle.data, ws.unitId, ws.eventId]);
   const data = bundle.data;
+  const selectedFile =
+    ws.codeSpan?.path ??
+    data?.map.units.find((u) => u.unit_id === ws.unitId)?.primary_span.path ??
+    data?.map.units[0]?.primary_span.path;
+  const fileUnits = useMemo(
+    () => data?.map.units.filter((u) => u.primary_span.path === selectedFile).map((u) => u.unit_id),
+    [data?.map.units, selectedFile],
+  );
+  const playbackUnits = ws.playbackFile ? fileUnits : undefined;
+  useEffect(() => {
+    if (ws.playbackFile && selectedFile && selectedFile !== ws.playbackFile) {
+      engine.pause();
+      ws.set({ playbackFile: selectedFile });
+    }
+  }, [selectedFile, ws.playbackFile]);
   const playbackScene = ws.wholeWork ? 0 : ws.scene;
   const plan = useMemo(
-    () => playbackPlan(data?.score, ws.mode, playbackScene, ws.wholeWork),
-    [data?.score, ws.mode, playbackScene, ws.wholeWork],
+    () =>
+      playbackPlan(data?.score, ws.mode, playbackScene, ws.wholeWork, playbackUnits) ??
+      playbackPlan(data?.score, ws.mode, playbackScene, ws.wholeWork),
+    [data?.score, ws.mode, playbackScene, ws.wholeWork, playbackUnits],
   );
   useEffect(() => {
     if (!data || ws.unitId || ws.codeSpan) return;
@@ -498,6 +546,13 @@ export default function App() {
         <button className="icon-button" aria-label="使い方" onClick={() => setModal('guide')}>
           <HelpCircle size={16} />
         </button>
+        <button
+          className="icon-button"
+          aria-label={ws.theme === 'light' ? 'ダークモードに切り替え' : 'ライトモードに切り替え'}
+          onClick={() => ws.set({ theme: ws.theme === 'light' ? 'dark' : 'light' })}
+        >
+          {ws.theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
+        </button>
         {user ? (
           <button
             className="account"
@@ -515,6 +570,8 @@ export default function App() {
               });
               history.replaceState(null, '', '/');
               setRunId('');
+              setInvestigationRunId('');
+              setResult(undefined);
               setProposalId('');
               setProposalRunId('');
               setShowProposal(false);
@@ -526,13 +583,15 @@ export default function App() {
           <button onClick={() => setModal('auth')}>ログイン</button>
         )}
       </header>
-      <Transport score={data?.score} onError={setError} />
+      <Transport score={data?.score} selectedFile={selectedFile} fileUnits={fileUnits} onError={setError} />
       {user && ws.projectId && !ws.sampleId && (
         <div className="refresh-bar">
           <span>
-            {project.data?.working_copy
-              ? 'アプリ内のスナップショット · 元のRepositoryは保持'
-              : '保存済み結果を再生中 · Git更新時は変更と影響先だけ調査'}
+            {project.data?.source?.scope_path
+              ? `対象: ${project.data.source.scope_path} · 範囲外は未検査`
+              : project.data?.working_copy
+                ? 'アプリ内のスナップショット · 元のRepositoryは保持'
+                : '保存済み結果を再生中 · Git更新時は変更と影響先だけ調査'}
           </span>
           <button disabled={pending} onClick={() => void refreshRepository()}>
             {project.data?.working_copy ? '保存したコードを再確認' : 'Gitの差分を調べる'}
@@ -651,7 +710,7 @@ export default function App() {
         <OpenDialog
           close={() => setModal('')}
           openSample={openSample}
-          openRepo={(url) => void openRepo(url)}
+          openRepo={(url, scope) => void openRepo(url, scope)}
           openProject={(id) => void openSaved(id)}
           pending={starting}
         />
@@ -678,6 +737,23 @@ export default function App() {
           reject={() => void decideImprovement(false)}
           pending={proposalBusy}
           error={investigationError}
+        />
+      )}
+      {(activity.data || pending || investigating || proposing) && (
+        <AgentActivity
+          status={activityStatus}
+          kind={
+            activity.data?.kind ?? (proposing ? 'proposal' : investigating ? 'investigation' : 'analysis')
+          }
+          events={activityEvents.data ?? []}
+          open={
+            activity.data
+              ? () => {
+                  setModal('');
+                  void openSaved(activity.data!.project_id);
+                }
+              : undefined
+          }
         />
       )}
     </div>

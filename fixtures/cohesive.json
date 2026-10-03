@@ -365,7 +365,7 @@
   },
   "score": {
     "analysis_id": "analysis_cohesive",
-    "score_hash": "a18e0582b67734fa537386c3278be75d52f56dab2bed2ebcba26f9218fa46ac9",
+    "score_hash": "13f702dab11dfc2bbd80021703aedc0ffb5ae37bee84f35b9b5ffa65afaf6788",
     "scenes": [
       {
         "scene_id": "scene_1",
@@ -376,9 +376,9 @@
         ],
         "theme": {
           "scene_id": "scene_1",
-          "grammar_version": "groove-arrangement-v4",
-          "kit_id": "midnight-jazz-v3",
-          "kit_hash": "c37c7270ae395961af061d5f314215a253b0c0decc678f82afe91d531e4add8f",
+          "grammar_version": "groove-chamber-v5",
+          "kit_id": "midnight-jazz-v4",
+          "kit_hash": "a302b56825512936a014a556a88819affd50de65c9d68ff3acb544702dc919f7",
           "bpm": 96,
           "beats_per_bar": 4,
           "steps_per_bar": 16,
@@ -419,18 +419,6 @@
               "velocity": 0.42,
               "duration_ms": 510,
               "pan": -0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_0_0",
-              "kind": "accompaniment",
-              "tick": 0,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.045,
-              "duration_ms": 220,
-              "pan": 0.12,
               "evidence_ids": []
             },
             {
@@ -478,29 +466,6 @@
                 "evidence_0"
               ],
               "tick": 0
-            },
-            {
-              "note_id": "pulse_0_0",
-              "kind": "pulse",
-              "tick": 0,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_0_0",
-              "kind": "accompaniment",
-              "tick": 0,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.1,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
             },
             {
               "note_id": "chord_0_0_1",
@@ -568,41 +533,6 @@
               "evidence_ids": []
             },
             {
-              "note_id": "pulse_0_4",
-              "kind": "pulse",
-              "tick": 480,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_0_1",
-              "kind": "accompaniment",
-              "tick": 480,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.085,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_0_1",
-              "kind": "accompaniment",
-              "tick": 520,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.19,
-              "duration_ms": 220,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
               "note_id": "melody_0_r0_2",
               "kind": "accompaniment",
               "tick": 720,
@@ -620,18 +550,6 @@
               "unit_id": "unit_isRefundEligible"
             },
             {
-              "note_id": "swing_0_1",
-              "kind": "accompaniment",
-              "tick": 800,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.06,
-              "duration_ms": 110,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
               "note_id": "bass_0_2",
               "kind": "accompaniment",
               "tick": 960,
@@ -641,18 +559,6 @@
               "velocity": 0.42,
               "duration_ms": 510,
               "pan": -0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_0_2",
-              "kind": "accompaniment",
-              "tick": 960,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.045,
-              "duration_ms": 220,
-              "pan": 0.12,
               "evidence_ids": []
             },
             {
@@ -671,29 +577,6 @@
               "responsibility_id": "r0",
               "event_id": "event_0_0",
               "unit_id": "unit_isRefundEligible"
-            },
-            {
-              "note_id": "pulse_0_8",
-              "kind": "pulse",
-              "tick": 960,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_0_2",
-              "kind": "accompaniment",
-              "tick": 960,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.1,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
             },
             {
               "note_id": "chord_0_10_0",
@@ -773,53 +656,6 @@
               "unit_id": "unit_isRefundEligible"
             },
             {
-              "note_id": "pulse_0_12",
-              "kind": "pulse",
-              "tick": 1440,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_0_3",
-              "kind": "accompaniment",
-              "tick": 1440,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.085,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_0_3",
-              "kind": "accompaniment",
-              "tick": 1480,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.19,
-              "duration_ms": 220,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "swing_0_3",
-              "kind": "accompaniment",
-              "tick": 1760,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.06,
-              "duration_ms": 110,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
               "note_id": "bass_1_0",
               "kind": "accompaniment",
               "tick": 1920,
@@ -829,18 +665,6 @@
               "velocity": 0.42,
               "duration_ms": 510,
               "pan": -0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_1_0",
-              "kind": "accompaniment",
-              "tick": 1920,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.045,
-              "duration_ms": 220,
-              "pan": 0.12,
               "evidence_ids": []
             },
             {
@@ -888,29 +712,6 @@
                 "evidence_0"
               ],
               "tick": 1920
-            },
-            {
-              "note_id": "pulse_1_0",
-              "kind": "pulse",
-              "tick": 1920,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_1_0",
-              "kind": "accompaniment",
-              "tick": 1920,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.1,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
             },
             {
               "note_id": "chord_1_0_1",
@@ -978,41 +779,6 @@
               "unit_id": "unit_isRefundEligible"
             },
             {
-              "note_id": "pulse_1_4",
-              "kind": "pulse",
-              "tick": 2400,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_1_1",
-              "kind": "accompaniment",
-              "tick": 2400,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.085,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_1_1",
-              "kind": "accompaniment",
-              "tick": 2440,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.19,
-              "duration_ms": 220,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
               "note_id": "melody_1_r0_2",
               "kind": "accompaniment",
               "tick": 2720,
@@ -1030,18 +796,6 @@
               "unit_id": "unit_isRefundEligible"
             },
             {
-              "note_id": "swing_1_1",
-              "kind": "accompaniment",
-              "tick": 2720,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.06,
-              "duration_ms": 110,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
               "note_id": "bass_1_2",
               "kind": "accompaniment",
               "tick": 2880,
@@ -1051,41 +805,6 @@
               "velocity": 0.42,
               "duration_ms": 510,
               "pan": -0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_1_2",
-              "kind": "accompaniment",
-              "tick": 2880,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.045,
-              "duration_ms": 220,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "pulse_1_8",
-              "kind": "pulse",
-              "tick": 2880,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_1_2",
-              "kind": "accompaniment",
-              "tick": 2880,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.1,
-              "duration_ms": 140,
-              "pan": 0.12,
               "evidence_ids": []
             },
             {
@@ -1166,53 +885,6 @@
               "evidence_ids": []
             },
             {
-              "note_id": "pulse_1_12",
-              "kind": "pulse",
-              "tick": 3360,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_1_3",
-              "kind": "accompaniment",
-              "tick": 3360,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.085,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_1_3",
-              "kind": "accompaniment",
-              "tick": 3400,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.19,
-              "duration_ms": 220,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "swing_1_3",
-              "kind": "accompaniment",
-              "tick": 3680,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.06,
-              "duration_ms": 110,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
               "note_id": "bass_2_0",
               "kind": "accompaniment",
               "tick": 3840,
@@ -1222,18 +894,6 @@
               "velocity": 0.42,
               "duration_ms": 510,
               "pan": -0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_2_0",
-              "kind": "accompaniment",
-              "tick": 3840,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.045,
-              "duration_ms": 220,
-              "pan": 0.12,
               "evidence_ids": []
             },
             {
@@ -1281,29 +941,6 @@
                 "evidence_0"
               ],
               "tick": 3840
-            },
-            {
-              "note_id": "pulse_2_0",
-              "kind": "pulse",
-              "tick": 3840,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_2_0",
-              "kind": "accompaniment",
-              "tick": 3840,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.1,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
             },
             {
               "note_id": "chord_2_0_1",
@@ -1371,41 +1008,6 @@
               "evidence_ids": []
             },
             {
-              "note_id": "pulse_2_4",
-              "kind": "pulse",
-              "tick": 4320,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_2_1",
-              "kind": "accompaniment",
-              "tick": 4320,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.085,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_2_1",
-              "kind": "accompaniment",
-              "tick": 4360,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.19,
-              "duration_ms": 220,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
               "note_id": "melody_2_r0_2",
               "kind": "accompaniment",
               "tick": 4560,
@@ -1423,18 +1025,6 @@
               "unit_id": "unit_isRefundEligible"
             },
             {
-              "note_id": "swing_2_1",
-              "kind": "accompaniment",
-              "tick": 4640,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.06,
-              "duration_ms": 110,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
               "note_id": "bass_2_2",
               "kind": "accompaniment",
               "tick": 4800,
@@ -1444,41 +1034,6 @@
               "velocity": 0.42,
               "duration_ms": 510,
               "pan": -0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_2_2",
-              "kind": "accompaniment",
-              "tick": 4800,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.045,
-              "duration_ms": 220,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "pulse_2_8",
-              "kind": "pulse",
-              "tick": 4800,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_2_2",
-              "kind": "accompaniment",
-              "tick": 4800,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.1,
-              "duration_ms": 140,
-              "pan": 0.12,
               "evidence_ids": []
             },
             {
@@ -1559,41 +1114,6 @@
               "evidence_ids": []
             },
             {
-              "note_id": "pulse_2_12",
-              "kind": "pulse",
-              "tick": 5280,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_2_3",
-              "kind": "accompaniment",
-              "tick": 5280,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.085,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_2_3",
-              "kind": "accompaniment",
-              "tick": 5320,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.19,
-              "duration_ms": 220,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
               "note_id": "melody_2_r0_4",
               "kind": "accompaniment",
               "tick": 5440,
@@ -1611,18 +1131,6 @@
               "unit_id": "unit_isRefundEligible"
             },
             {
-              "note_id": "swing_2_3",
-              "kind": "accompaniment",
-              "tick": 5600,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.06,
-              "duration_ms": 110,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
               "note_id": "bass_3_0",
               "kind": "accompaniment",
               "tick": 5760,
@@ -1632,18 +1140,6 @@
               "velocity": 0.42,
               "duration_ms": 510,
               "pan": -0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_3_0",
-              "kind": "accompaniment",
-              "tick": 5760,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.045,
-              "duration_ms": 220,
-              "pan": 0.12,
               "evidence_ids": []
             },
             {
@@ -1674,29 +1170,6 @@
               "responsibility_id": "r0",
               "event_id": "event_0_0",
               "unit_id": "unit_isRefundEligible"
-            },
-            {
-              "note_id": "pulse_3_0",
-              "kind": "pulse",
-              "tick": 5760,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_3_0",
-              "kind": "accompaniment",
-              "tick": 5760,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.1,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
             },
             {
               "note_id": "chord_3_0_1",
@@ -1747,41 +1220,6 @@
               "evidence_ids": []
             },
             {
-              "note_id": "pulse_3_4",
-              "kind": "pulse",
-              "tick": 6240,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_3_1",
-              "kind": "accompaniment",
-              "tick": 6240,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.085,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_3_1",
-              "kind": "accompaniment",
-              "tick": 6280,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.19,
-              "duration_ms": 220,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
               "note_id": "melody_3_r0_1",
               "kind": "accompaniment",
               "tick": 6400,
@@ -1799,18 +1237,6 @@
               "unit_id": "unit_isRefundEligible"
             },
             {
-              "note_id": "swing_3_1",
-              "kind": "accompaniment",
-              "tick": 6560,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.06,
-              "duration_ms": 110,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
               "note_id": "bass_3_2",
               "kind": "accompaniment",
               "tick": 6720,
@@ -1820,18 +1246,6 @@
               "velocity": 0.42,
               "duration_ms": 510,
               "pan": -0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_3_2",
-              "kind": "accompaniment",
-              "tick": 6720,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.045,
-              "duration_ms": 220,
-              "pan": 0.12,
               "evidence_ids": []
             },
             {
@@ -1850,29 +1264,6 @@
               "responsibility_id": "r0",
               "event_id": "event_0_2",
               "unit_id": "unit_isRefundEligible"
-            },
-            {
-              "note_id": "pulse_3_8",
-              "kind": "pulse",
-              "tick": 6720,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_3_2",
-              "kind": "accompaniment",
-              "tick": 6720,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.1,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
             },
             {
               "note_id": "chord_3_10_0",
@@ -1935,53 +1326,6 @@
               "evidence_ids": []
             },
             {
-              "note_id": "pulse_3_12",
-              "kind": "pulse",
-              "tick": 7200,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_3_3",
-              "kind": "accompaniment",
-              "tick": 7200,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.085,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_3_3",
-              "kind": "accompaniment",
-              "tick": 7240,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.19,
-              "duration_ms": 220,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "swing_3_3",
-              "kind": "accompaniment",
-              "tick": 7520,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.06,
-              "duration_ms": 110,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
               "note_id": "bass_4_0",
               "kind": "accompaniment",
               "tick": 7680,
@@ -1991,18 +1335,6 @@
               "velocity": 0.42,
               "duration_ms": 510,
               "pan": -0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_4_0",
-              "kind": "accompaniment",
-              "tick": 7680,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.045,
-              "duration_ms": 220,
-              "pan": 0.12,
               "evidence_ids": []
             },
             {
@@ -2050,29 +1382,6 @@
                 "evidence_1"
               ],
               "tick": 7680
-            },
-            {
-              "note_id": "pulse_4_0",
-              "kind": "pulse",
-              "tick": 7680,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_4_0",
-              "kind": "accompaniment",
-              "tick": 7680,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.1,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
             },
             {
               "note_id": "chord_4_0_1",
@@ -2140,41 +1449,6 @@
               "evidence_ids": []
             },
             {
-              "note_id": "pulse_4_4",
-              "kind": "pulse",
-              "tick": 8160,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_4_1",
-              "kind": "accompaniment",
-              "tick": 8160,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.085,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_4_1",
-              "kind": "accompaniment",
-              "tick": 8200,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.19,
-              "duration_ms": 220,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
               "note_id": "melody_4_r1_2",
               "kind": "accompaniment",
               "tick": 8400,
@@ -2192,18 +1466,6 @@
               "unit_id": "unit_calculateRefund"
             },
             {
-              "note_id": "swing_4_1",
-              "kind": "accompaniment",
-              "tick": 8480,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.06,
-              "duration_ms": 110,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
               "note_id": "bass_4_2",
               "kind": "accompaniment",
               "tick": 8640,
@@ -2213,18 +1475,6 @@
               "velocity": 0.42,
               "duration_ms": 510,
               "pan": -0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_4_2",
-              "kind": "accompaniment",
-              "tick": 8640,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.045,
-              "duration_ms": 220,
-              "pan": 0.12,
               "evidence_ids": []
             },
             {
@@ -2243,29 +1493,6 @@
               "responsibility_id": "r1",
               "event_id": "event_1_0",
               "unit_id": "unit_calculateRefund"
-            },
-            {
-              "note_id": "pulse_4_8",
-              "kind": "pulse",
-              "tick": 8640,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_4_2",
-              "kind": "accompaniment",
-              "tick": 8640,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.1,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
             },
             {
               "note_id": "chord_4_10_0",
@@ -2345,53 +1572,6 @@
               "unit_id": "unit_calculateRefund"
             },
             {
-              "note_id": "pulse_4_12",
-              "kind": "pulse",
-              "tick": 9120,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_4_3",
-              "kind": "accompaniment",
-              "tick": 9120,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.085,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_4_3",
-              "kind": "accompaniment",
-              "tick": 9160,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.19,
-              "duration_ms": 220,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "swing_4_3",
-              "kind": "accompaniment",
-              "tick": 9440,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.06,
-              "duration_ms": 110,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
               "note_id": "bass_5_0",
               "kind": "accompaniment",
               "tick": 9600,
@@ -2401,18 +1581,6 @@
               "velocity": 0.42,
               "duration_ms": 510,
               "pan": -0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_5_0",
-              "kind": "accompaniment",
-              "tick": 9600,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.045,
-              "duration_ms": 220,
-              "pan": 0.12,
               "evidence_ids": []
             },
             {
@@ -2443,29 +1611,6 @@
               "responsibility_id": "r1",
               "event_id": "event_1_1",
               "unit_id": "unit_calculateRefund"
-            },
-            {
-              "note_id": "pulse_5_0",
-              "kind": "pulse",
-              "tick": 9600,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_5_0",
-              "kind": "accompaniment",
-              "tick": 9600,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.1,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
             },
             {
               "note_id": "chord_5_0_1",
@@ -2533,41 +1678,6 @@
               "unit_id": "unit_calculateRefund"
             },
             {
-              "note_id": "pulse_5_4",
-              "kind": "pulse",
-              "tick": 10080,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_5_1",
-              "kind": "accompaniment",
-              "tick": 10080,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.085,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_5_1",
-              "kind": "accompaniment",
-              "tick": 10120,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.19,
-              "duration_ms": 220,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
               "note_id": "melody_5_r1_2",
               "kind": "accompaniment",
               "tick": 10400,
@@ -2585,18 +1695,6 @@
               "unit_id": "unit_calculateRefund"
             },
             {
-              "note_id": "swing_5_1",
-              "kind": "accompaniment",
-              "tick": 10400,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.06,
-              "duration_ms": 110,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
               "note_id": "bass_5_2",
               "kind": "accompaniment",
               "tick": 10560,
@@ -2606,41 +1704,6 @@
               "velocity": 0.42,
               "duration_ms": 510,
               "pan": -0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_5_2",
-              "kind": "accompaniment",
-              "tick": 10560,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.045,
-              "duration_ms": 220,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "pulse_5_8",
-              "kind": "pulse",
-              "tick": 10560,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_5_2",
-              "kind": "accompaniment",
-              "tick": 10560,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.1,
-              "duration_ms": 140,
-              "pan": 0.12,
               "evidence_ids": []
             },
             {
@@ -2738,53 +1801,6 @@
               "tick": 11040
             },
             {
-              "note_id": "pulse_5_12",
-              "kind": "pulse",
-              "tick": 11040,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_5_3",
-              "kind": "accompaniment",
-              "tick": 11040,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.085,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_5_3",
-              "kind": "accompaniment",
-              "tick": 11080,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.19,
-              "duration_ms": 220,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "swing_5_3",
-              "kind": "accompaniment",
-              "tick": 11360,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.06,
-              "duration_ms": 110,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
               "note_id": "bass_6_0",
               "kind": "accompaniment",
               "tick": 11520,
@@ -2794,18 +1810,6 @@
               "velocity": 0.42,
               "duration_ms": 510,
               "pan": -0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_6_0",
-              "kind": "accompaniment",
-              "tick": 11520,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.045,
-              "duration_ms": 220,
-              "pan": 0.12,
               "evidence_ids": []
             },
             {
@@ -2853,29 +1857,6 @@
                 "evidence_1"
               ],
               "tick": 11520
-            },
-            {
-              "note_id": "pulse_6_0",
-              "kind": "pulse",
-              "tick": 11520,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_6_0",
-              "kind": "accompaniment",
-              "tick": 11520,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.1,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
             },
             {
               "note_id": "chord_6_0_1",
@@ -2943,41 +1924,6 @@
               "evidence_ids": []
             },
             {
-              "note_id": "pulse_6_4",
-              "kind": "pulse",
-              "tick": 12000,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_6_1",
-              "kind": "accompaniment",
-              "tick": 12000,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.085,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_6_1",
-              "kind": "accompaniment",
-              "tick": 12040,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.19,
-              "duration_ms": 220,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
               "note_id": "melody_6_r1_2",
               "kind": "accompaniment",
               "tick": 12240,
@@ -2995,18 +1941,6 @@
               "unit_id": "unit_calculateRefund"
             },
             {
-              "note_id": "swing_6_1",
-              "kind": "accompaniment",
-              "tick": 12320,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.06,
-              "duration_ms": 110,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
               "note_id": "bass_6_2",
               "kind": "accompaniment",
               "tick": 12480,
@@ -3016,41 +1950,6 @@
               "velocity": 0.42,
               "duration_ms": 510,
               "pan": -0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_6_2",
-              "kind": "accompaniment",
-              "tick": 12480,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.045,
-              "duration_ms": 220,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "pulse_6_8",
-              "kind": "pulse",
-              "tick": 12480,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_6_2",
-              "kind": "accompaniment",
-              "tick": 12480,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.1,
-              "duration_ms": 140,
-              "pan": 0.12,
               "evidence_ids": []
             },
             {
@@ -3131,41 +2030,6 @@
               "evidence_ids": []
             },
             {
-              "note_id": "pulse_6_12",
-              "kind": "pulse",
-              "tick": 12960,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_6_3",
-              "kind": "accompaniment",
-              "tick": 12960,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.085,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_6_3",
-              "kind": "accompaniment",
-              "tick": 13000,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.19,
-              "duration_ms": 220,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
               "note_id": "melody_6_r1_4",
               "kind": "accompaniment",
               "tick": 13120,
@@ -3183,18 +2047,6 @@
               "unit_id": "unit_calculateRefund"
             },
             {
-              "note_id": "swing_6_3",
-              "kind": "accompaniment",
-              "tick": 13280,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.06,
-              "duration_ms": 110,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
               "note_id": "bass_7_0",
               "kind": "accompaniment",
               "tick": 13440,
@@ -3204,18 +2056,6 @@
               "velocity": 0.42,
               "duration_ms": 510,
               "pan": -0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_7_0",
-              "kind": "accompaniment",
-              "tick": 13440,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.045,
-              "duration_ms": 220,
-              "pan": 0.12,
               "evidence_ids": []
             },
             {
@@ -3246,29 +2086,6 @@
               "responsibility_id": "r1",
               "event_id": "event_1_0",
               "unit_id": "unit_calculateRefund"
-            },
-            {
-              "note_id": "pulse_7_0",
-              "kind": "pulse",
-              "tick": 13440,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_7_0",
-              "kind": "accompaniment",
-              "tick": 13440,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.1,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
             },
             {
               "note_id": "chord_7_0_1",
@@ -3319,41 +2136,6 @@
               "evidence_ids": []
             },
             {
-              "note_id": "pulse_7_4",
-              "kind": "pulse",
-              "tick": 13920,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_7_1",
-              "kind": "accompaniment",
-              "tick": 13920,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.085,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_7_1",
-              "kind": "accompaniment",
-              "tick": 13960,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.19,
-              "duration_ms": 220,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
               "note_id": "melody_7_r1_1",
               "kind": "accompaniment",
               "tick": 14080,
@@ -3371,18 +2153,6 @@
               "unit_id": "unit_calculateRefund"
             },
             {
-              "note_id": "swing_7_1",
-              "kind": "accompaniment",
-              "tick": 14240,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.06,
-              "duration_ms": 110,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
               "note_id": "bass_7_2",
               "kind": "accompaniment",
               "tick": 14400,
@@ -3392,18 +2162,6 @@
               "velocity": 0.42,
               "duration_ms": 510,
               "pan": -0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_7_2",
-              "kind": "accompaniment",
-              "tick": 14400,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.045,
-              "duration_ms": 220,
-              "pan": 0.12,
               "evidence_ids": []
             },
             {
@@ -3422,29 +2180,6 @@
               "responsibility_id": "r1",
               "event_id": "event_1_2",
               "unit_id": "unit_calculateRefund"
-            },
-            {
-              "note_id": "pulse_7_8",
-              "kind": "pulse",
-              "tick": 14400,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_7_2",
-              "kind": "accompaniment",
-              "tick": 14400,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.1,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
             },
             {
               "note_id": "chord_7_10_0",
@@ -3507,53 +2242,6 @@
               "evidence_ids": []
             },
             {
-              "note_id": "pulse_7_12",
-              "kind": "pulse",
-              "tick": 14880,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_7_3",
-              "kind": "accompaniment",
-              "tick": 14880,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.085,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_7_3",
-              "kind": "accompaniment",
-              "tick": 14920,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.19,
-              "duration_ms": 220,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "swing_7_3",
-              "kind": "accompaniment",
-              "tick": 15200,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.06,
-              "duration_ms": 110,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
               "note_id": "bass_8_0",
               "kind": "accompaniment",
               "tick": 15360,
@@ -3563,18 +2251,6 @@
               "velocity": 0.42,
               "duration_ms": 510,
               "pan": -0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_8_0",
-              "kind": "accompaniment",
-              "tick": 15360,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.045,
-              "duration_ms": 220,
-              "pan": 0.12,
               "evidence_ids": []
             },
             {
@@ -3622,29 +2298,6 @@
                 "evidence_2"
               ],
               "tick": 15360
-            },
-            {
-              "note_id": "pulse_8_0",
-              "kind": "pulse",
-              "tick": 15360,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_8_0",
-              "kind": "accompaniment",
-              "tick": 15360,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.1,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
             },
             {
               "note_id": "chord_8_0_1",
@@ -3712,41 +2365,6 @@
               "evidence_ids": []
             },
             {
-              "note_id": "pulse_8_4",
-              "kind": "pulse",
-              "tick": 15840,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_8_1",
-              "kind": "accompaniment",
-              "tick": 15840,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.085,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_8_1",
-              "kind": "accompaniment",
-              "tick": 15880,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.19,
-              "duration_ms": 220,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
               "note_id": "melody_8_r2_2",
               "kind": "accompaniment",
               "tick": 16080,
@@ -3764,18 +2382,6 @@
               "unit_id": "unit_buildNotification"
             },
             {
-              "note_id": "swing_8_1",
-              "kind": "accompaniment",
-              "tick": 16160,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.06,
-              "duration_ms": 110,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
               "note_id": "bass_8_2",
               "kind": "accompaniment",
               "tick": 16320,
@@ -3785,18 +2391,6 @@
               "velocity": 0.42,
               "duration_ms": 510,
               "pan": -0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_8_2",
-              "kind": "accompaniment",
-              "tick": 16320,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.045,
-              "duration_ms": 220,
-              "pan": 0.12,
               "evidence_ids": []
             },
             {
@@ -3815,29 +2409,6 @@
               "responsibility_id": "r2",
               "event_id": "event_2_0",
               "unit_id": "unit_buildNotification"
-            },
-            {
-              "note_id": "pulse_8_8",
-              "kind": "pulse",
-              "tick": 16320,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_8_2",
-              "kind": "accompaniment",
-              "tick": 16320,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.1,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
             },
             {
               "note_id": "chord_8_10_0",
@@ -3917,53 +2488,6 @@
               "unit_id": "unit_buildNotification"
             },
             {
-              "note_id": "pulse_8_12",
-              "kind": "pulse",
-              "tick": 16800,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_8_3",
-              "kind": "accompaniment",
-              "tick": 16800,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.085,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_8_3",
-              "kind": "accompaniment",
-              "tick": 16840,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.19,
-              "duration_ms": 220,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "swing_8_3",
-              "kind": "accompaniment",
-              "tick": 17120,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.06,
-              "duration_ms": 110,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
               "note_id": "bass_9_0",
               "kind": "accompaniment",
               "tick": 17280,
@@ -3973,18 +2497,6 @@
               "velocity": 0.42,
               "duration_ms": 510,
               "pan": -0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_9_0",
-              "kind": "accompaniment",
-              "tick": 17280,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.045,
-              "duration_ms": 220,
-              "pan": 0.12,
               "evidence_ids": []
             },
             {
@@ -4032,29 +2544,6 @@
                 "evidence_2"
               ],
               "tick": 17280
-            },
-            {
-              "note_id": "pulse_9_0",
-              "kind": "pulse",
-              "tick": 17280,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_9_0",
-              "kind": "accompaniment",
-              "tick": 17280,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.1,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
             },
             {
               "note_id": "chord_9_0_1",
@@ -4122,41 +2611,6 @@
               "unit_id": "unit_buildNotification"
             },
             {
-              "note_id": "pulse_9_4",
-              "kind": "pulse",
-              "tick": 17760,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_9_1",
-              "kind": "accompaniment",
-              "tick": 17760,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.085,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_9_1",
-              "kind": "accompaniment",
-              "tick": 17800,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.19,
-              "duration_ms": 220,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
               "note_id": "melody_9_r2_2",
               "kind": "accompaniment",
               "tick": 18080,
@@ -4174,18 +2628,6 @@
               "unit_id": "unit_buildNotification"
             },
             {
-              "note_id": "swing_9_1",
-              "kind": "accompaniment",
-              "tick": 18080,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.06,
-              "duration_ms": 110,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
               "note_id": "bass_9_2",
               "kind": "accompaniment",
               "tick": 18240,
@@ -4195,41 +2637,6 @@
               "velocity": 0.42,
               "duration_ms": 510,
               "pan": -0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_9_2",
-              "kind": "accompaniment",
-              "tick": 18240,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.045,
-              "duration_ms": 220,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "pulse_9_8",
-              "kind": "pulse",
-              "tick": 18240,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_9_2",
-              "kind": "accompaniment",
-              "tick": 18240,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.1,
-              "duration_ms": 140,
-              "pan": 0.12,
               "evidence_ids": []
             },
             {
@@ -4310,53 +2717,6 @@
               "evidence_ids": []
             },
             {
-              "note_id": "pulse_9_12",
-              "kind": "pulse",
-              "tick": 18720,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_9_3",
-              "kind": "accompaniment",
-              "tick": 18720,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.085,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_9_3",
-              "kind": "accompaniment",
-              "tick": 18760,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.19,
-              "duration_ms": 220,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "swing_9_3",
-              "kind": "accompaniment",
-              "tick": 19040,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.06,
-              "duration_ms": 110,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
               "note_id": "bass_10_0",
               "kind": "accompaniment",
               "tick": 19200,
@@ -4366,18 +2726,6 @@
               "velocity": 0.42,
               "duration_ms": 510,
               "pan": -0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_10_0",
-              "kind": "accompaniment",
-              "tick": 19200,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.045,
-              "duration_ms": 220,
-              "pan": 0.12,
               "evidence_ids": []
             },
             {
@@ -4425,29 +2773,6 @@
                 "evidence_2"
               ],
               "tick": 19200
-            },
-            {
-              "note_id": "pulse_10_0",
-              "kind": "pulse",
-              "tick": 19200,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_10_0",
-              "kind": "accompaniment",
-              "tick": 19200,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.1,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
             },
             {
               "note_id": "chord_10_0_1",
@@ -4515,41 +2840,6 @@
               "evidence_ids": []
             },
             {
-              "note_id": "pulse_10_4",
-              "kind": "pulse",
-              "tick": 19680,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_10_1",
-              "kind": "accompaniment",
-              "tick": 19680,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.085,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_10_1",
-              "kind": "accompaniment",
-              "tick": 19720,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.19,
-              "duration_ms": 220,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
               "note_id": "melody_10_r2_2",
               "kind": "accompaniment",
               "tick": 19920,
@@ -4567,18 +2857,6 @@
               "unit_id": "unit_buildNotification"
             },
             {
-              "note_id": "swing_10_1",
-              "kind": "accompaniment",
-              "tick": 20000,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.06,
-              "duration_ms": 110,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
               "note_id": "bass_10_2",
               "kind": "accompaniment",
               "tick": 20160,
@@ -4588,41 +2866,6 @@
               "velocity": 0.42,
               "duration_ms": 510,
               "pan": -0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_10_2",
-              "kind": "accompaniment",
-              "tick": 20160,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.045,
-              "duration_ms": 220,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "pulse_10_8",
-              "kind": "pulse",
-              "tick": 20160,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_10_2",
-              "kind": "accompaniment",
-              "tick": 20160,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.1,
-              "duration_ms": 140,
-              "pan": 0.12,
               "evidence_ids": []
             },
             {
@@ -4703,41 +2946,6 @@
               "evidence_ids": []
             },
             {
-              "note_id": "pulse_10_12",
-              "kind": "pulse",
-              "tick": 20640,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_10_3",
-              "kind": "accompaniment",
-              "tick": 20640,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.085,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_10_3",
-              "kind": "accompaniment",
-              "tick": 20680,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.19,
-              "duration_ms": 220,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
               "note_id": "melody_10_r2_4",
               "kind": "accompaniment",
               "tick": 20800,
@@ -4755,18 +2963,6 @@
               "unit_id": "unit_buildNotification"
             },
             {
-              "note_id": "swing_10_3",
-              "kind": "accompaniment",
-              "tick": 20960,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.06,
-              "duration_ms": 110,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
               "note_id": "bass_11_0",
               "kind": "accompaniment",
               "tick": 21120,
@@ -4776,18 +2972,6 @@
               "velocity": 0.42,
               "duration_ms": 510,
               "pan": -0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_11_0",
-              "kind": "accompaniment",
-              "tick": 21120,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.045,
-              "duration_ms": 220,
-              "pan": 0.12,
               "evidence_ids": []
             },
             {
@@ -4818,29 +3002,6 @@
               "responsibility_id": "r2",
               "event_id": "event_2_0",
               "unit_id": "unit_buildNotification"
-            },
-            {
-              "note_id": "pulse_11_0",
-              "kind": "pulse",
-              "tick": 21120,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_11_0",
-              "kind": "accompaniment",
-              "tick": 21120,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.1,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
             },
             {
               "note_id": "chord_11_0_1",
@@ -4891,41 +3052,6 @@
               "evidence_ids": []
             },
             {
-              "note_id": "pulse_11_4",
-              "kind": "pulse",
-              "tick": 21600,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_11_1",
-              "kind": "accompaniment",
-              "tick": 21600,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.085,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_11_1",
-              "kind": "accompaniment",
-              "tick": 21640,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.19,
-              "duration_ms": 220,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
               "note_id": "melody_11_r2_1",
               "kind": "accompaniment",
               "tick": 21760,
@@ -4943,18 +3069,6 @@
               "unit_id": "unit_buildNotification"
             },
             {
-              "note_id": "swing_11_1",
-              "kind": "accompaniment",
-              "tick": 21920,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.06,
-              "duration_ms": 110,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
               "note_id": "bass_11_2",
               "kind": "accompaniment",
               "tick": 22080,
@@ -4964,18 +3078,6 @@
               "velocity": 0.42,
               "duration_ms": 510,
               "pan": -0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_11_2",
-              "kind": "accompaniment",
-              "tick": 22080,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.045,
-              "duration_ms": 220,
-              "pan": 0.12,
               "evidence_ids": []
             },
             {
@@ -4994,29 +3096,6 @@
               "responsibility_id": "r2",
               "event_id": "event_2_2",
               "unit_id": "unit_buildNotification"
-            },
-            {
-              "note_id": "pulse_11_8",
-              "kind": "pulse",
-              "tick": 22080,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_11_2",
-              "kind": "accompaniment",
-              "tick": 22080,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.1,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
             },
             {
               "note_id": "chord_11_10_0",
@@ -5077,61 +3156,14 @@
               "duration_ms": 510,
               "pan": -0.12,
               "evidence_ids": []
-            },
-            {
-              "note_id": "pulse_11_12",
-              "kind": "pulse",
-              "tick": 22560,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_11_3",
-              "kind": "accompaniment",
-              "tick": 22560,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.085,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_11_3",
-              "kind": "accompaniment",
-              "tick": 22600,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.19,
-              "duration_ms": 220,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "swing_11_3",
-              "kind": "accompaniment",
-              "tick": 22880,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.06,
-              "duration_ms": 110,
-              "pan": 0.12,
-              "evidence_ids": []
             }
           ]
         },
         "repo": {
           "scene_id": "scene_1",
-          "grammar_version": "groove-arrangement-v4",
-          "kit_id": "midnight-jazz-v3",
-          "kit_hash": "c37c7270ae395961af061d5f314215a253b0c0decc678f82afe91d531e4add8f",
+          "grammar_version": "groove-chamber-v5",
+          "kit_id": "midnight-jazz-v4",
+          "kit_hash": "a302b56825512936a014a556a88819affd50de65c9d68ff3acb544702dc919f7",
           "bpm": 96,
           "beats_per_bar": 4,
           "steps_per_bar": 16,
@@ -5172,18 +3204,6 @@
               "velocity": 0.42,
               "duration_ms": 510,
               "pan": -0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_0_0",
-              "kind": "accompaniment",
-              "tick": 0,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.045,
-              "duration_ms": 220,
-              "pan": 0.12,
               "evidence_ids": []
             },
             {
@@ -5231,29 +3251,6 @@
                 "evidence_2"
               ],
               "tick": 0
-            },
-            {
-              "note_id": "pulse_0_0",
-              "kind": "pulse",
-              "tick": 0,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_0_0",
-              "kind": "accompaniment",
-              "tick": 0,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.1,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
             },
             {
               "note_id": "chord_0_0_1",
@@ -5321,41 +3318,6 @@
               "evidence_ids": []
             },
             {
-              "note_id": "pulse_0_4",
-              "kind": "pulse",
-              "tick": 480,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_0_1",
-              "kind": "accompaniment",
-              "tick": 480,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.085,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_0_1",
-              "kind": "accompaniment",
-              "tick": 520,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.19,
-              "duration_ms": 220,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
               "note_id": "melody_0_r2_2",
               "kind": "accompaniment",
               "tick": 720,
@@ -5373,18 +3335,6 @@
               "unit_id": "unit_buildNotification"
             },
             {
-              "note_id": "swing_0_1",
-              "kind": "accompaniment",
-              "tick": 800,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.06,
-              "duration_ms": 110,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
               "note_id": "bass_0_2",
               "kind": "accompaniment",
               "tick": 960,
@@ -5394,18 +3344,6 @@
               "velocity": 0.42,
               "duration_ms": 510,
               "pan": -0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_0_2",
-              "kind": "accompaniment",
-              "tick": 960,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.045,
-              "duration_ms": 220,
-              "pan": 0.12,
               "evidence_ids": []
             },
             {
@@ -5424,29 +3362,6 @@
               "responsibility_id": "r2",
               "event_id": "event_2_0",
               "unit_id": "unit_buildNotification"
-            },
-            {
-              "note_id": "pulse_0_8",
-              "kind": "pulse",
-              "tick": 960,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_0_2",
-              "kind": "accompaniment",
-              "tick": 960,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.1,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
             },
             {
               "note_id": "chord_0_10_0",
@@ -5526,53 +3441,6 @@
               "unit_id": "unit_buildNotification"
             },
             {
-              "note_id": "pulse_0_12",
-              "kind": "pulse",
-              "tick": 1440,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_0_3",
-              "kind": "accompaniment",
-              "tick": 1440,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.085,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_0_3",
-              "kind": "accompaniment",
-              "tick": 1480,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.19,
-              "duration_ms": 220,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "swing_0_3",
-              "kind": "accompaniment",
-              "tick": 1760,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.06,
-              "duration_ms": 110,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
               "note_id": "bass_1_0",
               "kind": "accompaniment",
               "tick": 1920,
@@ -5582,18 +3450,6 @@
               "velocity": 0.42,
               "duration_ms": 510,
               "pan": -0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_1_0",
-              "kind": "accompaniment",
-              "tick": 1920,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.045,
-              "duration_ms": 220,
-              "pan": 0.12,
               "evidence_ids": []
             },
             {
@@ -5641,29 +3497,6 @@
                 "evidence_2"
               ],
               "tick": 1920
-            },
-            {
-              "note_id": "pulse_1_0",
-              "kind": "pulse",
-              "tick": 1920,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_1_0",
-              "kind": "accompaniment",
-              "tick": 1920,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.1,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
             },
             {
               "note_id": "chord_1_0_1",
@@ -5731,41 +3564,6 @@
               "unit_id": "unit_buildNotification"
             },
             {
-              "note_id": "pulse_1_4",
-              "kind": "pulse",
-              "tick": 2400,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_1_1",
-              "kind": "accompaniment",
-              "tick": 2400,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.085,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_1_1",
-              "kind": "accompaniment",
-              "tick": 2440,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.19,
-              "duration_ms": 220,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
               "note_id": "melody_1_r2_2",
               "kind": "accompaniment",
               "tick": 2720,
@@ -5783,18 +3581,6 @@
               "unit_id": "unit_buildNotification"
             },
             {
-              "note_id": "swing_1_1",
-              "kind": "accompaniment",
-              "tick": 2720,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.06,
-              "duration_ms": 110,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
               "note_id": "bass_1_2",
               "kind": "accompaniment",
               "tick": 2880,
@@ -5804,41 +3590,6 @@
               "velocity": 0.42,
               "duration_ms": 510,
               "pan": -0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_1_2",
-              "kind": "accompaniment",
-              "tick": 2880,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.045,
-              "duration_ms": 220,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "pulse_1_8",
-              "kind": "pulse",
-              "tick": 2880,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_1_2",
-              "kind": "accompaniment",
-              "tick": 2880,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.1,
-              "duration_ms": 140,
-              "pan": 0.12,
               "evidence_ids": []
             },
             {
@@ -5919,53 +3670,6 @@
               "evidence_ids": []
             },
             {
-              "note_id": "pulse_1_12",
-              "kind": "pulse",
-              "tick": 3360,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_1_3",
-              "kind": "accompaniment",
-              "tick": 3360,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.085,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_1_3",
-              "kind": "accompaniment",
-              "tick": 3400,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.19,
-              "duration_ms": 220,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "swing_1_3",
-              "kind": "accompaniment",
-              "tick": 3680,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.06,
-              "duration_ms": 110,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
               "note_id": "bass_2_0",
               "kind": "accompaniment",
               "tick": 3840,
@@ -5975,18 +3679,6 @@
               "velocity": 0.42,
               "duration_ms": 510,
               "pan": -0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_2_0",
-              "kind": "accompaniment",
-              "tick": 3840,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.045,
-              "duration_ms": 220,
-              "pan": 0.12,
               "evidence_ids": []
             },
             {
@@ -6034,29 +3726,6 @@
                 "evidence_2"
               ],
               "tick": 3840
-            },
-            {
-              "note_id": "pulse_2_0",
-              "kind": "pulse",
-              "tick": 3840,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_2_0",
-              "kind": "accompaniment",
-              "tick": 3840,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.1,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
             },
             {
               "note_id": "chord_2_0_1",
@@ -6124,41 +3793,6 @@
               "evidence_ids": []
             },
             {
-              "note_id": "pulse_2_4",
-              "kind": "pulse",
-              "tick": 4320,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_2_1",
-              "kind": "accompaniment",
-              "tick": 4320,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.085,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_2_1",
-              "kind": "accompaniment",
-              "tick": 4360,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.19,
-              "duration_ms": 220,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
               "note_id": "melody_2_r2_2",
               "kind": "accompaniment",
               "tick": 4560,
@@ -6176,18 +3810,6 @@
               "unit_id": "unit_buildNotification"
             },
             {
-              "note_id": "swing_2_1",
-              "kind": "accompaniment",
-              "tick": 4640,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.06,
-              "duration_ms": 110,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
               "note_id": "bass_2_2",
               "kind": "accompaniment",
               "tick": 4800,
@@ -6197,41 +3819,6 @@
               "velocity": 0.42,
               "duration_ms": 510,
               "pan": -0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_2_2",
-              "kind": "accompaniment",
-              "tick": 4800,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.045,
-              "duration_ms": 220,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "pulse_2_8",
-              "kind": "pulse",
-              "tick": 4800,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_2_2",
-              "kind": "accompaniment",
-              "tick": 4800,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.1,
-              "duration_ms": 140,
-              "pan": 0.12,
               "evidence_ids": []
             },
             {
@@ -6312,41 +3899,6 @@
               "evidence_ids": []
             },
             {
-              "note_id": "pulse_2_12",
-              "kind": "pulse",
-              "tick": 5280,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_2_3",
-              "kind": "accompaniment",
-              "tick": 5280,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.085,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_2_3",
-              "kind": "accompaniment",
-              "tick": 5320,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.19,
-              "duration_ms": 220,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
               "note_id": "melody_2_r2_4",
               "kind": "accompaniment",
               "tick": 5440,
@@ -6364,18 +3916,6 @@
               "unit_id": "unit_buildNotification"
             },
             {
-              "note_id": "swing_2_3",
-              "kind": "accompaniment",
-              "tick": 5600,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.06,
-              "duration_ms": 110,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
               "note_id": "bass_3_0",
               "kind": "accompaniment",
               "tick": 5760,
@@ -6385,18 +3925,6 @@
               "velocity": 0.42,
               "duration_ms": 510,
               "pan": -0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_3_0",
-              "kind": "accompaniment",
-              "tick": 5760,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.045,
-              "duration_ms": 220,
-              "pan": 0.12,
               "evidence_ids": []
             },
             {
@@ -6427,29 +3955,6 @@
               "responsibility_id": "r2",
               "event_id": "event_2_0",
               "unit_id": "unit_buildNotification"
-            },
-            {
-              "note_id": "pulse_3_0",
-              "kind": "pulse",
-              "tick": 5760,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_3_0",
-              "kind": "accompaniment",
-              "tick": 5760,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.1,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
             },
             {
               "note_id": "chord_3_0_1",
@@ -6500,41 +4005,6 @@
               "evidence_ids": []
             },
             {
-              "note_id": "pulse_3_4",
-              "kind": "pulse",
-              "tick": 6240,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_3_1",
-              "kind": "accompaniment",
-              "tick": 6240,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.085,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_3_1",
-              "kind": "accompaniment",
-              "tick": 6280,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.19,
-              "duration_ms": 220,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
               "note_id": "melody_3_r2_1",
               "kind": "accompaniment",
               "tick": 6400,
@@ -6552,18 +4022,6 @@
               "unit_id": "unit_buildNotification"
             },
             {
-              "note_id": "swing_3_1",
-              "kind": "accompaniment",
-              "tick": 6560,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.06,
-              "duration_ms": 110,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
               "note_id": "bass_3_2",
               "kind": "accompaniment",
               "tick": 6720,
@@ -6573,18 +4031,6 @@
               "velocity": 0.42,
               "duration_ms": 510,
               "pan": -0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_3_2",
-              "kind": "accompaniment",
-              "tick": 6720,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.045,
-              "duration_ms": 220,
-              "pan": 0.12,
               "evidence_ids": []
             },
             {
@@ -6603,29 +4049,6 @@
               "responsibility_id": "r2",
               "event_id": "event_2_2",
               "unit_id": "unit_buildNotification"
-            },
-            {
-              "note_id": "pulse_3_8",
-              "kind": "pulse",
-              "tick": 6720,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_3_2",
-              "kind": "accompaniment",
-              "tick": 6720,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.1,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
             },
             {
               "note_id": "chord_3_10_0",
@@ -6688,53 +4111,6 @@
               "evidence_ids": []
             },
             {
-              "note_id": "pulse_3_12",
-              "kind": "pulse",
-              "tick": 7200,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_3_3",
-              "kind": "accompaniment",
-              "tick": 7200,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.085,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_3_3",
-              "kind": "accompaniment",
-              "tick": 7240,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.19,
-              "duration_ms": 220,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "swing_3_3",
-              "kind": "accompaniment",
-              "tick": 7520,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.06,
-              "duration_ms": 110,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
               "note_id": "bass_4_0",
               "kind": "accompaniment",
               "tick": 7680,
@@ -6744,18 +4120,6 @@
               "velocity": 0.42,
               "duration_ms": 510,
               "pan": -0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_4_0",
-              "kind": "accompaniment",
-              "tick": 7680,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.045,
-              "duration_ms": 220,
-              "pan": 0.12,
               "evidence_ids": []
             },
             {
@@ -6803,29 +4167,6 @@
                 "evidence_1"
               ],
               "tick": 7680
-            },
-            {
-              "note_id": "pulse_4_0",
-              "kind": "pulse",
-              "tick": 7680,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_4_0",
-              "kind": "accompaniment",
-              "tick": 7680,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.1,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
             },
             {
               "note_id": "chord_4_0_1",
@@ -6893,41 +4234,6 @@
               "evidence_ids": []
             },
             {
-              "note_id": "pulse_4_4",
-              "kind": "pulse",
-              "tick": 8160,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_4_1",
-              "kind": "accompaniment",
-              "tick": 8160,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.085,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_4_1",
-              "kind": "accompaniment",
-              "tick": 8200,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.19,
-              "duration_ms": 220,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
               "note_id": "melody_4_r1_2",
               "kind": "accompaniment",
               "tick": 8400,
@@ -6945,18 +4251,6 @@
               "unit_id": "unit_calculateRefund"
             },
             {
-              "note_id": "swing_4_1",
-              "kind": "accompaniment",
-              "tick": 8480,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.06,
-              "duration_ms": 110,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
               "note_id": "bass_4_2",
               "kind": "accompaniment",
               "tick": 8640,
@@ -6966,18 +4260,6 @@
               "velocity": 0.42,
               "duration_ms": 510,
               "pan": -0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_4_2",
-              "kind": "accompaniment",
-              "tick": 8640,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.045,
-              "duration_ms": 220,
-              "pan": 0.12,
               "evidence_ids": []
             },
             {
@@ -6996,29 +4278,6 @@
               "responsibility_id": "r1",
               "event_id": "event_1_0",
               "unit_id": "unit_calculateRefund"
-            },
-            {
-              "note_id": "pulse_4_8",
-              "kind": "pulse",
-              "tick": 8640,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_4_2",
-              "kind": "accompaniment",
-              "tick": 8640,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.1,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
             },
             {
               "note_id": "chord_4_10_0",
@@ -7098,53 +4357,6 @@
               "unit_id": "unit_calculateRefund"
             },
             {
-              "note_id": "pulse_4_12",
-              "kind": "pulse",
-              "tick": 9120,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_4_3",
-              "kind": "accompaniment",
-              "tick": 9120,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.085,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_4_3",
-              "kind": "accompaniment",
-              "tick": 9160,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.19,
-              "duration_ms": 220,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "swing_4_3",
-              "kind": "accompaniment",
-              "tick": 9440,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.06,
-              "duration_ms": 110,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
               "note_id": "bass_5_0",
               "kind": "accompaniment",
               "tick": 9600,
@@ -7154,18 +4366,6 @@
               "velocity": 0.42,
               "duration_ms": 510,
               "pan": -0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_5_0",
-              "kind": "accompaniment",
-              "tick": 9600,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.045,
-              "duration_ms": 220,
-              "pan": 0.12,
               "evidence_ids": []
             },
             {
@@ -7196,29 +4396,6 @@
               "responsibility_id": "r1",
               "event_id": "event_1_1",
               "unit_id": "unit_calculateRefund"
-            },
-            {
-              "note_id": "pulse_5_0",
-              "kind": "pulse",
-              "tick": 9600,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_5_0",
-              "kind": "accompaniment",
-              "tick": 9600,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.1,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
             },
             {
               "note_id": "chord_5_0_1",
@@ -7286,41 +4463,6 @@
               "unit_id": "unit_calculateRefund"
             },
             {
-              "note_id": "pulse_5_4",
-              "kind": "pulse",
-              "tick": 10080,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_5_1",
-              "kind": "accompaniment",
-              "tick": 10080,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.085,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_5_1",
-              "kind": "accompaniment",
-              "tick": 10120,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.19,
-              "duration_ms": 220,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
               "note_id": "melody_5_r1_2",
               "kind": "accompaniment",
               "tick": 10400,
@@ -7338,18 +4480,6 @@
               "unit_id": "unit_calculateRefund"
             },
             {
-              "note_id": "swing_5_1",
-              "kind": "accompaniment",
-              "tick": 10400,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.06,
-              "duration_ms": 110,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
               "note_id": "bass_5_2",
               "kind": "accompaniment",
               "tick": 10560,
@@ -7359,41 +4489,6 @@
               "velocity": 0.42,
               "duration_ms": 510,
               "pan": -0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_5_2",
-              "kind": "accompaniment",
-              "tick": 10560,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.045,
-              "duration_ms": 220,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "pulse_5_8",
-              "kind": "pulse",
-              "tick": 10560,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_5_2",
-              "kind": "accompaniment",
-              "tick": 10560,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.1,
-              "duration_ms": 140,
-              "pan": 0.12,
               "evidence_ids": []
             },
             {
@@ -7491,53 +4586,6 @@
               "tick": 11040
             },
             {
-              "note_id": "pulse_5_12",
-              "kind": "pulse",
-              "tick": 11040,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_5_3",
-              "kind": "accompaniment",
-              "tick": 11040,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.085,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_5_3",
-              "kind": "accompaniment",
-              "tick": 11080,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.19,
-              "duration_ms": 220,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "swing_5_3",
-              "kind": "accompaniment",
-              "tick": 11360,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.06,
-              "duration_ms": 110,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
               "note_id": "bass_6_0",
               "kind": "accompaniment",
               "tick": 11520,
@@ -7547,18 +4595,6 @@
               "velocity": 0.42,
               "duration_ms": 510,
               "pan": -0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_6_0",
-              "kind": "accompaniment",
-              "tick": 11520,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.045,
-              "duration_ms": 220,
-              "pan": 0.12,
               "evidence_ids": []
             },
             {
@@ -7606,29 +4642,6 @@
                 "evidence_1"
               ],
               "tick": 11520
-            },
-            {
-              "note_id": "pulse_6_0",
-              "kind": "pulse",
-              "tick": 11520,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_6_0",
-              "kind": "accompaniment",
-              "tick": 11520,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.1,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
             },
             {
               "note_id": "chord_6_0_1",
@@ -7696,41 +4709,6 @@
               "evidence_ids": []
             },
             {
-              "note_id": "pulse_6_4",
-              "kind": "pulse",
-              "tick": 12000,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_6_1",
-              "kind": "accompaniment",
-              "tick": 12000,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.085,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_6_1",
-              "kind": "accompaniment",
-              "tick": 12040,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.19,
-              "duration_ms": 220,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
               "note_id": "melody_6_r1_2",
               "kind": "accompaniment",
               "tick": 12240,
@@ -7748,18 +4726,6 @@
               "unit_id": "unit_calculateRefund"
             },
             {
-              "note_id": "swing_6_1",
-              "kind": "accompaniment",
-              "tick": 12320,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.06,
-              "duration_ms": 110,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
               "note_id": "bass_6_2",
               "kind": "accompaniment",
               "tick": 12480,
@@ -7769,41 +4735,6 @@
               "velocity": 0.42,
               "duration_ms": 510,
               "pan": -0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_6_2",
-              "kind": "accompaniment",
-              "tick": 12480,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.045,
-              "duration_ms": 220,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "pulse_6_8",
-              "kind": "pulse",
-              "tick": 12480,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_6_2",
-              "kind": "accompaniment",
-              "tick": 12480,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.1,
-              "duration_ms": 140,
-              "pan": 0.12,
               "evidence_ids": []
             },
             {
@@ -7884,41 +4815,6 @@
               "evidence_ids": []
             },
             {
-              "note_id": "pulse_6_12",
-              "kind": "pulse",
-              "tick": 12960,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_6_3",
-              "kind": "accompaniment",
-              "tick": 12960,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.085,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_6_3",
-              "kind": "accompaniment",
-              "tick": 13000,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.19,
-              "duration_ms": 220,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
               "note_id": "melody_6_r1_4",
               "kind": "accompaniment",
               "tick": 13120,
@@ -7936,18 +4832,6 @@
               "unit_id": "unit_calculateRefund"
             },
             {
-              "note_id": "swing_6_3",
-              "kind": "accompaniment",
-              "tick": 13280,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.06,
-              "duration_ms": 110,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
               "note_id": "bass_7_0",
               "kind": "accompaniment",
               "tick": 13440,
@@ -7957,18 +4841,6 @@
               "velocity": 0.42,
               "duration_ms": 510,
               "pan": -0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_7_0",
-              "kind": "accompaniment",
-              "tick": 13440,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.045,
-              "duration_ms": 220,
-              "pan": 0.12,
               "evidence_ids": []
             },
             {
@@ -7999,29 +4871,6 @@
               "responsibility_id": "r1",
               "event_id": "event_1_0",
               "unit_id": "unit_calculateRefund"
-            },
-            {
-              "note_id": "pulse_7_0",
-              "kind": "pulse",
-              "tick": 13440,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_7_0",
-              "kind": "accompaniment",
-              "tick": 13440,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.1,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
             },
             {
               "note_id": "chord_7_0_1",
@@ -8072,41 +4921,6 @@
               "evidence_ids": []
             },
             {
-              "note_id": "pulse_7_4",
-              "kind": "pulse",
-              "tick": 13920,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_7_1",
-              "kind": "accompaniment",
-              "tick": 13920,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.085,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_7_1",
-              "kind": "accompaniment",
-              "tick": 13960,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.19,
-              "duration_ms": 220,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
               "note_id": "melody_7_r1_1",
               "kind": "accompaniment",
               "tick": 14080,
@@ -8124,18 +4938,6 @@
               "unit_id": "unit_calculateRefund"
             },
             {
-              "note_id": "swing_7_1",
-              "kind": "accompaniment",
-              "tick": 14240,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.06,
-              "duration_ms": 110,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
               "note_id": "bass_7_2",
               "kind": "accompaniment",
               "tick": 14400,
@@ -8145,18 +4947,6 @@
               "velocity": 0.42,
               "duration_ms": 510,
               "pan": -0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_7_2",
-              "kind": "accompaniment",
-              "tick": 14400,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.045,
-              "duration_ms": 220,
-              "pan": 0.12,
               "evidence_ids": []
             },
             {
@@ -8175,29 +4965,6 @@
               "responsibility_id": "r1",
               "event_id": "event_1_2",
               "unit_id": "unit_calculateRefund"
-            },
-            {
-              "note_id": "pulse_7_8",
-              "kind": "pulse",
-              "tick": 14400,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_7_2",
-              "kind": "accompaniment",
-              "tick": 14400,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.1,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
             },
             {
               "note_id": "chord_7_10_0",
@@ -8260,53 +5027,6 @@
               "evidence_ids": []
             },
             {
-              "note_id": "pulse_7_12",
-              "kind": "pulse",
-              "tick": 14880,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_7_3",
-              "kind": "accompaniment",
-              "tick": 14880,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.085,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_7_3",
-              "kind": "accompaniment",
-              "tick": 14920,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.19,
-              "duration_ms": 220,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "swing_7_3",
-              "kind": "accompaniment",
-              "tick": 15200,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.06,
-              "duration_ms": 110,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
               "note_id": "bass_8_0",
               "kind": "accompaniment",
               "tick": 15360,
@@ -8316,18 +5036,6 @@
               "velocity": 0.42,
               "duration_ms": 510,
               "pan": -0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_8_0",
-              "kind": "accompaniment",
-              "tick": 15360,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.045,
-              "duration_ms": 220,
-              "pan": 0.12,
               "evidence_ids": []
             },
             {
@@ -8375,29 +5083,6 @@
                 "evidence_0"
               ],
               "tick": 15360
-            },
-            {
-              "note_id": "pulse_8_0",
-              "kind": "pulse",
-              "tick": 15360,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_8_0",
-              "kind": "accompaniment",
-              "tick": 15360,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.1,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
             },
             {
               "note_id": "chord_8_0_1",
@@ -8465,41 +5150,6 @@
               "evidence_ids": []
             },
             {
-              "note_id": "pulse_8_4",
-              "kind": "pulse",
-              "tick": 15840,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_8_1",
-              "kind": "accompaniment",
-              "tick": 15840,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.085,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_8_1",
-              "kind": "accompaniment",
-              "tick": 15880,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.19,
-              "duration_ms": 220,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
               "note_id": "melody_8_r0_2",
               "kind": "accompaniment",
               "tick": 16080,
@@ -8517,18 +5167,6 @@
               "unit_id": "unit_isRefundEligible"
             },
             {
-              "note_id": "swing_8_1",
-              "kind": "accompaniment",
-              "tick": 16160,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.06,
-              "duration_ms": 110,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
               "note_id": "bass_8_2",
               "kind": "accompaniment",
               "tick": 16320,
@@ -8538,18 +5176,6 @@
               "velocity": 0.42,
               "duration_ms": 510,
               "pan": -0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_8_2",
-              "kind": "accompaniment",
-              "tick": 16320,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.045,
-              "duration_ms": 220,
-              "pan": 0.12,
               "evidence_ids": []
             },
             {
@@ -8568,29 +5194,6 @@
               "responsibility_id": "r0",
               "event_id": "event_0_0",
               "unit_id": "unit_isRefundEligible"
-            },
-            {
-              "note_id": "pulse_8_8",
-              "kind": "pulse",
-              "tick": 16320,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_8_2",
-              "kind": "accompaniment",
-              "tick": 16320,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.1,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
             },
             {
               "note_id": "chord_8_10_0",
@@ -8670,53 +5273,6 @@
               "unit_id": "unit_isRefundEligible"
             },
             {
-              "note_id": "pulse_8_12",
-              "kind": "pulse",
-              "tick": 16800,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_8_3",
-              "kind": "accompaniment",
-              "tick": 16800,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.085,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_8_3",
-              "kind": "accompaniment",
-              "tick": 16840,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.19,
-              "duration_ms": 220,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "swing_8_3",
-              "kind": "accompaniment",
-              "tick": 17120,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.06,
-              "duration_ms": 110,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
               "note_id": "bass_9_0",
               "kind": "accompaniment",
               "tick": 17280,
@@ -8726,18 +5282,6 @@
               "velocity": 0.42,
               "duration_ms": 510,
               "pan": -0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_9_0",
-              "kind": "accompaniment",
-              "tick": 17280,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.045,
-              "duration_ms": 220,
-              "pan": 0.12,
               "evidence_ids": []
             },
             {
@@ -8785,29 +5329,6 @@
                 "evidence_0"
               ],
               "tick": 17280
-            },
-            {
-              "note_id": "pulse_9_0",
-              "kind": "pulse",
-              "tick": 17280,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_9_0",
-              "kind": "accompaniment",
-              "tick": 17280,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.1,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
             },
             {
               "note_id": "chord_9_0_1",
@@ -8875,41 +5396,6 @@
               "unit_id": "unit_isRefundEligible"
             },
             {
-              "note_id": "pulse_9_4",
-              "kind": "pulse",
-              "tick": 17760,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_9_1",
-              "kind": "accompaniment",
-              "tick": 17760,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.085,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_9_1",
-              "kind": "accompaniment",
-              "tick": 17800,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.19,
-              "duration_ms": 220,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
               "note_id": "melody_9_r0_2",
               "kind": "accompaniment",
               "tick": 18080,
@@ -8927,18 +5413,6 @@
               "unit_id": "unit_isRefundEligible"
             },
             {
-              "note_id": "swing_9_1",
-              "kind": "accompaniment",
-              "tick": 18080,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.06,
-              "duration_ms": 110,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
               "note_id": "bass_9_2",
               "kind": "accompaniment",
               "tick": 18240,
@@ -8948,41 +5422,6 @@
               "velocity": 0.42,
               "duration_ms": 510,
               "pan": -0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_9_2",
-              "kind": "accompaniment",
-              "tick": 18240,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.045,
-              "duration_ms": 220,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "pulse_9_8",
-              "kind": "pulse",
-              "tick": 18240,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_9_2",
-              "kind": "accompaniment",
-              "tick": 18240,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.1,
-              "duration_ms": 140,
-              "pan": 0.12,
               "evidence_ids": []
             },
             {
@@ -9063,53 +5502,6 @@
               "evidence_ids": []
             },
             {
-              "note_id": "pulse_9_12",
-              "kind": "pulse",
-              "tick": 18720,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_9_3",
-              "kind": "accompaniment",
-              "tick": 18720,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.085,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_9_3",
-              "kind": "accompaniment",
-              "tick": 18760,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.19,
-              "duration_ms": 220,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "swing_9_3",
-              "kind": "accompaniment",
-              "tick": 19040,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.06,
-              "duration_ms": 110,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
               "note_id": "bass_10_0",
               "kind": "accompaniment",
               "tick": 19200,
@@ -9119,18 +5511,6 @@
               "velocity": 0.42,
               "duration_ms": 510,
               "pan": -0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_10_0",
-              "kind": "accompaniment",
-              "tick": 19200,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.045,
-              "duration_ms": 220,
-              "pan": 0.12,
               "evidence_ids": []
             },
             {
@@ -9178,29 +5558,6 @@
                 "evidence_0"
               ],
               "tick": 19200
-            },
-            {
-              "note_id": "pulse_10_0",
-              "kind": "pulse",
-              "tick": 19200,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_10_0",
-              "kind": "accompaniment",
-              "tick": 19200,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.1,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
             },
             {
               "note_id": "chord_10_0_1",
@@ -9268,41 +5625,6 @@
               "evidence_ids": []
             },
             {
-              "note_id": "pulse_10_4",
-              "kind": "pulse",
-              "tick": 19680,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_10_1",
-              "kind": "accompaniment",
-              "tick": 19680,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.085,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_10_1",
-              "kind": "accompaniment",
-              "tick": 19720,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.19,
-              "duration_ms": 220,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
               "note_id": "melody_10_r0_2",
               "kind": "accompaniment",
               "tick": 19920,
@@ -9320,18 +5642,6 @@
               "unit_id": "unit_isRefundEligible"
             },
             {
-              "note_id": "swing_10_1",
-              "kind": "accompaniment",
-              "tick": 20000,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.06,
-              "duration_ms": 110,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
               "note_id": "bass_10_2",
               "kind": "accompaniment",
               "tick": 20160,
@@ -9341,41 +5651,6 @@
               "velocity": 0.42,
               "duration_ms": 510,
               "pan": -0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_10_2",
-              "kind": "accompaniment",
-              "tick": 20160,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.045,
-              "duration_ms": 220,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "pulse_10_8",
-              "kind": "pulse",
-              "tick": 20160,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_10_2",
-              "kind": "accompaniment",
-              "tick": 20160,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.1,
-              "duration_ms": 140,
-              "pan": 0.12,
               "evidence_ids": []
             },
             {
@@ -9456,41 +5731,6 @@
               "evidence_ids": []
             },
             {
-              "note_id": "pulse_10_12",
-              "kind": "pulse",
-              "tick": 20640,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_10_3",
-              "kind": "accompaniment",
-              "tick": 20640,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.085,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_10_3",
-              "kind": "accompaniment",
-              "tick": 20680,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.19,
-              "duration_ms": 220,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
               "note_id": "melody_10_r0_4",
               "kind": "accompaniment",
               "tick": 20800,
@@ -9508,18 +5748,6 @@
               "unit_id": "unit_isRefundEligible"
             },
             {
-              "note_id": "swing_10_3",
-              "kind": "accompaniment",
-              "tick": 20960,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.06,
-              "duration_ms": 110,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
               "note_id": "bass_11_0",
               "kind": "accompaniment",
               "tick": 21120,
@@ -9529,18 +5757,6 @@
               "velocity": 0.42,
               "duration_ms": 510,
               "pan": -0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_11_0",
-              "kind": "accompaniment",
-              "tick": 21120,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.045,
-              "duration_ms": 220,
-              "pan": 0.12,
               "evidence_ids": []
             },
             {
@@ -9571,29 +5787,6 @@
               "responsibility_id": "r0",
               "event_id": "event_0_0",
               "unit_id": "unit_isRefundEligible"
-            },
-            {
-              "note_id": "pulse_11_0",
-              "kind": "pulse",
-              "tick": 21120,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_11_0",
-              "kind": "accompaniment",
-              "tick": 21120,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.1,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
             },
             {
               "note_id": "chord_11_0_1",
@@ -9644,41 +5837,6 @@
               "evidence_ids": []
             },
             {
-              "note_id": "pulse_11_4",
-              "kind": "pulse",
-              "tick": 21600,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_11_1",
-              "kind": "accompaniment",
-              "tick": 21600,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.085,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_11_1",
-              "kind": "accompaniment",
-              "tick": 21640,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.19,
-              "duration_ms": 220,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
               "note_id": "melody_11_r0_1",
               "kind": "accompaniment",
               "tick": 21760,
@@ -9696,18 +5854,6 @@
               "unit_id": "unit_isRefundEligible"
             },
             {
-              "note_id": "swing_11_1",
-              "kind": "accompaniment",
-              "tick": 21920,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.06,
-              "duration_ms": 110,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
               "note_id": "bass_11_2",
               "kind": "accompaniment",
               "tick": 22080,
@@ -9717,18 +5863,6 @@
               "velocity": 0.42,
               "duration_ms": 510,
               "pan": -0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_11_2",
-              "kind": "accompaniment",
-              "tick": 22080,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.045,
-              "duration_ms": 220,
-              "pan": 0.12,
               "evidence_ids": []
             },
             {
@@ -9747,29 +5881,6 @@
               "responsibility_id": "r0",
               "event_id": "event_0_2",
               "unit_id": "unit_isRefundEligible"
-            },
-            {
-              "note_id": "pulse_11_8",
-              "kind": "pulse",
-              "tick": 22080,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_11_2",
-              "kind": "accompaniment",
-              "tick": 22080,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.1,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
             },
             {
               "note_id": "chord_11_10_0",
@@ -9829,53 +5940,6 @@
               "velocity": 0.42,
               "duration_ms": 510,
               "pan": -0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "pulse_11_12",
-              "kind": "pulse",
-              "tick": 22560,
-              "duration_ms": 35,
-              "voice": "wood",
-              "variant": 0,
-              "velocity": 0.08,
-              "pan": 0,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "ride_11_3",
-              "kind": "accompaniment",
-              "tick": 22560,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.085,
-              "duration_ms": 140,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "brush_11_3",
-              "kind": "accompaniment",
-              "tick": 22600,
-              "voice": "snare",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.19,
-              "duration_ms": 220,
-              "pan": 0.12,
-              "evidence_ids": []
-            },
-            {
-              "note_id": "swing_11_3",
-              "kind": "accompaniment",
-              "tick": 22880,
-              "voice": "hat",
-              "midi": null,
-              "variant": 0,
-              "velocity": 0.06,
-              "duration_ms": 110,
-              "pan": 0.12,
               "evidence_ids": []
             }
           ]

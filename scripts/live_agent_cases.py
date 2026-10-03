@@ -17,7 +17,7 @@ from code_groove.source import build_index, run_node, sample_snapshot  # noqa: E
 
 async def main():
     reports = []
-    kit = json.loads((ROOT / "apps/web/public/audio/midnight-jazz-v3/manifest.json").read_text())
+    kit = json.loads((ROOT / "apps/web/public/audio/midnight-jazz-v4/manifest.json").read_text())
     for sample_id in sys.argv[1:] or ["scattered", "justified"]:
         started = time.monotonic()
         sha, sources = sample_snapshot(sample_id)

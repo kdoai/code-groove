@@ -158,6 +158,7 @@ export function ReviewWorkspace({
             bundle.score.scenes.findIndex((s) => s.unit_ids.includes(target.unit_id)),
           )
         : ws.scene,
+      playbackFile: ws.playbackFile ? path : '',
     });
   }
   return (
@@ -534,58 +535,60 @@ function Arrangement({
           );
         })}
       </div>
-      <div className="arrangement-backing">
-        <div className="backing-heading">
-          共通伴奏 <span>楽曲の土台 · コードの判断を表す音ではありません</span>
+      {ws.showBacking && (
+        <div className="arrangement-backing">
+          <div className="backing-heading">
+            共通伴奏 <span>楽曲の土台 · コードの判断を表す音ではありません</span>
+          </div>
+          {supports.map((part) => {
+            const notes = musical.filter((n) => !n.event_id && part.voices.includes(n.voice));
+            return (
+              <div
+                className={`backing-track ${ws.focusEvidence || part.voices.every((v) => ws.instrumentMutes.includes(v)) ? 'muted-track' : ''}`}
+                key={part.name}
+              >
+                <div className="composer-track-label">
+                  <span>
+                    <strong>{part.name}</strong>
+                    <small>{part.detail}</small>
+                  </span>
+                  <button
+                    className="track-mute"
+                    aria-label={`${part.name}をミュート`}
+                    aria-pressed={part.voices.every((v) => ws.instrumentMutes.includes(v))}
+                    onClick={() =>
+                      ws.set({
+                        instrumentMutes: part.voices.every((v) => ws.instrumentMutes.includes(v))
+                          ? ws.instrumentMutes.filter((v) => !part.voices.includes(v))
+                          : [...new Set([...ws.instrumentMutes, ...part.voices])],
+                      })
+                    }
+                  >
+                    M
+                  </button>
+                  <i
+                    className={`activity-led ${active.some((n) => !n.event_id && part.voices.includes(n.voice)) ? 'on' : ''}`}
+                  />
+                </div>
+                <div className="backing-lane">
+                  <svg viewBox="0 0 1000 28" preserveAspectRatio="none">
+                    {notes.map((note) => (
+                      <rect
+                        key={note.note_id}
+                        x={(note.tick / total) * 1000}
+                        y={note.midi != null ? 4 + (72 - note.midi) * 0.3 : 8}
+                        width={Math.max(1, ((note.duration_ms * 0.768) / total) * 1000)}
+                        height={4}
+                        fill="#75849c"
+                      />
+                    ))}
+                  </svg>
+                </div>
+              </div>
+            );
+          })}
         </div>
-        {supports.map((part) => {
-          const notes = musical.filter((n) => !n.event_id && part.voices.includes(n.voice));
-          return (
-            <div
-              className={`backing-track ${ws.focusEvidence || part.voices.every((v) => ws.instrumentMutes.includes(v)) ? 'muted-track' : ''}`}
-              key={part.name}
-            >
-              <div className="composer-track-label">
-                <span>
-                  <strong>{part.name}</strong>
-                  <small>{part.detail}</small>
-                </span>
-                <button
-                  className="track-mute"
-                  aria-label={`${part.name}をミュート`}
-                  aria-pressed={part.voices.every((v) => ws.instrumentMutes.includes(v))}
-                  onClick={() =>
-                    ws.set({
-                      instrumentMutes: part.voices.every((v) => ws.instrumentMutes.includes(v))
-                        ? ws.instrumentMutes.filter((v) => !part.voices.includes(v))
-                        : [...new Set([...ws.instrumentMutes, ...part.voices])],
-                    })
-                  }
-                >
-                  M
-                </button>
-                <i
-                  className={`activity-led ${active.some((n) => !n.event_id && part.voices.includes(n.voice)) ? 'on' : ''}`}
-                />
-              </div>
-              <div className="backing-lane">
-                <svg viewBox="0 0 1000 28" preserveAspectRatio="none">
-                  {notes.map((note) => (
-                    <rect
-                      key={note.note_id}
-                      x={(note.tick / total) * 1000}
-                      y={note.midi != null ? 4 + (72 - note.midi) * 0.3 : 8}
-                      width={Math.max(1, ((note.duration_ms * 0.768) / total) * 1000)}
-                      height={4}
-                      fill="#75849c"
-                    />
-                  ))}
-                </svg>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+      )}
       <div className="composer-now">
         <span className={current?.kind === 'cue' ? 'warning' : ''}>
           {audioError ||

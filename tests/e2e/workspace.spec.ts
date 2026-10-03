@@ -43,9 +43,14 @@ test('whole-health listening and real-screen tour keep investigation human-direc
   await page.getByRole('textbox', { name: '選択した範囲への質問' }).fill('この旋律が戻る理由は？');
   await page.getByRole('button', { name: '質問を送信' }).click();
   await expect(page.locator('.saved-answer')).toContainText('新しいAgent調査が必要');
-  await page.getByRole('button', { name: '根拠の音だけ', exact: true }).click();
+  await expect(page.locator('.backing-track')).toHaveCount(0);
+  await page.getByText('再生設定', { exact: true }).click();
+  await page.getByRole('button', { name: '伴奏トラックを表示', exact: true }).click();
+  await page.getByRole('button', { name: '伴奏を消してコードのリズムを聴く', exact: true }).click();
   await expect(page.locator('.backing-track.muted-track')).toHaveCount(2);
-  await page.getByRole('button', { name: '根拠の音だけ', exact: true }).click();
+  await page.getByRole('button', { name: '伴奏を戻す', exact: true }).click();
+  await page.getByRole('button', { name: '伴奏トラックを表示', exact: true }).click();
+  await page.getByText('再生設定', { exact: true }).click();
   for (const viewport of [
     { width: 1440, height: 900 },
     { width: 1280, height: 720 },
@@ -54,7 +59,7 @@ test('whole-health listening and real-screen tour keep investigation human-direc
     await page.setViewportSize(viewport);
     await expect(page.getByRole('textbox', { name: '選択した範囲への質問' })).toBeInViewport();
     await expect(page.getByRole('button', { name: 'Play', exact: true })).toBeInViewport();
-    await expect(page.locator('.backing-track').filter({ hasText: 'Piano' })).toBeInViewport();
+    await expect(page.locator('.backing-track')).toHaveCount(0);
     const size = await page.evaluate(() => [
       document.documentElement.scrollHeight,
       innerHeight,
@@ -63,7 +68,7 @@ test('whole-health listening and real-screen tour keep investigation human-direc
     ]);
     expect(size[0]).toBe(size[1]);
     expect(size[2]).toBe(size[3]);
-    await page.screenshot({ path: `artifacts/health-review-${viewport.width}.png` });
+    await page.screenshot({ path: `artifacts/workspace-r6-${viewport.width}.png` });
   }
   expect(
     await page.locator('.review-code').evaluate((e) => e.getBoundingClientRect().height),
@@ -71,6 +76,39 @@ test('whole-health listening and real-screen tour keep investigation human-direc
   await page.reload();
   await expect(page.getByRole('dialog')).toHaveCount(0);
   expect(modelRuns).toBe(0);
+  expect(errors).toEqual([]);
+});
+
+test('selected-file listening, supporting files and theme switching preserve the workspace', async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  await page.goto('/projects/sample-recorded-checkout-flow/inspect?scene=1');
+  await page.getByRole('checkbox', { name: '今後このメッセージを表示しない', exact: true }).check();
+  await page.getByRole('button', { name: 'あとで見る', exact: true }).click();
+  await page.getByRole('button', { name: 'pricing.ts', exact: true }).click();
+  const fullLength = await page.locator('.time-display small').innerText();
+  await page.getByRole('combobox', { name: '再生範囲', exact: true }).selectOption('file');
+  await expect(page.locator('.time-display small')).not.toHaveText(fullLength);
+  await page.getByRole('button', { name: 'Play', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Pause', exact: true })).toBeVisible();
+  await expect.poll(() => page.locator('.time-display b').innerText()).not.toBe('00:00');
+  await page.getByRole('button', { name: 'contracts.ts', exact: true }).click();
+  await expect(page.locator('.monaco-editor')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Play', exact: true })).toBeDisabled();
+  await page.getByRole('button', { name: 'rewards.ts', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Play', exact: true })).toBeEnabled();
+  await expect(page.locator('.code-panel .panel-heading')).toContainText('rewards.ts');
+  await page.getByRole('combobox', { name: '再生範囲', exact: true }).selectOption('all');
+  await expect(page.locator('.time-display small')).toHaveText(fullLength);
+  await page.getByRole('button', { name: 'ダークモードに切り替え', exact: true }).click();
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+  await page.screenshot({ path: 'artifacts/workspace-r6-dark.png' });
+  await page.reload();
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+  await page.getByRole('button', { name: 'ライトモードに切り替え', exact: true }).click();
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
   expect(errors).toEqual([]);
 });
 

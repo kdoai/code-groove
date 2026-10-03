@@ -5,15 +5,26 @@ import { useWorkspace } from '../state';
 import { engine } from '../audio/engine';
 import { playbackPlan } from '../audio/playback';
 
-export function Transport({ score, onError }: { score?: ScoreBundle; onError: (message: string) => void }) {
+export function Transport({
+  score,
+  fileUnits,
+  selectedFile,
+  onError,
+}: {
+  score?: ScoreBundle;
+  fileUnits?: string[];
+  selectedFile?: string;
+  onError: (message: string) => void;
+}) {
   const ws = useWorkspace();
   const [playing, setPlaying] = useState(false),
     [seconds, setSeconds] = useState(0),
     [loading, setLoading] = useState(false);
   const playbackScene = ws.wholeWork ? 0 : ws.scene;
+  const playbackUnits = ws.playbackFile ? fileUnits : undefined;
   const plan = useMemo(
-    () => playbackPlan(score, ws.mode, playbackScene, ws.wholeWork),
-    [score, ws.mode, playbackScene, ws.wholeWork],
+    () => playbackPlan(score, ws.mode, playbackScene, ws.wholeWork, playbackUnits),
+    [score, ws.mode, playbackScene, ws.wholeWork, playbackUnits],
   );
   useEffect(() => {
     if (plan) engine.configure(plan);
@@ -82,7 +93,17 @@ export function Transport({ score, onError }: { score?: ScoreBundle; onError: (m
         onClick={() => void toggle()}
       >
         {playing ? <Pause size={16} fill="currentColor" /> : <Play size={16} fill="currentColor" />}
-        <span>{loading ? '読込中' : playing ? '一時停止' : ws.wholeWork ? '全体を聴く' : '区間を聴く'}</span>
+        <span>
+          {loading
+            ? '読込中'
+            : playing
+              ? '一時停止'
+              : ws.playbackFile
+                ? 'ファイルを聴く'
+                : ws.wholeWork
+                  ? '全体を聴く'
+                  : '区間を聴く'}
+        </span>
       </button>
       <button
         className="stop-button"
@@ -96,14 +117,20 @@ export function Transport({ score, onError }: { score?: ScoreBundle; onError: (m
         <b>{clock(seconds)}</b>
         <small>/ {clock(plan ? plan.total_bars * 2.5 : 0)}</small>
       </div>
-      <span className="playback-hint">聴く → 気になった区間を選ぶ → Agentが精密検査</span>
-      <button
-        className="evidence-solo"
-        aria-pressed={ws.focusEvidence}
-        onClick={() => ws.set({ focusEvidence: !ws.focusEvidence })}
+      <select
+        className="playback-range"
+        aria-label="再生範囲"
+        value={ws.playbackFile ? 'file' : 'all'}
+        onChange={(e) => {
+          engine.stop();
+          ws.set({ playbackFile: e.target.value === 'file' ? (selectedFile ?? '') : '', wholeWork: true });
+        }}
       >
-        根拠の音だけ
-      </button>
+        <option value="all">リポジトリ全体</option>
+        <option value="file" disabled={!fileUnits?.length}>
+          選択ファイル{selectedFile ? ` · ${selectedFile.split('/').at(-1)}` : ''}
+        </option>
+      </select>
       <div className="volume">
         <Volume2 size={15} />
         <input
@@ -120,7 +147,10 @@ export function Transport({ score, onError }: { score?: ScoreBundle; onError: (m
         <summary>再生設定</summary>
         <div className="settings-popover">
           <span>聴く範囲</span>
-          <button aria-pressed={ws.wholeWork} onClick={() => ws.set({ wholeWork: !ws.wholeWork })}>
+          <button
+            aria-pressed={ws.wholeWork}
+            onClick={() => ws.set({ wholeWork: !ws.wholeWork, playbackFile: '' })}
+          >
             {ws.wholeWork ? '全体を再生' : '選択区間を再生'}
           </button>
           {!ws.wholeWork && (
@@ -141,6 +171,15 @@ export function Transport({ score, onError }: { score?: ScoreBundle; onError: (m
             繰り返す
           </button>
           <span>伴奏・メロディー</span>
+          <button
+            aria-pressed={ws.focusEvidence}
+            onClick={() => ws.set({ focusEvidence: !ws.focusEvidence })}
+          >
+            {ws.focusEvidence ? '伴奏を戻す' : '伴奏を消してコードのリズムを聴く'}
+          </button>
+          <button aria-pressed={ws.showBacking} onClick={() => ws.set({ showBacking: !ws.showBacking })}>
+            伴奏トラックを表示
+          </button>
           <div className="instrument-settings">
             {[
               ['bass', 'Bass'],
@@ -163,6 +202,9 @@ export function Transport({ score, onError }: { score?: ScoreBundle; onError: (m
             ))}
           </div>
           <small>96 BPM · 4/4 · 音はコードから再現可能</small>
+          <a href="/audio/midnight-jazz-v4/NOTICE.txt" target="_blank" rel="noreferrer">
+            音源・ライセンス
+          </a>
         </div>
       </details>
     </div>

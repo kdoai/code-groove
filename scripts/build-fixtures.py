@@ -178,7 +178,7 @@ reasons = [
     "手数料・返金額の計算規則が変わるとき",
     "顧客への伝え方が変わるとき",
 ]
-kit = json.loads((ROOT / "apps/web/public/audio/midnight-jazz-v3/manifest.json").read_text())
+kit = json.loads((ROOT / "apps/web/public/audio/midnight-jazz-v4/manifest.json").read_text())
 for sample_id, (title, description, definitions) in SAMPLES.items():
     sources, units, events, evidence = {}, [], [], []
     counters = [0, 0, 0]

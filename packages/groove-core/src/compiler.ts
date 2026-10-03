@@ -85,7 +85,7 @@ export async function compileGroove(map: SemanticMap, kitHash: string): Promise<
     const base = {
       scene_id: sceneId,
       grammar_version: 'groove-chamber-v5' as const,
-      kit_id: 'midnight-jazz-v3' as const,
+      kit_id: 'midnight-jazz-v4' as const,
       kit_hash: kitHash,
       bpm: 96 as const,
       beats_per_bar: 4 as const,

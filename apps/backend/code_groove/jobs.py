@@ -421,6 +421,11 @@ class JobService:
                 snapshot_id = f"snap_{sha[:24]}_{hashlib.sha256(INDEX_VERSION.encode()).hexdigest()[:6]}"
                 self.mutate(run_id, attempt, {"status": "indexing"})
                 index = await asyncio.to_thread(build_index, snapshot_id, sources)
+                if project["source"].get("scope_path"):
+                    index["scope_path"] = project["source"]["scope_path"]
+                    index["scope_note"] = (
+                        "範囲外の実装・呼び出し元は未検査。リポジトリ全体の健全性を断定しない。"
+                    )
                 snapshot = {
                     "sha": sha,
                     "snapshot_id": snapshot_id,
@@ -444,7 +449,19 @@ class JobService:
                 if source["kind"] == "sample":
                     sha, sources = sample_snapshot(source["sample_id"])
                 else:
-                    sha, sources = await github_snapshot(source["url"], source.get("ref"))
+                    if source.get("scope_path"):
+                        sha, sources = await github_snapshot(
+                            source["url"], source.get("ref"), source["scope_path"]
+                        )
+                        emit(
+                            "scope_selected",
+                            {
+                                "message": "対象フォルダーのみ健診。範囲外は未検査です。",
+                                "scope_path": source["scope_path"],
+                            },
+                        )
+                    else:
+                        sha, sources = await github_snapshot(source["url"], source.get("ref"))
                 snapshot_id = f"snap_{sha[:24]}_{hashlib.sha256(INDEX_VERSION.encode()).hexdigest()[:6]}"
                 emit("source_pinned", {"sha": sha, "snapshot_id": snapshot_id})
                 self.mutate(run_id, attempt, {"status": "indexing"})
@@ -460,6 +477,11 @@ class JobService:
                     emit("index_cache_hit", {"snapshot_id": snapshot_id})
                 else:
                     index = await asyncio.to_thread(build_index, snapshot_id, sources)
+                    if source.get("scope_path"):
+                        index["scope_path"] = source["scope_path"]
+                        index["scope_note"] = (
+                            "範囲外の実装・呼び出し元は未検査。リポジトリ全体の健全性を断定しない。"
+                        )
                 snapshot = {
                     "sha": sha,
                     "snapshot_id": snapshot_id,
@@ -606,7 +628,7 @@ class JobService:
                     created_at=datetime.now(UTC).isoformat(),
                 ).model_dump(mode="json")
                 self.mutate(run_id, attempt, {"status": "compiling"})
-                kit = json.loads((ROOT / "apps/web/public/audio/midnight-jazz-v3/manifest.json").read_text())
+                kit = json.loads((ROOT / "apps/web/public/audio/midnight-jazz-v4/manifest.json").read_text())
                 score = await asyncio.to_thread(
                     run_node, "groove-core", {"map": semantic, "kit_hash": kit["kit_hash"]}
                 )
