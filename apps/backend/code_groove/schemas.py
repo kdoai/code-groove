@@ -212,6 +212,7 @@ class Reclassification(Contract):
 
 
 class InvestigationCandidate(Contract):
+    replaced_signal_ids: Ids = Field(default_factory=list, max_length=12)
     review_signals: list[ReviewSignal] = Field(default_factory=list, max_length=6)
     findings: list[Finding] = Field(min_length=1, max_length=3)
     hypotheses: list[Hypothesis] = Field(max_length=16)

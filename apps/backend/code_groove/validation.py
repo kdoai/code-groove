@@ -134,6 +134,35 @@ def validate_investigation(candidate: InvestigationCandidate, evidence: list[Evi
             raise GrooveError("INVALID_EVIDENCE", "結論に有効な根拠が必要です。")
     if not any(fresh.intersection(f.evidence_ids) for f in candidate.findings):
         raise GrooveError("INVALID_EVIDENCE", "結論には今回読み直した根拠が必要です。")
+    prior_signals = {s["signal_id"]: s for s in base.get("review_signals", [])}
+    units = {u["unit_id"]: u for u in base["units"]}
+    cited = {e for f in candidate.findings for e in f.evidence_ids} | {
+        e for s in candidate.review_signals for e in s.evidence_ids
+    }
+    if len(set(candidate.replaced_signal_ids)) != len(candidate.replaced_signal_ids):
+        raise GrooveError("INVALID_ANALYSIS", "更新元の健診候補IDが重複しています。")
+    updated_ids = set(candidate.replaced_signal_ids) | {
+        s.signal_id for s in candidate.review_signals if s.signal_id in prior_signals
+    }
+    for sid in updated_ids:
+        original = prior_signals.get(sid)
+        if not original:
+            raise GrooveError("INVALID_ANALYSIS", "更新元の健診候補が見つかりません。")
+        for uid in original["unit_ids"]:
+            if not any(
+                e.evidence_id in cited
+                and e.source_kind == "code"
+                and contains(e.span, Span(**units[uid]["primary_span"]))
+                for e in evidence
+            ):
+                raise GrooveError(
+                    "INVALID_EVIDENCE", "候補の更新には元の対象関数すべての新しい読取根拠が必要です。"
+                )
+    remaining_ids = (prior_signals.keys() - set(candidate.replaced_signal_ids)) | {
+        s.signal_id for s in candidate.review_signals
+    }
+    if len(remaining_ids) > 12:
+        raise GrooveError("INVALID_ANALYSIS", "健診候補は12件以内にまとめ、更新元IDを明示してください。")
     for item in candidate.suggested_reclassification:
         original = next((e for e in base["events"] if e["event_id"] == item.event_id), None)
         if (

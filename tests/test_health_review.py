@@ -192,3 +192,64 @@ def test_focused_signals_require_fresh_covering_reads_and_existing_events():
     candidate.review_signals[0].event_ids = ["invented_event"]
     with pytest.raises(GrooveError, match="INVALID_ANALYSIS"):
         validate_investigation(candidate, ctx.evidence, bundle["map"])
+
+
+def test_withdrawn_candidate_cannot_keep_sounding_or_start_a_proposal(tmp_path):
+    app = create_app(
+        Settings(local_data_dir=tmp_path, enable_live_analysis=True, model_mode="live"),
+        verifier=lambda token: token,
+    )
+    app.state.store.put("accounts", "alice", {"enabled": True})
+    client = TestClient(app)
+    headers = {"Authorization": "Bearer alice", "Idempotency-Key": "withdraw-copy"}
+    copied = client.post("/api/v1/samples/recorded-returns-before/projects", json={}, headers=headers).json()[
+        "data"
+    ]
+    meta = app.state.store.get("analyses", copied["analysis_id"])
+    original = app.state.artifacts.get(meta["artifact_key"])
+    sources = app.state.artifacts.get(meta["snapshot_key"])["sources"]
+    ctx, candidate = fresh_review(original["map"], sources)
+    signal_id = candidate.review_signals[0].signal_id
+    candidate.review_signals = []
+    candidate.replaced_signal_ids = [signal_id]
+    candidate.findings[0].verdict = "justified_difference"
+    candidate.findings[0].summary = "The checked boundary has a separate operating contract"
+    validate_investigation(candidate, ctx.evidence, original["map"])
+    with pytest.raises(GrooveError, match="INVALID_EVIDENCE"):
+        validate_investigation(candidate, ctx.evidence[:1], original["map"])
+    unknown = candidate.model_copy(deep=True)
+    unknown.replaced_signal_ids = ["missing_signal"]
+    with pytest.raises(GrooveError, match="INVALID_ANALYSIS"):
+        validate_investigation(unknown, ctx.evidence, original["map"])
+    app.state.artifacts.put(
+        "health/withdraw",
+        {
+            **candidate.model_dump(mode="json"),
+            "base_analysis_id": copied["analysis_id"],
+            "evidence": [e.model_dump(mode="json") for e in ctx.evidence],
+        },
+    )
+    app.state.store.put("investigations", "inv_withdraw", {**meta, "artifact_key": "health/withdraw"})
+    published = client.post(
+        "/api/v1/investigations/inv_withdraw/publish-interpretation", json={}, headers=headers
+    )
+    assert published.status_code == 200, published.text
+    current = client.get(f"/api/v1/projects/{copied['project_id']}/bundle", headers=headers).json()["data"]
+    assert current["sources"] == sources
+    assert signal_id not in {s["signal_id"] for s in current["map"]["review_signals"]}
+    assert not any(
+        note.get("signal_id") == signal_id
+        for scene in current["score"]["scenes"]
+        for mode in ("theme", "repo")
+        for note in scene[mode]["notes"]
+    )
+    assert app.state.artifacts.get(meta["artifact_key"])["map"] == original["map"]
+    assert (
+        client.post(
+            f"/api/v1/analyses/{current['map']['analysis_id']}/proposals",
+            json={"signal_id": signal_id},
+            headers={**headers, "Idempotency-Key": "withdraw-proposal"},
+        ).status_code
+        == 400
+    )
+    assert not app.state.store.list("runs")

@@ -559,7 +559,11 @@ def create_app(settings: Settings | None = None, verifier: Callable[[str], str] 
         base_meta = own("analyses", previous, user)
         if project.get("latest_analysis_id") != previous:
             raise GrooveError("STALE_BASE_ANALYSIS", "解釈が更新されています。", 409)
-        if not result["suggested_reclassification"] and not result.get("review_signals"):
+        if (
+            not result["suggested_reclassification"]
+            and not result.get("review_signals")
+            and not result.get("replaced_signal_ids")
+        ):
             raise GrooveError("NO_RECLASSIFICATION", "反映する解釈の更新がありません。", 409)
         semantic = copy.deepcopy(bundle_for(previous, user)["map"])
         candidate = InvestigationCandidate.model_validate(
@@ -568,7 +572,9 @@ def create_app(settings: Settings | None = None, verifier: Callable[[str], str] 
         validate_investigation(candidate, [Evidence(**e) for e in result["evidence"]], semantic)
         updates = {s["signal_id"]: s for s in result.get("review_signals", [])}
         semantic["review_signals"] = [
-            s for s in semantic.get("review_signals", []) if s["signal_id"] not in updates
+            s
+            for s in semantic.get("review_signals", [])
+            if s["signal_id"] not in updates and s["signal_id"] not in result.get("replaced_signal_ids", [])
         ] + list(updates.values())
         semantic["responsibilities"].extend(result["new_responsibilities"])
         semantic["evidence"].extend(result["evidence"])

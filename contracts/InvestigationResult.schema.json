@@ -431,6 +431,15 @@
   },
   "additionalProperties": false,
   "properties": {
+    "replaced_signal_ids": {
+      "items": {
+        "pattern": "^[a-zA-Z0-9_-]{1,80}$",
+        "type": "string"
+      },
+      "maxItems": 96,
+      "title": "Replaced Signal Ids",
+      "type": "array"
+    },
     "review_signals": {
       "items": {
         "$ref": "#/$defs/ReviewSignal"

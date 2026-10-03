@@ -276,7 +276,10 @@ export function AgentPanel({
               </p>
             )}
             <FindingCards result={result} map={bundle.map} />
-            {result && (result.suggested_reclassification?.length || result.review_signals?.length) ? (
+            {result &&
+            (result.suggested_reclassification?.length ||
+              result.review_signals?.length ||
+              result.replaced_signal_ids?.length) ? (
               <button className="primary wide" onClick={publish}>
                 調査結果を演奏に反映
                 <ArrowUpRight size={15} />

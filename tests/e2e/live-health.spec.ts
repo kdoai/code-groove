@@ -83,7 +83,11 @@ test('paid whole-health passage investigation and optional human-approved refact
   await page.screenshot({ path: 'artifacts/deployed-r5-precision.png' });
   writeFileSync('.local/deployed-r5-investigation.json', JSON.stringify(result, null, 2));
   await page.waitForTimeout(8000);
-  if (result.review_signals?.length || result.suggested_reclassification?.length) {
+  if (
+    result.review_signals?.length ||
+    result.suggested_reclassification?.length ||
+    result.replaced_signal_ids?.length
+  ) {
     await page.getByRole('button', { name: '調査結果を演奏に反映', exact: true }).click();
     await expect(page.locator('.health-stage')).toHaveCount(0);
     timings.reflected = time();

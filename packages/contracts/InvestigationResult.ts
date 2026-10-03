@@ -1,4 +1,8 @@
 /**
+ * @maxItems 96
+ */
+export type ReplacedSignalIds = string[];
+/**
  * @maxItems 6
  */
 export type ReviewSignals =
@@ -231,6 +235,7 @@ export type CreatedByToolEventId = string;
 export type Evidence = Evidence1[];
 
 export interface InvestigationResult {
+  replaced_signal_ids?: ReplacedSignalIds;
   review_signals?: ReviewSignals;
   findings: Findings;
   hypotheses: Hypotheses;
