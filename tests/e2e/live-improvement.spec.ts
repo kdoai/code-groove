@@ -53,6 +53,7 @@ test('paid deployed Gemini proposal, explicit approval, fresh analysis and prese
   await page.waitForTimeout(20000);
   await page.getByRole('button', { name: 'Pause', exact: true }).click();
   timings.before_pause = time();
+  await page.getByTestId('cue-note').first().click();
   await page.getByRole('button', { name: 'Geminiに改善案を依頼', exact: true }).click();
   timings.requested = time();
   await expect(page.getByRole('button', { name: 'Geminiが改善案を作成中…', exact: true })).toBeVisible();
@@ -143,8 +144,11 @@ test('paid deployed Gemini proposal, explicit approval, fresh analysis and prese
     ),
   );
   expect(errors).toEqual([]);
+  const video = page.video()!;
+  await page.close();
+  await video.saveAs('.local/deployed-r4-browser.webm');
   writeFileSync(
     '.local/deployed-r4-video.json',
-    JSON.stringify({ video_path: await page.video()!.path(), timings }, null, 2),
+    JSON.stringify({ video_path: '.local/deployed-r4-browser.webm', timings }, null, 2),
   );
 });

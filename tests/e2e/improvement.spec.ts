@@ -10,6 +10,14 @@ test('human approval gates source changes and after comparison (mock API, no pai
   after.map.analysis_id = 'analysis_e2e_after';
   after.map.parent_analysis_id = before.map.analysis_id;
   after.map.origin = 'live';
+  after.trace = [
+    {
+      seq: 1,
+      type: 'tool_completed',
+      timestamp: '2026-10-03',
+      payload: { tool: 'read_code', purpose: '模擬API：採用したソースを読取' },
+    },
+  ];
   after.sources['src/store-return.ts'] += '\n// E2E mock snapshot\n';
   const proposal = {
     proposal_id: 'proposal_e2e',
@@ -144,6 +152,8 @@ test('human approval gates source changes and after comparison (mock API, no pai
   await expect(page.locator('.statusbar')).toContainText('保存済み実解析');
   await page.getByRole('button', { name: '採用後', exact: true }).click();
   await expect(page.locator('.statusbar')).toContainText('実解析');
+  await expect(page.getByText('Agentの実行記録 · 1回のツール調査')).toBeVisible();
+  await expect(page.getByText(/追加調査の記録/)).toHaveCount(0);
   expect(calls).toEqual([
     '/samples/recorded-returns-before/projects',
     `/analyses/${before.map.analysis_id}/proposals`,

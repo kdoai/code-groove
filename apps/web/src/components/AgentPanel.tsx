@@ -224,15 +224,36 @@ export function AgentPanel({
                 <ArrowUpRight size={15} />
               </button>
             ) : null}
-            <details className="trace">
-              <summary>調査の記録 · {events.filter((e) => e.type === 'tool_completed').length} tools</summary>
-              {events.map((e) => (
-                <div key={e.seq}>
-                  <b>{e.payload.tool ?? e.type}</b>
-                  <small>{e.payload.purpose ?? e.payload.message ?? e.payload.code}</small>
-                </div>
-              ))}
-            </details>
+            {!!bundle.trace?.length && (
+              <details className="trace">
+                <summary>
+                  Agentの実行記録 · {bundle.trace.filter((e) => e.type === 'tool_completed').length}
+                  回のツール調査
+                </summary>
+                {bundle.trace
+                  .filter((e) => e.type === 'tool_completed' || e.type === 'hypothesis_recorded')
+                  .map((e) => (
+                    <div key={e.seq}>
+                      <b>{e.payload.tool ?? e.type}</b>
+                      <small>{e.payload.purpose ?? e.payload.message ?? e.payload.statement}</small>
+                    </div>
+                  ))}
+              </details>
+            )}
+            {!!events.length && (
+              <details className="trace">
+                <summary>
+                  追加調査の記録 · {events.filter((e) => e.type === 'tool_completed').length}
+                  回のツール調査
+                </summary>
+                {events.map((e) => (
+                  <div key={e.seq}>
+                    <b>{e.payload.tool ?? e.type}</b>
+                    <small>{e.payload.purpose ?? e.payload.message ?? e.payload.code}</small>
+                  </div>
+                ))}
+              </details>
+            )}
           </>
         )}
         {error && (

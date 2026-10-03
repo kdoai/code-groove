@@ -273,5 +273,7 @@ async def test_accepted_snapshot_is_reanalysed_without_overwriting_original(work
     assert old["sources"] == before["sources"]
     assert new["map"]["parent_analysis_id"] == copied["analysis_id"]
     assert new["map"]["origin"] == "live" and new["map"]["review_signals"]
+    assert new["trace"]
+    assert all(set(e) == {"seq", "type", "timestamp", "payload"} for e in new["trace"])
     # Acceptance does not force removal of a concern, even in a deterministic test.
     assert any(s["verdict"] == "concern" for s in new["map"]["review_signals"])

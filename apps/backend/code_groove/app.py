@@ -380,7 +380,17 @@ def create_app(settings: Settings | None = None, verifier: Callable[[str], str] 
         if bundle["score"]["scenes"][0]["repo"]["grammar_version"] != "groove-chamber-v5":
             kit = json.loads((ROOT / "apps/web/public/audio/midnight-jazz-v3/manifest.json").read_text())
             bundle["score"] = run_node("groove-core", {"map": bundle["map"], "kit_hash": kit["kit_hash"]})
-        return {"data": {**bundle, "sources": snapshot["sources"]}}
+        trace = bundle.get("trace", [])
+        if meta.get("run_id"):
+            source_run = own("runs", meta["run_id"], user)
+            if source_run["project_id"] == project_id:
+                trace = [
+                    {k: e[k] for k in ("seq", "type", "timestamp", "payload")}
+                    for e in sorted(
+                        store.list("run_events", "run_id", meta["run_id"]), key=lambda e: e["seq"]
+                    )[:200]
+                ]
+        return {"data": {**bundle, "sources": snapshot["sources"], "trace": trace}}
 
     @app.get("/api/v1/analyses/{analysis_id}")
     def get_analysis(analysis_id: str, user: User) -> dict:
