@@ -1,3 +1,5 @@
+> Historical record. This describes the version at that time, not R14 acceptance. Current specification: [SPEC.md](SPEC.md).
+
 # Refinement security review
 
 Threat boundaries: browser / public API; Firebase identity / server allowlist;

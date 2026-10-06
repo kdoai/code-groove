@@ -30,6 +30,8 @@ function comparisonMap(): SemanticMap {
       signal_id: 'signal_mock',
       category: 'change_coupling',
       verdict: 'concern',
+      counter_explanation: 'Mock checked counter-explanation',
+      counter_status: 'rejected',
       review_axis: 'coherence',
       human_review_required: false,
       human_review_reason: '',
@@ -92,6 +94,31 @@ it.each(['quality', 'correctness', 'human', 'justified'] as const)(
     expect(score.scenes.flatMap((s) => s.repo.notes).filter((n) => n.kind === 'cue')).toHaveLength(0);
   },
 );
+
+it.each(['not_checked', 'supported', 'undetermined'] as const)(
+  'does not sound a concern when its counter-explanation is %s',
+  async (status) => {
+    const map = comparisonMap();
+    map.review_signals![0]!.counter_status = status;
+    const score = await compileGroove(map, 'test-kit');
+    expect(score.scenes.flatMap((s) => s.repo.notes).filter((n) => n.kind === 'cue')).toEqual([]);
+    expect(score.scenes.flatMap((s) => s.repo.notes).filter((n) => n.kind === 'data')).toHaveLength(
+      map.events.length,
+    );
+  },
+);
+
+it('does not amplify a checked concern when an equivalent signal is repeated', async () => {
+  const map = comparisonMap();
+  const original = await compileGroove(map, 'test-kit');
+  expect(original.scenes.flatMap((s) => s.repo.notes).filter((n) => n.kind === 'cue')).toHaveLength(4);
+  map.review_signals = [
+    ...map.review_signals!,
+    { ...structuredClone(map.review_signals![0]!), signal_id: 'zz_duplicate' },
+  ] as SemanticMap['review_signals'];
+  const repeated = await compileGroove(map, 'test-kit');
+  expect(repeated.scenes.map((s) => s.repo.notes)).toEqual(original.scenes.map((s) => s.repo.notes));
+});
 
 it('comparison and pattern hashes use source content instead of read receipt IDs', async () => {
   const map = comparisonMap(),

@@ -1,11 +1,11 @@
-# Cost envelope (infrastructure only)
+# 費用と上限 — R14
 
-Target ¥6,000/month, excluding AI. R11 raises the user daily analysis ceiling to10 at the user's explicit request. The original sizing example below assumes2 reviewer users,3 analyses +10 investigations each per day, ~90s/30s average; it is not a new estimate for full use of the ten-analysis cap. Global token reservations and infrastructure capacity remain unchanged. No minimum instances, no GPU, SQL instance, Redis, NAT or load balancer. Firestore/GCS are usage based. Artifacts expire after7 days (API) and14 days (physical cleanup).
+AIを除くインフラ目標は月6,000円、東京、scale to zeroです。これは利用量を測定するための目標で、予算アラートは強制停止ではありません。ADKはworker内のライブラリとして使い、Agent Engineなどのサービスは追加しません。依存が増えるためimageサイズ・cold startは配備前に計測します。
 
-Cloud Run: web 1 vCPU / 512 MiB, max 2; worker 1 vCPU / 1 GiB, max 1. Cloud Tasks concurrent dispatch 1. This deliberately reduces the specification's CPU/instance settings to respect the user's cost requirement. Increase explicit limits after observing latency and billing; the architecture already supports scaling.
+Cloud Run web min=0/max=2、worker min=0/max=1、Tasksの同時dispatch=1を維持します。保存再生はモデル呼出しゼロ。Firestoreの実行イベントは要求したseq範囲のdocumentだけを取得し、pollのたびに過去の全履歴を読みません。
 
-The [Cloud Run price sheet](https://cloud.google.com/run/pricing) lists a request-billing monthly allowance of 180,000 vCPU-s and 360,000 GiB-s (us-central1 price basis). Account-wide allowances can be consumed by other apps. At the example workload, worker use is ~34,200 vCPU-s/month. Registry/build/storage and egress remain separately billed. The intended traffic should fit the envelope; a monthly hard cap cannot be guaranteed by max instances or budget alerts.
+解析は1ユーザー1日10回（UTC）、追加調査／提案は共有10回、更新確認は10回。1アカウントの同時実行は1件。解析／範囲間統合は最大400,000入力・48,000出力トークンを予約し、追加調査／提案は160,000・20,000です。全体の日次入力3,000,000・出力300,000（予約＋消費）上限が先に適用される場合があります。10回実行できる保証ではありません。
 
-Model cost: reserved per-run tokens, user daily limits, global input/output token limits, one active run per user, persistent kill switch. Replay never calls the model. Amount estimates remain disabled until verified pricing is configured.
+解析は最大18モデル要求・48ツール・480秒、追加調査は8要求・20ツール・180秒。provider再試行も要求数と保守的な予約に含めます。ADK移行や範囲間統合でこの上限を増やしません。統合調査は利用者が明示的に1回開始するのでAI費用は発生しますが、自動連鎖はしません。
 
-A billing budget restricted to this project's nine non-AI services is configured at ¥6,000 with 50/80/100% notifications. See `artifacts/operations.json` for the actual budget ID and service filter. Budget notifications do not stop billing. AI is excluded from this infrastructure budget and controlled with persistent token reservations and run limits.
+AI価格はモデル・契約・利用時点によるため、過去単価を現在の料金として表示しません。実行数、入出力・予約トークンを記録して見積もりと実請求を照合します。提出前に実請求でFirestore・Run・Tasks・Storage・Logging・Registryを確認し、不要な古いimageとログ保持を整理します。

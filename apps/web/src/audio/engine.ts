@@ -23,6 +23,7 @@ class GrooveEngine {
   private instruments = new Set<string>();
   private supportMuted = false;
   private samples: KitSample[] = [];
+  private playbackSequence = 0;
   loading?: Promise<void>;
 
   async load() {
@@ -133,16 +134,19 @@ class GrooveEngine {
       ),
     );
   }
-  async play() {
+  async play(shouldStart: () => boolean = () => true) {
+    const sequence = ++this.playbackSequence;
     await Tone.start();
     await this.load();
-    if (this.plan) Tone.getTransport().start('+0.03');
+    if (this.plan && sequence === this.playbackSequence && shouldStart()) Tone.getTransport().start('+0.03');
   }
   pause() {
+    this.playbackSequence++;
     Tone.getTransport().pause();
     this.release();
   }
   stop() {
+    this.playbackSequence++;
     Tone.getTransport().stop();
     Tone.getTransport().seconds = 0;
     this.release();
@@ -155,6 +159,9 @@ class GrooveEngine {
   }
   get playing() {
     return Tone.getTransport().state === 'started';
+  }
+  get playbackSession() {
+    return this.playbackSequence;
   }
   setVolume(value: number) {
     this.volume = value;
@@ -176,6 +183,7 @@ class GrooveEngine {
     this.supportMuted = value;
   }
   seek(tick: number) {
+    this.playbackSequence++;
     this.release();
     Tone.getTransport().seconds = tickSeconds(
       Math.max(0, Math.min(tick, (this.plan?.total_bars ?? 1) * 1920 - 1)),

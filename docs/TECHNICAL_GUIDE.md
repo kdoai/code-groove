@@ -1,39 +1,35 @@
-# Code Groove — technical guide
+# Code Groove — current architecture (R15)
 
-R10 adds authenticated committed-snapshot ingestion, Python method/TypeScript lexical ownership indexing, bounded semantic partitions, dependency-aware result caching and explicit continuation/retry. Whole-repository coverage remains visibly partial; cross-partition interpretation is not implemented. See [Repository Agent R10](REPOSITORY_AGENT_R10.md) for limits, cost controls and official SDK/ADK references.
+![Architecture](architecture.svg)
 
-| Layer | Implementation | Purpose |
-|---|---|---|
-| Arrangement workspace | React 19 / TypeScript 6 / Vite / Zustand / TanStack Query | Directory tree, file/function MIDI clips, optional backing lanes, exact code dock, full/file transport, themes, spotlight tour, persistent questions |
-| Code inspection | Monaco, self-hosted workers | Read-only TypeScript/Python evidence, exact line highlighting |
-| Sonification | Pure TS compiler + Tone.js + self-hosted recorded/authored PCM | Six reproducible motifs, jazz accompaniment, evidence-linked rhythmic responses; no generative music |
-| Agent | FastAPI / Python 3.13 / Google Gen AI SDK / Gemini 3.8 Flash on Google Cloud | Adaptive read/search/relations/hypothesis tools; grounded structural/readability interpretation and validated draft proposals |
-| Index | Virtual TS Compiler API / isolated Python AST | Bounded code structure without executing submitted code |
-| Jobs | Cloud Tasks + private Cloud Run worker | OIDC, cancellation, attempts, lease, durable quotas and traces |
-| Web | Public Cloud Run | Authenticated owner API and static app, scale to zero |
-| Identity | Firebase Authentication + server allowlist | Reviewer password login without email receipt; no social login requirement |
-| Persistence | Firestore + private Cloud Storage | Metadata, immutable snapshots/results, TTL, differential reuse |
-| Secrets / release | Secret Manager / GitHub Actions WIF / Cloud Build / Artifact Registry | No service-account keys; scoped verified releases |
+Browser（React / TypeScript / Monaco / Tone.js）→ Cloud Run web API → Cloud Tasks → private worker。メタデータはFirestore、不変ソース・map・譜面は非公開Cloud Storage、認証はFirebase Authです。東京・scale to zeroを維持します。
 
-![Architecture](../artifacts/architecture.png)
-![Agent and playback sequence](../artifacts/sequence.png)
-![Data flow and trust boundaries](../artifacts/data-flow.png)
-![Musical explanation pipeline](../artifacts/sonification.png)
-![Human-approved improvement sequence](../artifacts/approval-sequence.png)
-![Whole-health listening and focused examination](../artifacts/health-sequence.png)
+workerはADK 2.11.0の単一custom BaseAgent／InMemoryRunnerを使います。Gemini adapterはGoogle Gen AI SDK clientを受け取り、1要求1応答で呼びます。ADK標準の自動ツールループを重ねず、Code Grooveの制御ループが予算、停止、読取receipt、提出schemaを検証します。既存の耐久ジョブ、90秒lease、heartbeat、CAS公開、再試行、予約・清算を保持します。
 
-Initial Gemini examination uses the complete eligible index and full model capability.
-Detected future-debt candidates remain accessible alongside unknowns. The overview
-music describes responsibility placement; it never treats repetition alone as a defect.
-Human selection directs fresh examination of future change friction, readability and
-legitimate boundaries. Reflecting that result creates an immutable focused map before
-any optional source proposal. Investigation progress/results survive reload through
-owned metadata, without a new model call. Independent accepted re-analysis can retain
-a concern; hearing comfort is not proof of correctness or health.
+主な責務の境界：
 
-Detailed grammars and boundaries are in SONIFICATION.md, INCREMENTAL.md and
-SECURITY_REVIEW_R1.md. Infrastructure remains scale-to-zero Cloud Run, not GKE or
-an always-on database VM. The ¥6,000 infrastructure budget excludes AI and raises
-alerts; it is not a hard billing cap. Runtime instance caps, short retention,
-bounded jobs and reusable analyses reduce cost; a large traffic increase still
-requires budget review before scaling further.
+| 領域 | 実装 |
+|---|---|
+| Agentの提出・探索・予算 | `agent.py` |
+| read-onlyツール・context・receipt | `agent_tools.py` |
+| ADK実行／モデル境界 | `agent_runtime.py` / `adk_adapter.py` |
+| 所有権付きAPI／耐久ジョブ | `app.py` / `jobs.py` |
+| 範囲・依存fingerprint | `repository.py` |
+| 選択範囲の意味統合境界 | `reconciliation.py` |
+| Python静的構文と所有関係 | `python_indexer.py` |
+| Pydantic・根拠検証 | `schemas.py` / `validation.py` |
+| 音の規則 | `packages/groove-core/src/compiler.ts` / `arrangement.ts` |
+| ツリー／演奏／主デモ | `RepositoryTree.tsx` / `Arrangement.tsx` / `DemoComparison.tsx` |
+| UIの合成 | `ReviewWorkspace.tsx` / `App.tsx` |
+| 独立構文投影・順序対応 | `packages/repo-indexer/src/structure.ts` |
+| 構造譜面・中立音源 | `packages/groove-core/src/structure.ts` / `structure-sound.ts` |
+| 比較選択・今回の根拠検証 | `structure.py` / `comparison-system-v1.txt` |
+| 構造比較UI・端末内記録 | `StructureComparisonPanel.tsx` / `comparisonState.ts` / `audio/structurePlayer.ts` |
+
+CSSはbase・studio・workspace・review・demoに分割し、既存cascade順を保持しています。大きいAPIとJobServiceを無理に同時全面改稿せず、意味統合とモデル実行を独立境界へ切り出しました。
+
+`prompts/conductor-system-v1.txt`というパスは互換性のため保持し、論理版はv14です。名前による版の推測を避け、mapとcacheにprompt_versionを保存します。旧解析のorigin・prompt・scopeは更新しません。音だけ現行文法へcompileし直します。
+
+[現行仕様](SPEC.md) / [意味と音](SONIFICATION.md) / [検証](acceptance.md)。旧説明は[履歴](history/R13/TECHNICAL_GUIDE.md)です。
+
+R15の構造投影・譜面は意味解析map／ScoreSceneとは別の生成経路です。サーバーが不変ソースを信頼されたNodeパーサーへ渡し、独立契約で検証します。比較用調査入口はscene_idを使わず、既存investigationジョブとして同じ予算・取消・read tool・CASを通ります。結果は別の比較記録に結び付け、従来の意味再分類には採用できません。端末メモ・JSONはクラウドDBへ送らず、人が追加調査を押したときの期待／観察／疑問だけを調査要求に含めます。[詳細](STRUCTURE_COMPARISON.md)。

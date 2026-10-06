@@ -1,4 +1,12 @@
+> Historical record. This describes the version at that time, not R14 acceptance. Current specification: [SPEC.md](SPEC.md).
+
 # Tsugiai as the real-project demonstration
+
+## R16 — full source reference, 2026-10-06
+
+The primary walkthrough opens Tsugiai. All 51 committed source files / 19,541 lines are separately available in `fixtures/repository-reference/tsugiai.json`, with sanitized text, source hashes, fixed revision and MIT notice. This reference has `origin=committed_source_reference` and `semantic_analysis=not_run`. It is not an enlarged Gemini recording. The original eleven sources, map, score and read receipts remain unchanged by this feature. The tree labels unexamined references; selecting them displays read-only text without invented notes or unrelated Agent selection. Only the saved nine Checkout Agent implementations play.
+
+Explicit review-candidate links and accompaniment-free focused playback expose the ordinary grounded meaning notes. Unchecked historical concerns remain counter-evidence-unverified and do not receive concern cues. New UI/API and source-integrity checks are recorded in EXECUTION_PLAN.md; human listening benefit and new Gemini semantic accuracy remain unverified.
 
 ## Current R12 — real recorded scope, 2026-10-03
 

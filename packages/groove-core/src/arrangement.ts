@@ -129,8 +129,7 @@ export function arrangeJazz(plan: ScorePlan, map: SemanticMap) {
     const comparedPattern = signal.comparison
       ? map.design_patterns?.find((p) => p.pattern_id === signal.comparison!.pattern_id)
       : undefined;
-    if (signal.comparison && !comparedPattern) continue;
-    if (map.analysis_depth === 'overview' && !comparedPattern) continue;
+    if (!comparedPattern || signal.counter_status !== 'rejected') continue;
     if (signal.verdict !== 'concern') continue;
     for (const phrase of plan.phrases) {
       if (plan.mode === 'repo' && !signal.unit_ids.includes(phrase.unit_id!)) continue;

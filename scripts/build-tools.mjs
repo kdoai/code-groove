@@ -1,9 +1,9 @@
 import { build } from 'esbuild';
 import { mkdir } from 'node:fs/promises';
 await mkdir('dist/tools', { recursive: true });
-for (const name of ['groove-core', 'repo-indexer']) {
+for (const name of ['groove-core', 'repo-indexer', 'structure']) {
   await build({
-    entryPoints: [`packages/${name}/src/cli.ts`],
+    entryPoints: [name === 'structure' ? 'packages/repo-indexer/src/structure-cli.ts' : `packages/${name}/src/cli.ts`],
     outfile: `dist/tools/${name}.mjs`,
     bundle: true,
     platform: 'node',

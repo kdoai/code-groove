@@ -4,6 +4,7 @@ import pytest
 from code_groove.app import create_app
 from code_groove.errors import GrooveError
 from code_groove.settings import Settings
+from code_groove.storage import MetadataStore
 from fastapi.testclient import TestClient
 
 
@@ -215,10 +216,46 @@ def test_immutable_artifact_and_event_resume(setup):
         f"/api/v1/runs/{run_id}/events?after_seq=1", headers={"Authorization": "Bearer alice"}
     )
     assert [event["seq"] for event in response.json()["data"]] == [2]
+    first = client.get(f"/api/v1/runs/{run_id}/events?limit=1", headers={"Authorization": "Bearer alice"})
+    assert [event["seq"] for event in first.json()["data"]] == [1]
+    tail = client.get(f"/api/v1/runs/{run_id}/events?after_seq=2", headers={"Authorization": "Bearer alice"})
+    assert tail.json()["data"] == []
     state.artifacts.put("projects/p_test/one.json.gz", {"x": 1})
     state.artifacts.put("projects/p_test/one.json.gz", {"x": 1})
     with pytest.raises(GrooveError, match="IMMUTABLE_CONFLICT"):
         state.artifacts.put("projects/p_test/one.json.gz", {"x": 2})
+
+
+def test_cloud_event_poll_reads_only_requested_document_ids():
+    class Document:
+        exists = True
+
+        def __init__(self, reference):
+            self.reference = reference
+
+        def to_dict(self):
+            return {"seq": int(self.reference.rsplit("_", 1)[1])}
+
+    class Database:
+        requested = []
+
+        def collection(self, collection):
+            assert collection == "run_events"
+            return self
+
+        def document(self, identifier):
+            return identifier
+
+        def get_all(self, references):
+            self.requested = references
+            return [Document(reference) for reference in reversed(references)]
+
+    store = MetadataStore.__new__(MetadataStore)
+    store.cloud = True
+    store.db = Database()
+    assert store.events_after("run_mock", 1000, 2, 10000) == [{"seq": 1001}, {"seq": 1002}]
+    assert store.db.requested == ["run_mock_001001", "run_mock_001002"]
+    assert store.events_after("run_mock", 10000, 100, 10000) == []
 
 
 def test_chunked_request_cannot_bypass_body_limit(setup):

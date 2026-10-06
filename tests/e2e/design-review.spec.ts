@@ -45,6 +45,8 @@ test('read comparisons and human review are distinct, source-linked and never st
     },
   ];
   // Use the real kit hash; the mock only changes interpretation, never audio assets.
+  bundle.map.review_signals[0].counter_explanation = '模擬：別契約という反証を読取根拠で検討';
+  bundle.map.review_signals[0].counter_status = 'rejected';
   const kit = JSON.parse(readFileSync('apps/web/public/audio/midnight-jazz-v4/manifest.json', 'utf8'));
   bundle.score = await compileGroove(bundle.map, kit.kit_hash);
   let writes = 0;
@@ -73,7 +75,7 @@ test('read comparisons and human review are distinct, source-linked and never st
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   }
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.screenshot({ path: 'artifacts/design-review-r13-mock.png' });
+  await page.screenshot({ path: 'artifacts/design-review-r14-mock.png' });
   bundle.map.review_signals[0].verdict = 'inconclusive';
   bundle.map.review_signals[0].human_review_required = true;
   bundle.map.review_signals[0].human_review_reason = 'この差は外部契約の意図ですか？';
@@ -82,7 +84,7 @@ test('read comparisons and human review are distinct, source-linked and never st
   await page.getByRole('button', { name: 'あとで見る', exact: true }).click();
   await expect(page.getByTestId('human-review')).toContainText('この差は外部契約の意図ですか？');
   await expect(page.getByTestId('cue-note')).toHaveCount(0);
-  await expect(page.getByRole('textbox', { name: '選択した範囲への質問' })).toHaveCount(0);
+  await expect(page.getByRole('textbox', { name: '選択した範囲への質問' })).toBeVisible();
   await page.getByRole('button', { name: '選択箇所の保存された説明を見る' }).click();
   await expect(page.locator('.saved-answer')).toContainText('新しいモデル呼び出しなし');
   expect(writes).toBe(0);

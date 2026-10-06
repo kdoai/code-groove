@@ -1,40 +1,9 @@
-# Saved work and differential analysis
+# 索引・再利用・範囲間統合 — R14
 
-Replay retrieves immutable source snapshots, interpretations and scores. It calls
-no model. New grammar can compile a stored interpretation without another Agent
-review. Source selection is scoped to the owner and to the analysis's original
-snapshot, including historical analyses after Git refresh.
+静的索引の版は`typescript-6-python-3.13-v4-lexical`、分割計画は`repository-partitions-v2`です。Pythonの入れ子関数、async、lambda、入れ子クラスのメソッドを索引化し、最外の所有元に集約して意味解析します。継承・動的属性・実行時dispatchは推定せず未解決です。
 
-“Gitの差分を調べる” queues a bounded refresh of the configured public repository
-ref. A compatible identical snapshot completes with `analysis_cache_hit` and zero
-model requests. New source bytes trigger comparison against the previous snapshot.
-Changed source files and their transitive callers are re-investigated; removed
-callees invalidate old callers too. README, tests and config changes invalidate
-semantic reuse conservatively. Unaffected unit/event interpretations are retained
-only after source bytes and each cited SHA-256 line projection are reverified.
-The Agent receives server-issued remapped evidence and must re-evaluate structural
-signals. Reuse is visible in `incremental_scope` trace events.
+キャッシュはモデル・prompt・索引・計画・所有元の位置・依存ソースhashが一致するときだけ再利用します。直接／推移的なimport、全体の資料・テストを含みます。標準ライブラリは外部として区別します。未解決ローカルimportを到達可能な範囲に含む場合は全ソースを依存にして保守的に無効化します。他の到達不能な範囲へはその不確実性を広げません。未知のサードパーティimportはローカルとの判別ができないため保守的です。
 
-Cache boundaries: owner/project, source snapshot, `conductor-system-v4`, model ID
-and `typescript-6-python-3.13-v2` index adapter. Grammar/kit changes invalidate
-scores independently. No cross-account cache or arbitrary filesystem access exists.
-The archive is still checked; identical source bytes reuse the static index too. For changed snapshots the bounded static index is rebuilt; “differential” refers to expensive
-semantic investigation, not skipping source security checks.
+旧版の保存結果は再生できますが、現行Agentの解析キャッシュとは表示を分けます。意味キーや責務名が等しいだけでは、別範囲の意味を自動結合しません。
 
-Ten refresh checks/day are allowed; only changed semantic investigations consume
-the existing three-analysis/day limit. Worker attempts preserve reservations,
-deadline and usage. Cancellation and global kill switch still apply before tools,
-model calls and result publication.
-
-TypeScript/TSX uses a virtual TypeScript 6 compiler without tsconfig, plugins,
-packages or execution. Python 3.13 uses stdlib AST in an isolated child process,
-five-second deadline and Linux 256 MiB/three-second CPU limits. It supports module
-functions/async functions and direct local `from ... import` aliases. Python class
-methods, dynamic dispatch, import execution and third-party inference are outside
-this adapter's scope. Syntax parsing does not prove type correctness or behavior.
-The UI preserves code text and evidence ranges for both languages.
-
-Upgrade procedure: update locked runtime/parser/SDK dependencies in a PR, change
-adapter or prompt version when semantic behavior changes, run affected contract,
-parser, evidence and compiler checks; run E2E only for UI/API effects. Live SDK
-checks are opt-in, not scheduled on every dependency or documentation edit.
+範囲間統合は保存結果のある2–4範囲、同じスナップショット内の2–32実装を明示選択します。APIは所有権・期限・重複・所属を確認します。保存された責務は仮説として渡し、新しいread_code根拠を要求します。一つのSemanticMap上で変更理由を比較し、共通責務、理由のある差、未解決を提出します。全域の統合完了とは表示しません。1回の新規解析枠と既存予算を使用します。

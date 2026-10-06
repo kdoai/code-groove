@@ -58,6 +58,7 @@ export function Transport({
     if (engine.playing) engine.pause();
     else {
       setLoading(true);
+      ws.set({ following: true });
       try {
         await engine.play();
       } catch {

@@ -1,3 +1,5 @@
+> Historical record. This describes the version at that time, not R14 acceptance. Current specification: [SPEC.md](SPEC.md).
+
 # Implementation decisions
 
 - Specification copied verbatim to SPEC.md. R1–R3 user feedback supersedes the original presentation: the current workspace uses a directory tree and DTM-style arrangement with a compact code dock and persistent Agent panel.

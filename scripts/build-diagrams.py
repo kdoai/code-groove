@@ -41,7 +41,7 @@ def main():
         (160, "Browser"),
         (440, "Web / Auth"),
         (720, "Worker / Queue"),
-        (1000, "Gemini SDK"),
+        (1000, "ADK governed Agent"),
         (1280, "Private store"),
     ]
     for x, name in actors:
@@ -62,7 +62,7 @@ def main():
         '<rect x="640" y="415" width="438" height="145" fill="none" stroke="#8596bc" stroke-dasharray="5 4" rx="10"/><text x="663" y="437" class="small">Bounded adaptive tool loop</text>'
     )
     parts.append(
-        '<text x="60" y="870" class="sub">Identical refresh: source validation + index cache + analysis cache, zero model calls. Changed: affected semantic units only.</text>'
+        '<text x="60" y="870" class="sub">Compatible saved scope: zero model calls. Changed inputs invalidate cache. Cross-scope reconciliation is explicit and bounded.</text>'
     )
     save("sequence", parts)
     parts = document(
@@ -130,7 +130,7 @@ def main():
         180,
         "Gemini on Google Cloud",
         [
-            "Gen AI SDK / ADC",
+            "ADK + Gen AI / ADC",
             "Sanitized selected evidence",
             "Structured claims / alternatives",
             "No source write / approval tools",
@@ -154,7 +154,7 @@ def main():
     save("data-flow", parts)
     parts = document(
         "Code Groove / Why this rhythm?",
-        "Whole-health mapping -> listen -> select -> focused inspection -> human decision.",
+        "Scoped meaning map -> listen -> source evidence -> counter-explanation -> human decision.",
     )
     box(
         parts,
@@ -162,12 +162,12 @@ def main():
         190,
         375,
         240,
-        "1 / Whole-health map",
+        "1 / Scoped meaning map",
         [
             "Read exact functions + context",
             "Ask: same reason to change?",
             "Check alternative contracts",
-            "Detected debt candidates stay visible",
+            "Findings and unknowns stay visible",
             "Roles first; no initial patch action",
         ],
     )
@@ -179,11 +179,11 @@ def main():
         240,
         "2 / Musical arrangement",
         [
-            "Same M0-M5 identity / data notes",
+            "Same role + key: same pitch",
             "Code clips only / no empty bars",
             "Rootless voicing / walking bass",
             "Swing / rests / no drums",
-            "Response cues after focused review",
+            "Cues: read peer + rejected counter",
         ],
     )
     box(
@@ -265,15 +265,15 @@ def main():
     )
     save("approval-sequence", parts)
     parts = document(
-        "Code Groove / Repository health examination",
-        "Full Gemini detection stays available. Sound guides the scope of fresh examination; no initial patch action.",
+        "Code Groove / Scoped repository review",
+        "Read selected immutable implementations. Outside scope and runtime remain unverified.",
     )
     for x, name in actors:
         box(parts, x - 130, 150, 260, 80, name, [])
         parts.append(f'<path d="M{x} 230V830" stroke="#cbd5e6" stroke-dasharray="6 6"/>')
     for y, a, b, label in [
-        (275, 0, 1, "1. Open a pinned whole-repository snapshot"),
-        (330, 1, 2, "2. Full health examination / roles / alternatives"),
+        (275, 0, 1, "1. Open pinned sources / choose scope"),
+        (330, 1, 2, "2. Read roles / competing explanations"),
         (385, 2, 3, "3. Save map + detected debt candidates + unknowns"),
         (440, 1, 0, "4. Descriptive motifs / file and meaning layouts"),
         (495, 0, 1, "5. Listen / select a passage / ask a question"),
@@ -297,6 +297,7 @@ def main():
             "Investigate design. Hear its rhythm. Follow exact source evidence.",
         )
         .replace("Validate → compile score", "Validate / reuse → compose")
+        .replace("Google Gen AI SDK · global endpoint", "ADK + Gen AI · global endpoint")
     )
     architecture.write_text(value, encoding="utf-8")
 

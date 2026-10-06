@@ -13,7 +13,7 @@ const motifs = [
 const velocity = [0.58, 0.52, 0.55, 0.48, 0.52, 0.5, 0.48, 0.54];
 const duration = [650, 520, 540, 700, 580, 520, 560, 820];
 const pan = [-0.25, 0.2, -0.08, 0.3, -0.3, 0.08];
-export const grammarVersion = 'groove-chamber-v9' as const;
+export const grammarVersion = 'groove-chamber-v10' as const;
 export const tickSeconds = (tick: number) => ((tick / 480) * 60) / 96;
 function occupiedBars(steps: number[]) {
   return new Map(
@@ -39,7 +39,6 @@ async function sha256(value: unknown) {
 
 export async function compileGroove(map: SemanticMap, kitHash: string): Promise<ScoreBundle> {
   const events = map.events.filter((e) => e.state === 'grounded');
-  if (!events.length) throw new Error('NO_GROUNDED_EVENTS');
   const ids = new Set(events.map((e) => e.event_id));
   if (ids.size !== events.length) throw new Error('DUPLICATE_EVENT');
   for (const r of map.responsibilities) {
@@ -63,13 +62,21 @@ export async function compileGroove(map: SemanticMap, kitHash: string): Promise<
     const sceneEvents = events.filter((e) => unitIds.includes(e.unit_id));
     const placements = responsibilities.flatMap((responsibility) => {
       const variant = Number(responsibility.motif_id.slice(1));
+      const concepts = [
+        ...new Set(
+          events
+            .filter((e) => e.responsibility_id === responsibility.responsibility_id)
+            .sort((a, b) => a.semantic_order - b.semantic_order)
+            .map((e) => e.concept_key),
+        ),
+      ];
       return sceneEvents
         .filter((e) => e.responsibility_id === responsibility.responsibility_id)
         .sort((a, b) => a.semantic_order - b.semantic_order)
         .map((event, index) => ({
           event,
           variant,
-          slot: index % 8,
+          slot: concepts.indexOf(event.concept_key) % 8,
           step: Math.floor(index / 8) * 64 + motifs[variant][index % 8] * 4,
         }));
     });

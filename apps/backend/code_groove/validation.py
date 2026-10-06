@@ -85,6 +85,14 @@ def validate_design_review(
             ):
                 errors.append("Pattern exception requires a separate implementation and covering reads")
     for signal in signals:
+        if signal.counter_status != "not_checked" and (
+            not signal.counter_explanation
+            or not signal.alternative_evidence_ids
+            or any(e not in proofs for e in signal.alternative_evidence_ids)
+        ):
+            errors.append("Checked counter-explanation requires an explicit claim and actual read evidence")
+        if signal.counter_status == "undetermined" and signal.verdict == "concern":
+            errors.append("An unresolved counter-explanation requires an inconclusive verdict")
         if signal.human_review_required and (
             not signal.human_review_reason or signal.verdict != "inconclusive"
         ):

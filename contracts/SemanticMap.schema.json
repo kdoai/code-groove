@@ -685,6 +685,23 @@
           "title": "Alternative",
           "type": "string"
         },
+        "counter_explanation": {
+          "default": "",
+          "maxLength": 800,
+          "title": "Counter Explanation",
+          "type": "string"
+        },
+        "counter_status": {
+          "default": "not_checked",
+          "enum": [
+            "not_checked",
+            "supported",
+            "rejected",
+            "undetermined"
+          ],
+          "title": "Counter Status",
+          "type": "string"
+        },
         "change_scenario": {
           "default": "",
           "maxLength": 800,
@@ -864,6 +881,15 @@
       ],
       "default": null,
       "title": "Parent Analysis Id"
+    },
+    "integration_chunk_ids": {
+      "items": {
+        "pattern": "^[a-zA-Z0-9_-]{1,80}$",
+        "type": "string"
+      },
+      "maxItems": 4,
+      "title": "Integration Chunk Ids",
+      "type": "array"
     },
     "analysis_depth": {
       "default": "focused",

@@ -39,7 +39,9 @@ EXCLUDED = {
     "venv",
     "__pycache__",
 }
-SECRET = re.compile(r"(?i)((?:api[_-]?key|password|secret|access[_-]?token)[\"']?\s*[:=]\s*)([\"'])(?:\\.|(?!\2)[^\\\r\n])*\2")
+SECRET = re.compile(
+    r"(?i)((?:api[_-]?key|password|secret|access[_-]?token)[\"']?\s*[:=]\s*)([\"'])(?:\\.|(?!\2)[^\\\r\n])*\2"
+)
 
 
 def sanitize(source: str) -> str:
@@ -246,7 +248,9 @@ def build_index(snapshot_id: str, sources: dict[str, str], *, repository: bool =
         or sum(len(v.splitlines()) for v in eligible.values()) > (60000 if repository else 6000)
         or sum(len(v.encode()) for v in sources.values()) > (4 * 1024 * 1024 if repository else 1024 * 1024)
     ):
-        raise GrooveError("SCOPE_TOO_LARGE", "静的索引の上限を超えています。対象フォルダーを指定してください。")
+        raise GrooveError(
+            "SCOPE_TOO_LARGE", "静的索引の上限を超えています。対象フォルダーを指定してください。"
+        )
     index = run_node("repo-indexer", {"snapshot_id": snapshot_id, "sources": sources})
     if any(path.endswith(".py") for path in sources):
         try:
@@ -270,7 +274,9 @@ def build_index(snapshot_id: str, sources: dict[str, str], *, repository: bool =
     for file in index["files"]:
         file["lines"] = len(sources[file["path"]].splitlines())
     if len(index["units"]) > (4096 if repository else 32):
-        raise GrooveError("SCOPE_TOO_LARGE", f"静的索引の実装単位が{4096 if repository else 32}を超えています。")
+        raise GrooveError(
+            "SCOPE_TOO_LARGE", f"静的索引の実装単位が{4096 if repository else 32}を超えています。"
+        )
     if any(f["parse_errors"] for f in index["files"] if f["is_source"]):
         raise GrooveError("SOURCE_PARSE_FAILED", "TypeScript / Pythonの構文を確認してください。")
     return index

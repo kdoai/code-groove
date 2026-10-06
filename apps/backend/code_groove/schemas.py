@@ -11,6 +11,169 @@ class Contract(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
 
+class SyntaxLocation(Contract):
+    path: str
+    start_line: int = Field(ge=1)
+    end_line: int = Field(ge=1)
+    start_column: int = Field(ge=1)
+    end_column: int = Field(ge=1)
+    start_offset: int = Field(ge=0)
+    end_offset: int = Field(ge=0)
+
+
+class SyntaxEvent(Contract):
+    event_id: Id
+    kind: Literal[
+        "branch",
+        "loop",
+        "call",
+        "declaration",
+        "assignment",
+        "return",
+        "throw",
+        "block",
+        "function_boundary",
+        "unsupported",
+    ]
+    order: int = Field(ge=0)
+    parent_id: Id | None
+    depth: int = Field(ge=0)
+    context: str
+    syntax: str
+    shape: str
+    location: SyntaxLocation
+    call_key: str | None = None
+    call_identity: Literal["static_target", "same_expression"] | None = None
+    label: str
+
+
+class SyntaxProjection(Contract):
+    snapshot_id: Id
+    source_hash: str
+    unit_id: Id
+    label: str
+    location: SyntaxLocation
+    signature: str
+    extraction_version: Literal["ts-syntax-v1"] = "ts-syntax-v1"
+    normalization_version: Literal["ast-trivia-only-v1"] = "ast-trivia-only-v1"
+    status: Literal["ok", "empty", "unsupported", "parse_failed", "out_of_scope"]
+    diagnostics: list[str]
+    events: list[SyntaxEvent]
+
+
+class StructureRow(Contract):
+    row_id: Id
+    a: Id | None
+    b: Id | None
+    status: Literal["equal", "different", "unknown", "absent", "unsupported"]
+
+
+class StructureComparison(Contract):
+    comparison_id: Id
+    alignment_version: Literal["unique-monotone-v1"] = "unique-monotone-v1"
+    a: SyntaxProjection
+    b: SyntaxProjection
+    rows: list[StructureRow]
+
+
+class StructureTone(Contract):
+    at_ms: int = Field(ge=0)
+    duration_ms: int = Field(gt=0)
+    midi: int = Field(ge=0, le=127)
+    side: Literal["A", "B"]
+    event_id: Id | None
+    row_id: Id
+    role: Literal["structure", "difference_marker", "absent", "unknown", "unsupported"]
+
+
+class CallPhrase(Contract):
+    key: str
+    identity: Literal["static_target", "same_expression"]
+    midi: list[int] = Field(min_length=2, max_length=2)
+
+
+class StructureSegment(Contract):
+    index: int
+    start_row: int
+    end_row: int
+    duration_ms: int
+    tones: list[StructureTone]
+
+
+class StructurePlaybackPlan(Contract):
+    encoding_version: Literal["structure-neutral-v1"] = "structure-neutral-v1"
+    dictionary_version: Literal["sorted-call-pairs-v1"] = "sorted-call-pairs-v1"
+    sound_version: Literal["sine-envelope-v1"] = "sine-envelope-v1"
+    dictionary_limit: Literal[4] = 4
+    dictionary: list[CallPhrase]
+    markers: bool
+    status: Literal["ready", "dictionary_overflow", "extraction_unavailable", "empty"]
+    segments: list[StructureSegment]
+    score_hash: str
+
+
+class ComparisonInvestigationRequest(Contract):
+    record_id: Id
+    snapshot_id: Id
+    comparison_id: Id
+    unit_a: Id
+    unit_b: Id
+    source_hash_a: str = Field(pattern=r"^[a-f0-9]{64}$")
+    source_hash_b: str = Field(pattern=r"^[a-f0-9]{64}$")
+    start_row: int = Field(ge=0, strict=True)
+    end_row: int = Field(gt=0, strict=True)
+    expectation: str = Field(max_length=1000)
+    observation: str = Field(max_length=1000)
+    question: str = Field(min_length=1, max_length=1000)
+
+
+class ComparisonAnswerCandidate(Contract):
+    interpretation: Literal["maintained", "revised", "inconclusive"]
+    summary: str = Field(min_length=1, max_length=1000)
+    reason: str = Field(min_length=1, max_length=1000)
+    counter_explanation: str = Field(min_length=1, max_length=1000)
+    unknowns: list[str] = Field(max_length=12)
+    evidence_ids: Ids
+
+
+class ComparisonInvestigationResult(ComparisonAnswerCandidate):
+    kind: Literal["structure_comparison"] = "structure_comparison"
+    investigation_id: Id
+    base_analysis_id: Id
+    origin: Literal["live", "fixture"]
+    request: ComparisonInvestigationRequest
+    evidence: list["Evidence"]
+    model_id: str
+
+
+class ComparisonHumanRecord(Contract):
+    record_id: Id
+    expectation: str
+    observation: str
+    question: str
+    recognition: Literal["unrecorded", "recognized", "not_recognized"]
+    reason_status: Literal["not_started", "unanswered", "deferred", "confirmed_with_evidence"]
+    judgment: Literal["unrecorded", "intended_difference", "needs_review", "insufficient_context"]
+    started_at: str
+    updated_at: str
+    ended_at: str | None
+    reason_evidence: str
+    answers: list[ComparisonInvestigationResult]
+    operations: list[dict]
+
+
+class ComparisonExport(Contract):
+    export_version: Literal["code-groove-comparison-v1"] = "code-groove-comparison-v1"
+    material_id: str
+    code_revision: str
+    comparison: StructureComparison
+    playback: StructurePlaybackPlan
+    agent_context: dict
+    presentation: dict
+    record: ComparisonHumanRecord
+    exported_at: str
+
+
 class Span(Contract):
     file_id: Id
     path: str = Field(min_length=1, max_length=240)
@@ -138,6 +301,8 @@ class ReviewSignal(Contract):
     label: str = Field(min_length=1, max_length=48)
     explanation: Text
     alternative: Text
+    counter_explanation: str = Field(default="", max_length=800)
+    counter_status: Literal["not_checked", "supported", "rejected", "undetermined"] = "not_checked"
     change_scenario: str = Field(default="", max_length=800)
     alternative_evidence_ids: Ids = Field(default_factory=list)
     unit_ids: Ids
@@ -161,6 +326,7 @@ class SemanticMap(AnalysisCandidate):
     project_id: Id
     snapshot_id: Id
     parent_analysis_id: Id | None = None
+    integration_chunk_ids: list[Id] = Field(default_factory=list, max_length=4)
     analysis_depth: Literal["overview", "focused"] = "focused"
     origin: Literal["live", "recorded_live", "fixture"]
     evidence: list[Evidence]
@@ -209,6 +375,7 @@ class ScorePlan(Contract):
         "groove-chamber-v7",
         "groove-chamber-v8",
         "groove-chamber-v9",
+        "groove-chamber-v10",
     ]
     kit_id: Literal["paper-studio-v1", "midnight-jazz-v2", "midnight-jazz-v3", "midnight-jazz-v4"]
     kit_hash: str

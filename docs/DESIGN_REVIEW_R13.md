@@ -1,3 +1,5 @@
+> Historical record. This describes the version at that time, not R14 acceptance. Current specification: [SPEC.md](SPEC.md).
+
 # R13 — 監査から採用した改善
 
 目的に直結する比較の根拠・判断の区分・探索経路を改善する。網羅的な自動レビューへ機能を広げることより、確認したパターンと違いを人が検証できることを優先した。

@@ -49,6 +49,7 @@ export default function App() {
   const [starting, setStarting] = useState(false),
     [investigationError, setInvestigationError] = useState('');
   const [tour, setTour] = useState(false);
+  const [agentQuestion, setAgentQuestion] = useState('');
   const [proposalRunId, setProposalRunId] = useState(''),
     [proposalId, setProposalId] = useState('');
   const [showProposal, setShowProposal] = useState(false),
@@ -169,7 +170,7 @@ export default function App() {
     cache.invalidateQueries({ queryKey: ['project', ws.projectId] });
   }, [proposalRun.data]);
   const bundle = useQuery({
-    queryKey: ['bundle', ws.projectId, ws.analysisId, 'groove-chamber-v9'],
+    queryKey: ['bundle', ws.projectId, ws.analysisId, 'groove-chamber-v10'],
     queryFn: () =>
       api<Bundle>(
         ws.sampleId
@@ -395,11 +396,40 @@ export default function App() {
     } else await openRepo();
   }
   async function investigate(question: string) {
-    if (!bundle.data || ws.sampleId || bundle.data.map.origin === 'fixture') return;
+    if (!currentUser) {
+      setModal('auth');
+      return;
+    }
+    if (!bundle.data) return;
+    if (ws.codeSpan && !bundle.data.map.units.some((unit) => unit.primary_span.path === ws.codeSpan?.path)) {
+      setInvestigationError(
+        'この参考ファイルは保存済み検査の対象外です。まず演奏中の実装か検査済みの根拠行を選んでください。質問は保持しています。',
+      );
+      return;
+    }
     setInvestigationError('');
     setResult(undefined);
     try {
-      const run = await api<{ run_id: string }>(`/analyses/${bundle.data.map.analysis_id}/investigations`, {
+      let analysisId = bundle.data.map.analysis_id;
+      if (ws.sampleId) {
+        if (
+          !['recorded-checkout-flow', 'recorded-returns-before', 'recorded-tsugiai-agents'].includes(
+            ws.sampleId,
+          )
+        ) {
+          setInvestigationError(
+            '模擬データへの新規調査には、実解析のサンプルかRepositoryを開いてください。質問は保持しています。',
+          );
+          return;
+        }
+        const saved = await api<{ project_id: string; analysis_id: string }>(
+          `/samples/${ws.sampleId}/projects`,
+          {},
+        );
+        analysisId = saved.analysis_id;
+        ws.set({ projectId: saved.project_id, sampleId: '', analysisId });
+      }
+      const run = await api<{ run_id: string }>(`/analyses/${analysisId}/investigations`, {
         scene_id: bundle.data.score.scenes[ws.scene].scene_id,
         unit_ids: [ws.unitId || bundle.data.map.units.find((u) => u.review_state === 'inspected')!.unit_id],
         event_ids: ws.eventId ? [ws.eventId] : [],
@@ -707,9 +737,25 @@ export default function App() {
           <h2>保存した演奏とコードを読み込んでいます</h2>
           <p>保存済み結果の表示で、新しいAI解析は始まりません。</p>
         </main>
+      ) : data && !data.score.scenes.length ? (
+        <main className="analysis-progress" role="status">
+          <h2>判断を保留しました</h2>
+          <p>根拠が揃った意味イベントがないため演奏はありません。無音は良い設計を意味しません。</p>
+          <p>
+            確認済み {data.map.coverage.inspected_units} / 対象 {data.map.coverage.indexed_units}実装
+          </p>
+          <ul>
+            {data.map.profile.unknowns.map((reason, i) => (
+              <li key={i}>{reason}</li>
+            ))}
+          </ul>
+          <button onClick={() => setModal('repository')}>検査範囲を確認</button>
+        </main>
       ) : data && plan ? (
         <ReviewWorkspace bundle={data} plan={plan}>
           <AgentPanel
+            question={agentQuestion}
+            setQuestion={setAgentQuestion}
             key={data.map.analysis_id}
             bundle={data}
             result={result?.base_analysis_id === data.map.analysis_id ? result : undefined}
@@ -758,7 +804,7 @@ export default function App() {
             Tsugiaiの実コードを聴く
             <ArrowRight size={15} />
           </button>
-          <small>Checkout Agentの9実装 · 保存済み実解析 · ログイン不要・追加AI費用なし</small>
+          <small>実在する51ファイルを参照 · 9実装の保存済み実解析 · ログイン不要・追加AI費用なし</small>
         </main>
       )}
       {modal === 'open' && (
@@ -777,6 +823,18 @@ export default function App() {
           close={() => setModal('')}
           pending={pending}
           analyze={(id, retryPartial) => void analyzeChunk(id, retryPartial)}
+          integrate={(chunkIds, unitIds) => {
+            setStarting(true);
+            setError('');
+            setModal('');
+            void api<{ run_id: string }>(`/projects/${ws.projectId}/integrations`, {
+              chunk_ids: chunkIds,
+              unit_ids: unitIds,
+            })
+              .then((created) => setRunId(created.run_id))
+              .catch((e) => setError(e.message))
+              .finally(() => setStarting(false));
+          }}
           open={(id) => {
             engine.pause();
             ws.set({ analysisId: id, unitId: '', eventId: '', codeSpan: null, scene: 0, playbackFile: '' });

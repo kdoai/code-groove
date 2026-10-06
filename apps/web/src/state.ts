@@ -25,6 +25,7 @@ type Workspace = {
   showBacking: boolean;
   theme: 'light' | 'dark';
   agentVisible: boolean;
+  following: boolean;
   set: (values: Partial<Omit<Workspace, 'set'>>) => void;
 };
 export const useWorkspace = create<Workspace>()(
@@ -52,6 +53,7 @@ export const useWorkspace = create<Workspace>()(
       showBacking: false,
       theme: 'light',
       agentVisible: true,
+      following: true,
       set: (values) =>
         set({ ...('eventId' in values || 'unitId' in values ? { signalId: '' } : {}), ...values }),
     }),

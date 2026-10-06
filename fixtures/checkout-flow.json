@@ -739,7 +739,7 @@
   },
   "score": {
     "analysis_id": "analysis_checkout_fixture",
-    "score_hash": "8b2cfad42bf83d82452342df4dc8b8160a03eba7b386104f68094db5e01a580d",
+    "score_hash": "c488ad1e316f5fc4d252fe39a25ac01e03ecb58b5df9cc0b65f1f63d8b1c816e",
     "scenes": [
       {
         "scene_id": "scene_1",
@@ -755,7 +755,7 @@
         ],
         "theme": {
           "scene_id": "scene_1",
-          "grammar_version": "groove-chamber-v9",
+          "grammar_version": "groove-chamber-v10",
           "kit_id": "midnight-jazz-v4",
           "kit_hash": "a302b56825512936a014a556a88819affd50de65c9d68ff3acb544702dc919f7",
           "bpm": 96,
@@ -1077,10 +1077,10 @@
               "kind": "data",
               "tick": 1920,
               "voice": "piano",
-              "midi": 79,
+              "midi": 72,
               "variant": 0,
-              "velocity": 0.55,
-              "duration_ms": 540,
+              "velocity": 0.58,
+              "duration_ms": 650,
               "pan": -0.25,
               "evidence_ids": [
                 "ev_7e3b0f0c530e4af8b4ee9f949d43bd3b"
@@ -1307,11 +1307,11 @@
               "event_id": "evt_health_9",
               "responsibility_id": "r0",
               "unit_id": "unit_b834b49885e1f124",
-              "duration_ms": 520,
+              "duration_ms": 650,
               "voice": "piano",
-              "midi": 76,
+              "midi": 72,
               "variant": 0,
-              "velocity": 0.52,
+              "velocity": 0.58,
               "pan": -0.25,
               "evidence_ids": [
                 "ev_b51d93ae97ff48de8a751c5363794152"
@@ -1935,10 +1935,10 @@
               "kind": "data",
               "tick": 9120,
               "voice": "vibes",
-              "midi": 72,
+              "midi": 67,
               "variant": 1,
-              "velocity": 0.55,
-              "duration_ms": 540,
+              "velocity": 0.58,
+              "duration_ms": 625,
               "pan": 0.2,
               "evidence_ids": [
                 "ev_7e3b0f0c530e4af8b4ee9f949d43bd3b"
@@ -1993,10 +1993,10 @@
               "kind": "data",
               "tick": 9600,
               "voice": "vibes",
-              "midi": 69,
+              "midi": 67,
               "variant": 1,
-              "velocity": 0.52,
-              "duration_ms": 520,
+              "velocity": 0.58,
+              "duration_ms": 650,
               "pan": 0.2,
               "evidence_ids": [
                 "ev_b51d93ae97ff48de8a751c5363794152"
@@ -2335,8 +2335,8 @@
               "voice": "piano",
               "midi": 76,
               "variant": 2,
-              "velocity": 0.48,
-              "duration_ms": 560,
+              "velocity": 0.58,
+              "duration_ms": 650,
               "pan": -0.08,
               "evidence_ids": [
                 "ev_b51d93ae97ff48de8a751c5363794152"
@@ -2468,10 +2468,10 @@
               "kind": "data",
               "tick": 13440,
               "voice": "piano",
-              "midi": 81,
+              "midi": 76,
               "variant": 2,
-              "velocity": 0.55,
-              "duration_ms": 540,
+              "velocity": 0.58,
+              "duration_ms": 650,
               "pan": -0.08,
               "evidence_ids": [
                 "ev_f9135cbc14634d639b1e078e6c449ddd"
@@ -2579,10 +2579,10 @@
               "kind": "data",
               "tick": 14400,
               "voice": "piano",
-              "midi": 81,
+              "midi": 76,
               "variant": 2,
-              "velocity": 0.52,
-              "duration_ms": 580,
+              "velocity": 0.58,
+              "duration_ms": 650,
               "pan": -0.08,
               "evidence_ids": [
                 "ev_f9135cbc14634d639b1e078e6c449ddd"
@@ -2714,10 +2714,10 @@
               "kind": "data",
               "tick": 15360,
               "voice": "piano",
-              "midi": 79,
+              "midi": 76,
               "variant": 2,
-              "velocity": 0.52,
-              "duration_ms": 520,
+              "velocity": 0.58,
+              "duration_ms": 650,
               "pan": -0.08,
               "evidence_ids": [
                 "ev_aac9b408a0d7408797328cd2a3c82648"
@@ -2885,9 +2885,9 @@
               "kind": "data",
               "tick": 16800,
               "voice": "piano",
-              "midi": 84,
+              "midi": 76,
               "variant": 2,
-              "velocity": 0.48,
+              "velocity": 0.58,
               "duration_ms": 625,
               "pan": -0.08,
               "evidence_ids": [
@@ -3054,10 +3054,10 @@
               "kind": "data",
               "tick": 18240,
               "voice": "piano",
-              "midi": 79,
+              "midi": 76,
               "variant": 2,
-              "velocity": 0.5,
-              "duration_ms": 520,
+              "velocity": 0.58,
+              "duration_ms": 650,
               "pan": -0.08,
               "evidence_ids": [
                 "ev_f9135cbc14634d639b1e078e6c449ddd"
@@ -3131,9 +3131,9 @@
               "kind": "data",
               "tick": 18720,
               "voice": "piano",
-              "midi": 74,
+              "midi": 76,
               "variant": 2,
-              "velocity": 0.54,
+              "velocity": 0.58,
               "duration_ms": 625,
               "pan": -0.08,
               "evidence_ids": [
@@ -3622,7 +3622,7 @@
         },
         "repo": {
           "scene_id": "scene_1",
-          "grammar_version": "groove-chamber-v9",
+          "grammar_version": "groove-chamber-v10",
           "kit_id": "midnight-jazz-v4",
           "kit_hash": "a302b56825512936a014a556a88819affd50de65c9d68ff3acb544702dc919f7",
           "bpm": 96,
@@ -4050,10 +4050,10 @@
               "kind": "data",
               "tick": 1920,
               "voice": "piano",
-              "midi": 79,
+              "midi": 76,
               "variant": 2,
-              "velocity": 0.52,
-              "duration_ms": 520,
+              "velocity": 0.58,
+              "duration_ms": 650,
               "pan": -0.08,
               "evidence_ids": [
                 "ev_aac9b408a0d7408797328cd2a3c82648"
@@ -4593,10 +4593,10 @@
               "kind": "data",
               "tick": 5760,
               "voice": "piano",
-              "midi": 81,
+              "midi": 76,
               "variant": 2,
-              "velocity": 0.55,
-              "duration_ms": 540,
+              "velocity": 0.58,
+              "duration_ms": 650,
               "pan": -0.08,
               "evidence_ids": [
                 "ev_f9135cbc14634d639b1e078e6c449ddd"
@@ -4704,10 +4704,10 @@
               "kind": "data",
               "tick": 6720,
               "voice": "piano",
-              "midi": 81,
+              "midi": 76,
               "variant": 2,
-              "velocity": 0.52,
-              "duration_ms": 580,
+              "velocity": 0.58,
+              "duration_ms": 650,
               "pan": -0.08,
               "evidence_ids": [
                 "ev_f9135cbc14634d639b1e078e6c449ddd"
@@ -4993,9 +4993,9 @@
               "kind": "data",
               "tick": 9120,
               "voice": "piano",
-              "midi": 84,
+              "midi": 76,
               "variant": 2,
-              "velocity": 0.48,
+              "velocity": 0.58,
               "duration_ms": 625,
               "pan": -0.08,
               "evidence_ids": [
@@ -5162,10 +5162,10 @@
               "kind": "data",
               "tick": 10560,
               "voice": "piano",
-              "midi": 79,
+              "midi": 76,
               "variant": 2,
-              "velocity": 0.5,
-              "duration_ms": 520,
+              "velocity": 0.58,
+              "duration_ms": 650,
               "pan": -0.08,
               "evidence_ids": [
                 "ev_f9135cbc14634d639b1e078e6c449ddd"
@@ -5297,10 +5297,10 @@
               "kind": "data",
               "tick": 11520,
               "voice": "vibes",
-              "midi": 69,
+              "midi": 67,
               "variant": 1,
-              "velocity": 0.52,
-              "duration_ms": 520,
+              "velocity": 0.58,
+              "duration_ms": 650,
               "pan": 0.2,
               "evidence_ids": [
                 "ev_b51d93ae97ff48de8a751c5363794152"
@@ -5314,10 +5314,10 @@
               "kind": "data",
               "tick": 11520,
               "voice": "piano",
-              "midi": 76,
+              "midi": 72,
               "variant": 0,
-              "velocity": 0.52,
-              "duration_ms": 520,
+              "velocity": 0.58,
+              "duration_ms": 650,
               "pan": -0.25,
               "evidence_ids": [
                 "ev_b51d93ae97ff48de8a751c5363794152"
@@ -5707,8 +5707,8 @@
               "voice": "piano",
               "midi": 76,
               "variant": 2,
-              "velocity": 0.48,
-              "duration_ms": 560,
+              "velocity": 0.58,
+              "duration_ms": 650,
               "pan": -0.08,
               "evidence_ids": [
                 "ev_b51d93ae97ff48de8a751c5363794152"
@@ -6205,10 +6205,10 @@
               "kind": "data",
               "tick": 17280,
               "voice": "piano",
-              "midi": 79,
+              "midi": 72,
               "variant": 0,
-              "velocity": 0.55,
-              "duration_ms": 540,
+              "velocity": 0.58,
+              "duration_ms": 650,
               "pan": -0.25,
               "evidence_ids": [
                 "ev_7e3b0f0c530e4af8b4ee9f949d43bd3b"
@@ -6512,10 +6512,10 @@
               "kind": "data",
               "tick": 18720,
               "voice": "vibes",
-              "midi": 72,
+              "midi": 67,
               "variant": 1,
-              "velocity": 0.55,
-              "duration_ms": 540,
+              "velocity": 0.58,
+              "duration_ms": 625,
               "pan": 0.2,
               "evidence_ids": [
                 "ev_7e3b0f0c530e4af8b4ee9f949d43bd3b"
@@ -6741,9 +6741,9 @@
               "kind": "data",
               "tick": 20640,
               "voice": "piano",
-              "midi": 74,
+              "midi": 76,
               "variant": 2,
-              "velocity": 0.54,
+              "velocity": 0.58,
               "duration_ms": 625,
               "pan": -0.08,
               "evidence_ids": [

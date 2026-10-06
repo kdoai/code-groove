@@ -1,0 +1,474 @@
+import { useEffect, useRef, useState } from 'react';
+import { Headphones, Play } from 'lucide-react';
+import type { ScorePlan, ScheduledNote } from '../../../../packages/contracts/ScoreBundle';
+import type { Bundle } from '../api';
+import { engine } from '../audio/engine';
+import { useWorkspace } from '../state';
+import { DemoComparison } from './DemoComparison';
+import { ReviewFocus } from './ReviewFocus';
+const motifColors = ['#c7cfff', '#a6ddce', '#aad4ef', '#e4bfde', '#b8debd', '#edc4ae'];
+export function Arrangement({
+  bundle,
+  plan,
+  following,
+  select,
+  followPlayback,
+}: {
+  bundle: Bundle;
+  plan: ScorePlan;
+  following: boolean;
+  select: (note: ScheduledNote, seek?: boolean) => void;
+  followPlayback: () => void;
+}) {
+  const ws = useWorkspace();
+  const [active, setActive] = useState<ScheduledNote[]>([]),
+    [audioError, setAudioError] = useState('');
+  const trackHeads = useRef(new Map<string, HTMLDivElement>()),
+    trackRows = useRef(new Map<string, HTMLDivElement>()),
+    trackContainer = useRef<HTMLDivElement>(null),
+    overviewHead = useRef<HTMLDivElement>(null);
+  const total = plan.total_bars * 1920;
+  const musical = plan.notes.filter((n) => n.kind !== 'pulse' || !ws.pulseMuted);
+  function noteColor(note: ScheduledNote) {
+    if (note.kind === 'cue') return '#ffbc66';
+    if (!note.event_id) return '#74849c';
+    const role = bundle.map.responsibilities.find((r) => r.responsibility_id === note.responsibility_id);
+    return motifColors[Number(role?.motif_id.slice(1) ?? 0)];
+  }
+  const files = [...new Set(bundle.map.units.map((u) => u.primary_span.path))];
+  const selectedPath =
+    ws.codeSpan?.path ?? bundle.map.units.find((unit) => unit.unit_id === ws.unitId)?.primary_span.path;
+  useEffect(() => {
+    const container = trackContainer.current;
+    if (!container || !selectedPath) return;
+    const reveal = () => {
+      const row = trackRows.current.get(selectedPath);
+      if (!row) return;
+      if (row.offsetTop < container.scrollTop) container.scrollTop = row.offsetTop;
+      else if (row.offsetTop + row.offsetHeight > container.scrollTop + container.clientHeight)
+        container.scrollTop = row.offsetTop + row.offsetHeight - container.clientHeight;
+    };
+    reveal();
+    const observer = new ResizeObserver(reveal);
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, [selectedPath]);
+  const signal =
+    bundle.map.review_signals?.find((s) => s.verdict === 'concern' && s.unit_ids.includes(ws.unitId)) ??
+    bundle.map.review_signals?.find((s) => s.verdict === 'concern');
+  useEffect(() => {
+    let frame = 0,
+      last = 0;
+    const animate = (now: number) => {
+      const left = `${Math.min(100, (engine.tick / total) * 100)}%`;
+      trackHeads.current.forEach((head) => (head.style.left = left));
+      if (overviewHead.current) overviewHead.current.style.left = left;
+      if (now - last > 90) {
+        const sounding = engine.playing
+          ? musical.filter(
+              (n) =>
+                !ws.instrumentMutes.includes(n.voice) &&
+                !(ws.focusEvidence && n.kind === 'accompaniment') &&
+                !(
+                  n.responsibility_id &&
+                  (ws.muted.includes(n.responsibility_id) ||
+                    (ws.solo.length > 0 && !ws.solo.includes(n.responsibility_id)))
+                ) &&
+                n.tick <= engine.tick &&
+                engine.tick < n.tick + n.duration_ms * 0.768,
+            )
+          : [];
+        setActive(sounding);
+        const linked =
+          sounding.find((n) => n.kind === 'cue') ??
+          sounding.find((n) => n.kind === 'data') ??
+          sounding.find((n) => n.event_id);
+        const selection = useWorkspace.getState();
+        if (following && linked && (selection.eventId !== linked.event_id || selection.codeSpan)) {
+          select(linked, false);
+        }
+        last = now;
+      }
+      frame = requestAnimationFrame(animate);
+    };
+    frame = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(frame);
+  }, [plan, following, ws.instrumentMutes, ws.focusEvidence, ws.pulseMuted, ws.muted, ws.solo]);
+  async function audition() {
+    const cue =
+      musical.find((n) => n.kind === 'cue' && n.signal_id === signal?.signal_id) ??
+      musical.find((n) => n.event_id && n.unit_id === ws.unitId);
+    if (
+      !cue ||
+      (ws.playbackFile &&
+        ws.playbackFile !== bundle.map.events.find((e) => e.event_id === cue.event_id)?.span.path)
+    )
+      return;
+    select(cue, false);
+    followPlayback();
+    engine.stop();
+    engine.seek(Math.max(0, cue.tick - 1920));
+    try {
+      await engine.play();
+      setAudioError('');
+    } catch {
+      setAudioError('音源の読込に失敗しました。');
+    }
+  }
+  function markPassage() {
+    const note = current?.event_id ? current : musical.find((n) => n.event_id && n.unit_id === ws.unitId);
+    if (!note) return;
+    engine.pause();
+    setActive([]);
+    select(note);
+  }
+  const current =
+    active.find((n) => n.kind === 'cue') ??
+    active.find((n) => n.kind === 'data') ??
+    active.find((n) => n.event_id);
+  const event = bundle.map.events.find((e) => e.event_id === current?.event_id);
+  const supports = [
+    { name: 'Bass', voices: ['bass'], detail: '低音の土台' },
+    { name: 'Piano', voices: ['piano'], detail: '和音の伴奏' },
+  ];
+  const groups = [
+    ...new Map(
+      musical.filter((n) => n.kind === 'cue').map((n) => [`${n.unit_id}:${Math.floor(n.tick / 1920)}`, n]),
+    ).values(),
+  ];
+  const barLabels = Array.from({ length: Math.ceil(plan.total_bars / 4) }, (_, i) => i * 4);
+  return (
+    <section className="arrangement" aria-label="ファイルごとのリズム">
+      <div className="arrangement-title">
+        <span>
+          <Headphones size={16} />
+          <b>Arrangement</b>
+        </span>
+        <details className="motif-legend">
+          <summary>旋律と色の凡例</summary>
+          <div>
+            <p>
+              同じ役割は同じ色・リズム。健康の点数ではありません。精密検査の応答は、根拠のある将来の負担候補です。
+            </p>
+            {bundle.map.responsibilities.map((r) => {
+              const note = musical.find(
+                (n) => n.kind === 'data' && n.responsibility_id === r.responsibility_id,
+              );
+              return (
+                <button key={r.responsibility_id} disabled={!note} onClick={() => note && select(note)}>
+                  <i style={{ background: motifColors[Number(r.motif_id.slice(1))] }} />
+                  {r.motif_id} / {r.label}
+                </button>
+              );
+            })}
+            <small>低音・和音は共通伴奏です。</small>
+          </div>
+        </details>
+        <div className="arrangement-layout" aria-label="同じ解釈の演奏配置">
+          <button
+            aria-pressed={ws.mode === 'repo'}
+            onClick={() => {
+              engine.pause();
+              ws.set({ mode: 'repo' });
+            }}
+          >
+            ファイル順
+          </button>
+          <button
+            aria-pressed={ws.mode === 'theme'}
+            onClick={() => {
+              engine.pause();
+              ws.set({ mode: 'theme' });
+            }}
+          >
+            意味で揃える
+          </button>
+        </div>
+      </div>
+      <div className="score-overview" aria-label="実スコアの全発音">
+        <svg viewBox="0 0 1000 30" preserveAspectRatio="none">
+          {musical.map((note) => (
+            <rect
+              key={note.note_id}
+              x={(note.tick / total) * 1000}
+              y={note.kind === 'cue' ? 3 : note.event_id ? 8 : 19}
+              width={Math.max(0.8, ((note.duration_ms * 0.768) / total) * 1000)}
+              height={note.kind === 'cue' ? 22 : note.event_id ? 13 : 6}
+              fill={noteColor(note)}
+            />
+          ))}
+        </svg>
+        <div ref={overviewHead} />
+      </div>
+      <div className="arrangement-ruler">
+        <span>TRACK / FILE</span>
+        <div>
+          {barLabels.map((bar) => (
+            <span key={bar} style={{ left: `${(bar / plan.total_bars) * 100}%` }}>
+              {bar + 1}
+            </span>
+          ))}
+        </div>
+      </div>
+      <DemoComparison
+        bundle={bundle}
+        plan={plan}
+        select={(note) => {
+          engine.pause();
+          select(note);
+        }}
+      />
+      <ReviewFocus bundle={bundle} plan={plan} select={select} followPlayback={followPlayback} />
+      <div className="arrangement-tracks" ref={trackContainer} data-tour="signal">
+        {files.map((file, index) => {
+          const phrases = plan.phrases.filter((p) =>
+            p.unit_id
+              ? bundle.map.units.find((u) => u.unit_id === p.unit_id)?.primary_span.path === file
+              : musical.some(
+                  (n) =>
+                    n.responsibility_id === p.responsibility_id &&
+                    bundle.map.units.find((u) => u.unit_id === n.unit_id)?.primary_span.path === file,
+                ),
+          );
+          return (
+            <div
+              className={`composer-track ${event?.span.path === file ? 'sounding' : ''} ${selectedPath === file ? 'selected-track' : ''}`}
+              key={file}
+              ref={(element) => {
+                if (element) trackRows.current.set(file, element);
+                else trackRows.current.delete(file);
+              }}
+            >
+              <div className="composer-track-label">
+                <span className="track-number">{String(index + 1).padStart(2, '0')}</span>
+                <span>
+                  <strong>{file.split('/').at(-1)}</strong>
+                  <small>{file.split('/').slice(0, -1).join('/')}</small>
+                </span>
+                <i
+                  className={`activity-led ${active.some((n) => bundle.map.units.find((u) => u.unit_id === n.unit_id)?.primary_span.path === file) ? 'on' : ''}`}
+                />
+              </div>
+              <div
+                className="composer-track-lane"
+                style={{ backgroundSize: `${100 / plan.total_bars}% 100%` }}
+              >
+                <div
+                  className="tracks-head"
+                  ref={(element) => {
+                    if (element) trackHeads.current.set(file, element);
+                    else trackHeads.current.delete(file);
+                  }}
+                />
+                {phrases.map((phrase) => {
+                  const start = phrase.start_bar * 1920,
+                    length = phrase.bar_count * 1920;
+                  const notes = musical.filter(
+                    (n) =>
+                      n.event_id &&
+                      n.tick >= start &&
+                      n.tick < start + length &&
+                      bundle.map.units.find((u) => u.unit_id === n.unit_id)?.primary_span.path === file,
+                  );
+                  const anchor =
+                    notes.find((n) => n.kind === 'cue') ?? notes.find((n) => n.kind === 'data') ?? notes[0];
+                  if (!anchor) return null;
+                  const unit = bundle.map.units.find((u) => u.unit_id === anchor.unit_id)!;
+                  const candidate = bundle.map.review_signals?.find(
+                    (signal) => signal.verdict === 'concern' && signal.unit_ids.includes(unit.unit_id),
+                  );
+                  return (
+                    <button
+                      key={phrase.phrase_id}
+                      className={`midi-clip ${ws.unitId === anchor.unit_id ? 'selected' : ''} ${notes.some((n) => n.kind === 'cue') ? 'has-concern' : candidate ? 'has-review-candidate' : ''}`}
+                      style={{ left: `${(start / total) * 100}%`, width: `${(length / total) * 100}%` }}
+                      title={`${file}:${unit.primary_span.start_line}–${unit.primary_span.end_line}`}
+                      onClick={(e) => {
+                        const bounds = e.currentTarget.getBoundingClientRect();
+                        const tick = e.detail
+                          ? start + ((e.clientX - bounds.left) / bounds.width) * length
+                          : anchor.tick;
+                        const nearest = [...notes].sort(
+                          (a, b) => Math.abs(a.tick - tick) - Math.abs(b.tick - tick),
+                        )[0];
+                        select(nearest ?? anchor);
+                      }}
+                    >
+                      <span className="clip-title">
+                        {unit.label}
+                        <small>
+                          {notes.some((n) => n.kind === 'cue')
+                            ? bundle.map.review_signals?.find(
+                                (s) => s.signal_id === notes.find((n) => n.kind === 'cue')?.signal_id,
+                              )?.category === 'data_flow_opacity'
+                              ? '途切れる応答'
+                              : '比較した違い'
+                            : candidate
+                              ? '要確認 · 反証未確認／保留'
+                              : ''}
+                        </small>
+                      </span>
+                      <svg viewBox="0 0 1000 50" preserveAspectRatio="none">
+                        {notes.map((note) => (
+                          <rect
+                            key={note.note_id}
+                            data-testid={note.kind === 'data' ? 'data-note' : undefined}
+                            x={((note.tick - start) / length) * 1000}
+                            y={note.midi != null ? 5 + (84 - note.midi) * 1.1 : 38}
+                            width={Math.max(2, ((note.duration_ms * 0.768) / length) * 1000)}
+                            height={note.kind === 'data' ? 5 : 3}
+                            fill={noteColor(note)}
+                            opacity={note.kind === 'accompaniment' ? 0.65 : 1}
+                          >
+                            <title>
+                              {
+                                bundle.map.responsibilities.find(
+                                  (r) => r.responsibility_id === note.responsibility_id,
+                                )?.motif_id
+                              }{' '}
+                              /{' '}
+                              {
+                                bundle.map.responsibilities.find(
+                                  (r) => r.responsibility_id === note.responsibility_id,
+                                )?.label
+                              }{' '}
+                              · {bundle.map.events.find((e) => e.event_id === note.event_id)?.span.path}:
+                              {bundle.map.events.find((e) => e.event_id === note.event_id)?.span.start_line} ·{' '}
+                              {note.kind === 'accompaniment'
+                                ? '意味の旋律を反復'
+                                : note.kind === 'cue'
+                                  ? '懸念の応答リズム'
+                                  : '意味の打点'}
+                            </title>
+                          </rect>
+                        ))}
+                      </svg>
+                    </button>
+                  );
+                })}
+                {groups
+                  .filter(
+                    (n) => bundle.map.units.find((u) => u.unit_id === n.unit_id)?.primary_span.path === file,
+                  )
+                  .map((n) => (
+                    <button
+                      key={`cue_${n.note_id}`}
+                      className="concern-region"
+                      data-testid="cue-note"
+                      style={{
+                        left: `${((Math.floor(n.tick / 1920) * 1920) / total) * 100}%`,
+                        width: `${(1920 / total) * 100}%`,
+                      }}
+                      aria-label={`${file}:${bundle.map.events.find((e) => e.event_id === n.event_id)!.span.start_line} 懸念のリズム`}
+                      onClick={() => select(n)}
+                    />
+                  ))}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      {ws.showBacking && (
+        <div className="arrangement-backing">
+          <div className="backing-heading">
+            共通伴奏 <span>楽曲の土台 · コードの判断を表す音ではありません</span>
+          </div>
+          {supports.map((part) => {
+            const notes = musical.filter((n) => !n.event_id && part.voices.includes(n.voice));
+            return (
+              <div
+                className={`backing-track ${ws.focusEvidence || part.voices.every((v) => ws.instrumentMutes.includes(v)) ? 'muted-track' : ''}`}
+                key={part.name}
+              >
+                <div className="composer-track-label">
+                  <span>
+                    <strong>{part.name}</strong>
+                    <small>{part.detail}</small>
+                  </span>
+                  <button
+                    className="track-mute"
+                    aria-label={`${part.name}をミュート`}
+                    aria-pressed={part.voices.every((v) => ws.instrumentMutes.includes(v))}
+                    onClick={() =>
+                      ws.set({
+                        instrumentMutes: part.voices.every((v) => ws.instrumentMutes.includes(v))
+                          ? ws.instrumentMutes.filter((v) => !part.voices.includes(v))
+                          : [...new Set([...ws.instrumentMutes, ...part.voices])],
+                      })
+                    }
+                  >
+                    M
+                  </button>
+                  <i
+                    className={`activity-led ${active.some((n) => !n.event_id && part.voices.includes(n.voice)) ? 'on' : ''}`}
+                  />
+                </div>
+                <div className="backing-lane">
+                  <svg viewBox="0 0 1000 28" preserveAspectRatio="none">
+                    {notes.map((note) => (
+                      <rect
+                        key={note.note_id}
+                        x={(note.tick / total) * 1000}
+                        y={note.midi != null ? 4 + (72 - note.midi) * 0.3 : 8}
+                        width={Math.max(1, ((note.duration_ms * 0.768) / total) * 1000)}
+                        height={4}
+                        fill="#75849c"
+                      />
+                    ))}
+                  </svg>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+      <div className="composer-now">
+        <span className={current?.kind === 'cue' ? 'warning' : ''}>
+          {audioError ||
+            (event
+              ? `発音中 ${event.span.path}:${event.span.start_line}–${event.span.end_line} · ${current?.kind === 'cue' ? '懸念の応答リズム' : current?.kind === 'data' ? '判断の音' : '意味の旋律を反復'}`
+              : active.length
+                ? '発音中：共通伴奏（コード根拠なし）'
+                : 'ノートを選ぶと、その音の根拠へ移動')}
+        </span>
+        {ws.unitId && (
+          <button className="audition" data-tour="audition" onClick={() => void audition()}>
+            <Play size={12} />
+            この区間を聴く
+          </button>
+        )}
+        {ws.unitId && (
+          <button data-tour="mark" onClick={markPassage}>
+            この区間を選ぶ
+          </button>
+        )}
+      </div>
+      <details className="event-navigation">
+        <summary>
+          音なしで根拠を選ぶ / {bundle.map.events.filter((e) => e.state === 'grounded').length}判断
+        </summary>
+        <div>
+          {bundle.map.events
+            .filter((e) => e.state === 'grounded')
+            .map((event) => {
+              const note = plan.notes.find((n) => n.kind === 'data' && n.event_id === event.event_id);
+              return (
+                note && (
+                  <button
+                    key={event.event_id}
+                    aria-pressed={ws.eventId === event.event_id}
+                    onClick={() => {
+                      engine.pause();
+                      select(note);
+                    }}
+                  >
+                    {event.label} · {event.span.path}:{event.span.start_line}–{event.span.end_line}
+                  </button>
+                )
+              );
+            })}
+        </div>
+      </details>
+    </section>
+  );
+}

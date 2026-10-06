@@ -532,6 +532,23 @@
           "title": "Alternative",
           "type": "string"
         },
+        "counter_explanation": {
+          "default": "",
+          "maxLength": 800,
+          "title": "Counter Explanation",
+          "type": "string"
+        },
+        "counter_status": {
+          "default": "not_checked",
+          "enum": [
+            "not_checked",
+            "supported",
+            "rejected",
+            "undetermined"
+          ],
+          "title": "Counter Status",
+          "type": "string"
+        },
         "change_scenario": {
           "default": "",
           "maxLength": 800,

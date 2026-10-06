@@ -1,9 +1,11 @@
-# Data handling
+# データの扱い — R14
 
-Only public GitHub source and server-allowlisted samples. Snapshots pin commit SHA, are sanitized before persistence/inference, and never execute. Archive links and traversal are rejected; source scope is bounded. Redaction is best effort, so never submit a repository containing secrets.
+入力は公開GitHubの固定commit、またはログインした利用者が提供するcommit済みスナップショットです。対象コードはインポート・実行せず、Code Groove自身の信頼済み静的パーサーだけを起動します。アーカイブのパス・リンク・サイズを検証し、対象外ファイルを除外します。
 
-Model inference uses global; Tokyo application hosting does not imply inference stays in Japan. Source comments, README and tool content are untrusted. Tools cannot reach arbitrary URLs, shell, other owners, or cloud credentials. User-visible trace contains actual action purposes and evidence, not private reasoning.
+秘密らしい文字列は送信前にbest-effortでマスクします。完全な秘密検出を保証しません。利用者は秘密・認証情報を含むファイルを入力しないでください。ソース、資料、コメントは命令ではなく未信頼の資料としてモデルへ渡します。
 
-Project access expires 7 days after creation. Lifecycle physically cleans artifacts after 14 days; TTL/lifecycle are not immediate deletion guarantees. DELETE immediately denies access and durably schedules cleanup. Samples contain no personal data and remain public. Stored live results keep model/prompt/snapshot/usage provenance.
+モデル推論はGoogle Cloudのglobal endpoint、インフラと保存は東京です。東京インフラであることを、推論の東京限定と説明しません。モデルへ選択索引・明示的なコード読取・過去の仮説を送信します。ADKのRunner/sessionはworker内の一時メモリーで、別のクラウドsessionやMemory Bankは使いません。
 
-Firebase config is public. Server verifies tokens, account allowlist and resource ownership. Firebase session persistence is used; application code never writes tokens/passwords to localStorage. Client Firestore/Storage direct access is denied. Service identities use ADC without downloadable account keys.
+所有者だけが私有project、根拠、コード、実行記録へアクセスできます。Cloud Storageは非公開、workerはCloud TasksのOIDCだけを受けます。私有コピーは7日でアクセス期限を迎え、削除処理とストレージのライフサイクルで物理削除します。公開録画サンプルは別の固定教材・ライセンス付き実在コードの記録です。
+
+提案の承認はアプリ内コピーにだけ反映します。元のRepositoryを変更・pushせず、対象コードのテストを実行しません。ログにはイベント名・ID・短い目的・使用量を残し、認証トークン・秘密・raw provider error・対象コード全文を出力しません。

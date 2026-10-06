@@ -3,6 +3,7 @@ import hashlib
 import json
 import sqlite3
 import time
+from builtins import list as ListType
 from collections.abc import Callable
 from datetime import UTC, datetime
 from typing import Any
@@ -126,6 +127,28 @@ class MetadataStore:
                 for row in connection.execute("SELECT value FROM documents WHERE collection=?", (collection,))
             ]
             return [item for item in values if not field or item.get(field) == value]
+
+    def events_after(self, run_id: str, after_seq: int, limit: int, head_seq: int) -> ListType[dict]:
+        """Read only the requested immutable event page; no growing history query."""
+        stop = min(head_seq, after_seq + limit)
+        if stop <= after_seq:
+            return []
+        if self.cloud:
+            refs = [
+                self.db.collection("run_events").document(f"{run_id}_{seq:06}")
+                for seq in range(after_seq + 1, stop + 1)
+            ]
+            values = [normalize(doc.to_dict()) for doc in self.db.get_all(refs) if doc.exists]
+        else:
+            with self.connect() as connection:
+                rows = connection.execute(
+                    "SELECT value FROM documents WHERE collection='run_events' "
+                    "AND json_extract(value,'$.run_id')=? "
+                    "AND json_extract(value,'$.seq')>? AND json_extract(value,'$.seq')<=?",
+                    (run_id, after_seq, stop),
+                )
+                values = [json.loads(row[0]) for row in rows]
+        return sorted(values, key=lambda value: value["seq"])
 
     def append_event(self, run_id: str, kind: str, payload: dict, attempt: str | None = None) -> None:
         def operation(tx):

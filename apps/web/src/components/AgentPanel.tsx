@@ -56,6 +56,8 @@ export function AgentPanel({
   proposalTitle,
   openProposal,
   cancelProposal,
+  question,
+  setQuestion,
 }: {
   bundle: Bundle;
   result?: InvestigationResult;
@@ -70,9 +72,10 @@ export function AgentPanel({
   proposalTitle?: string;
   openProposal: () => void;
   cancelProposal: () => void;
+  question: string;
+  setQuestion: (value: string) => void;
 }) {
   const ws = useWorkspace(),
-    [question, setQuestion] = useState(''),
     [savedExplanation, setSavedExplanation] = useState({ selection: '', text: '' });
   const selectionKey = `${bundle.map.analysis_id}:${ws.unitId}:${ws.eventId}`;
   const savedAnswer = savedExplanation.selection === selectionKey ? savedExplanation.text : '';
@@ -95,7 +98,16 @@ export function AgentPanel({
     <section className="agent-panel">
       <div className="panel-heading">
         <span>
-          <ScanLine size={15} /> {fixture ? 'サンプルの説明' : 'Gemini Agent'}
+          <button
+            className="agent-window-toggle"
+            aria-label="AgentWindowを非表示"
+            aria-expanded={ws.agentVisible}
+            aria-controls="workspace-agent"
+            onClick={() => ws.set({ agentVisible: !ws.agentVisible })}
+          >
+            <ScanLine size={15} />
+          </button>{' '}
+          {fixture ? 'サンプルの説明' : 'Gemini Agent'}
         </span>
         <span className={`agent-indicator ${pending ? 'working' : ''}`}>
           {fixture
@@ -130,7 +142,7 @@ export function AgentPanel({
             <p>{bundle.case_study.scope}</p>
             <p>
               元の{bundle.case_study.repository_source_files}
-              実装ファイルのうち、11ファイルを取り込み。範囲間の統合判定と実行動作は未検証です。
+              実装ファイルのうち、保存済み解析には11ファイルを取り込み。左の全体の参考コードは別表示です。範囲間の統合判定と実行動作は未検証です。
             </p>
             <dl>
               <dt>元コードの確定版</dt>
@@ -189,7 +201,9 @@ export function AgentPanel({
                 <ArrowUpRight size={14} />
               </button>
             ))}
-            <small>同じ役割 → 同じ旋律・リズム。伴奏は品質の点数ではありません。</small>
+            <small>
+              同じ役割は同じ音形の系列。同じ意味キーは同じ音高です。伴奏は品質の点数ではありません。
+            </small>
           </div>
         )}
         {overview && !!bundle.map.review_signals?.length && (
@@ -273,8 +287,41 @@ export function AgentPanel({
               </div>
             )}
             <details className="alternative">
-              <summary>別の設計理由も確認しました</summary>
+              <summary>設計上の検討案（反証とは別）</summary>
               <p>{selectedSignal.alternative}</p>
+            </details>
+            <details className="counter-evidence">
+              <summary>
+                反証：
+                {
+                  (
+                    {
+                      not_checked: '確認記録なし',
+                      supported: '別の説明を支持',
+                      rejected: '別の説明を棄却',
+                      undetermined: '判断保留',
+                    } as const
+                  )[selectedSignal.counter_status ?? 'not_checked']
+                }
+              </summary>
+              <p>
+                {selectedSignal.counter_explanation ||
+                  'この保存結果には、別の説明を検証した記録がありません。懸念は確定した欠陥を意味しません。'}
+              </p>
+              {selectedSignal.alternative_evidence_ids?.map((id) => {
+                const proof = bundle.map.evidence.find((e) => e.evidence_id === id);
+                return (
+                  proof && (
+                    <button
+                      key={id}
+                      className="evidence-link"
+                      onClick={() => ws.set({ codeSpan: proof.span, screen: 'inspect' })}
+                    >
+                      {proof.span.path}:{proof.span.start_line}–{proof.span.end_line}
+                    </button>
+                  )
+                );
+              })}
             </details>
             {selectedSignal.evidence_ids.map((id) => {
               const proof = bundle.map.evidence.find((e) => e.evidence_id === id);
@@ -348,8 +395,8 @@ export function AgentPanel({
               <p className="rhythm-explanation">
                 {selectedSignal.category === 'data_flow_opacity'
                   ? '応答が途切れる = 処理を追うために判断をまたぐ箇所。'
-                  : '同じ旋律が別のファイルで戻る = 同じ判断の管理が分散。'}
-                「意味で揃える」と同じ音を寄せて聴けます。オレンジから根拠へ戻れます。
+                  : '同じ責務の意味キーが別ファイルにもある、という保存済み解釈です。'}
+                「意味で揃える」で配置を確認できます。懸念の音には、比較対象と反証の確認記録が必要です。
               </p>
             )}
             {recorded && bundle.investigation && (
@@ -381,7 +428,7 @@ export function AgentPanel({
                 ? 'この説明は模擬データです。Agentの実調査ログではありません。'
                 : bundle.partition
                   ? 'この検査範囲の保存済み実解析です。追加調査や未検査範囲の続きはログイン後に開始できます。'
-                  : '保存した全体健診です。新しい精密検査はログイン後に開始できます。'}
+                  : '取り込んだ対象範囲の保存済み解析です。実行動作やRepository全体の健全性は未検証。新規調査はログイン後に開始できます。'}
             </p>
           </>
         ) : (
@@ -465,67 +512,60 @@ export function AgentPanel({
             この記録を保存して精密検査
           </button>
         </div>
-      ) : (
-        <form
-          className="question-form"
-          onSubmit={(e) => {
-            e.preventDefault();
-            investigate(
-              question ||
-                'この旋律が複数箇所で戻る理由と、将来の変更・理解の負担を調べてください。分離を保つ正当な理由も確認し、経過観察かリファクタリング候補かを説明してください。',
-            );
-            setQuestion('');
-          }}
-        >
-          <details className="question-presets">
-            <summary>質問の例</summary>
-            <button
-              type="button"
-              disabled={pending || proposing}
-              onClick={() =>
-                setQuestion(
-                  'この旋律が別のファイルでも戻るのはなぜ？関連する処理を読み直し、将来の負担と分離を保つ理由を調べてください。',
-                )
-              }
-            >
-              この旋律の関係は？
-            </button>
-            <button
-              type="button"
-              disabled={pending || proposing}
-              onClick={() =>
-                setQuestion(
-                  '今は正常に動く前提で、ここの書き方・処理の流れが将来の変更や理解の負担になる可能性は？抽出による複雑化も含めて検討してください。',
-                )
-              }
-            >
-              将来の負担は？
-            </button>
-          </details>
-          <div>
-            <input
-              aria-label="選択した範囲への質問"
-              maxLength={1000}
-              value={question}
-              onChange={(e) => setQuestion(e.target.value)}
-              placeholder="聴いて気になった関係を質問…"
-            />
-            <button aria-label="質問を送信" disabled={pending || proposing}>
-              <Send size={16} />
-            </button>
-          </div>
-          <small>
-            {fixture || recorded
-              ? '保存済み根拠を読む · 新規Agent調査はログイン後'
-              : '選択範囲と関連コードだけ調査 · 読み取り専用'}
-          </small>
-          {(fixture || recorded) && (
-            <button type="button" className="live-question" onClick={activateLive}>
-              この記録を保存して精密検査
-            </button>
-          )}
-        </form>
-      )}
+      ) : null}
+      <form
+        className="question-form"
+        onSubmit={(e) => {
+          e.preventDefault();
+          investigate(
+            question ||
+              'この旋律が複数箇所で戻る理由と、将来の変更・理解の負担を調べてください。分離を保つ正当な理由も確認し、経過観察かリファクタリング候補かを説明してください。',
+          );
+        }}
+      >
+        <details className="question-presets">
+          <summary>質問の例</summary>
+          <button
+            type="button"
+            disabled={pending || proposing}
+            onClick={() =>
+              setQuestion(
+                'この旋律が別のファイルでも戻るのはなぜ？関連する処理を読み直し、将来の負担と分離を保つ理由を調べてください。',
+              )
+            }
+          >
+            この旋律の関係は？
+          </button>
+          <button
+            type="button"
+            disabled={pending || proposing}
+            onClick={() =>
+              setQuestion(
+                '今は正常に動く前提で、ここの書き方・処理の流れが将来の変更や理解の負担になる可能性は？抽出による複雑化も含めて検討してください。',
+              )
+            }
+          >
+            将来の負担は？
+          </button>
+        </details>
+        <div>
+          <input
+            aria-label="選択した範囲への質問"
+            maxLength={1000}
+            value={question}
+            onChange={(e) => setQuestion(e.target.value)}
+            placeholder="聴いて気になった関係を質問…"
+          />
+          <button aria-label="質問を送信" disabled={pending || proposing}>
+            <Send size={16} />
+          </button>
+        </div>
+        <small>
+          {fixture || recorded
+            ? '保存済み根拠を読む · 新規Agent調査はログイン後'
+            : '選択範囲と関連コードだけ調査 · 読み取り専用'}
+        </small>
+      </form>
     </section>
   );
 }

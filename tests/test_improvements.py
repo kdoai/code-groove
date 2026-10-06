@@ -267,6 +267,8 @@ async def test_accepted_snapshot_is_reanalysed_without_overwriting_original(work
                 if collection == "events":
                     item["unit_id"] = aliases[item["unit_id"]]
                 if collection == "review_signals":
+                    item["counter_explanation"] = "Mock fresh counter-explanation check"
+                    item["counter_status"] = "rejected"
                     item["unit_ids"] = [aliases[u] for u in item["unit_ids"]]
         return execute_tool(ctx, "submit_analysis", {"candidate": value}, "tool_reanalysis_final")
 

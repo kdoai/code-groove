@@ -1,9 +1,11 @@
-# 依存関係と監査
+# 依存関係 — R14
 
-Node 24 / Python 3.13、pnpm 10.27.0 / uv 0.6.11 を使用します。`pnpm-lock.yaml` と `uv.lock` をコミットし、CIとコンテナでは frozen install を必須にしています。TypeScriptは索引APIとlintの互換性を確認した6.0.2に固定しました。
+Pythonは`uv.lock`、Webは`pnpm-lock.yaml`を固定します。ADKは2.11.0を指定しました。Google Gen AI、FastAPI、Google Cloud clientなどの解決済み版はlockを正本にします。
 
-2026-10-02の本番依存監査では、npm 114依存に既知の問題0件、Python本番依存に既知の問題0件でした。データベースにない問題まで保証するものではありません。結果は `artifacts/npm-audit.json` / `artifacts/python-audit.json`。
+ADK導入で追加のPython依存とFastAPI等の版変更が生じました。新しい外部サービス・常駐プロセスは追加しません。採用目的はcustom Agent実行とGeminiモデル境界の統一です。代償は依存数、imageサイズ、cold startと更新時の互換性検証です。追加モデル要求、並列Agent、remote sessionはありません。
 
-Firebaseの間接依存gRPCを修正版1.14.5、MonacoのDOMPurifyを3.4.16にoverrideしました。根拠は [gRPC advisory](https://github.com/advisories/GHSA-m9gg-hp2v-232j) と [DOMPurify advisory](https://github.com/advisories/GHSA-p98j-92pf-mc4p)。ブラウザではFirebase Authのみを使用し、Firestore/Storageへの直接アクセスは拒否しています。
+更新時は関数ID／思考署名、budget、429/503/504再試行、打ち切り、期限、所有権、APIとUI E2Eを確認します。SDKを単に最新へ追従せず、lockの差分と公式release noteを照合します。実モデル互換性は有料テストが実行されるまで未検証です。
 
-有料モデル検証・全体テスト・監査をすべて毎回起動しません。通常CIは変更パスで選択し、ツール・配備コードは軽い静的検査だけを追加します。全体検証はリリース時、監査は依存更新時に実施してください。配備ジョブの再試行は成功した検証ジョブと同じSHAを使用し、既存イメージがある場合はビルドを再利用します。
+[ADK Python公式](https://adk.dev/get-started/python/)（2026-10-04確認）。ADK Webは開発用であり、本番APIとして公開しません。
+
+2026-10-04のlock済みruntime依存71件をpip-auditで調べ、既知脆弱性は0件でした（`artifacts/dependency-audit-r14.json`）。未知の脆弱性や本番の設定安全性を保証する結果ではありません。動画のローカル編集にはdev依存のimageio-ffmpegとPillowを使用し、本番imageには追加しません。

@@ -6,7 +6,17 @@ async function writeGenerated(path, content) {
   await rename(temporary, path);
 }
 let result = '';
-for (const name of ['SemanticMap', 'ScoreBundle', 'InvestigationResult', 'ImprovementProposal']) {
+for (const name of [
+  'SemanticMap',
+  'ScoreBundle',
+  'InvestigationResult',
+  'ImprovementProposal',
+  'StructureComparison',
+  'StructurePlaybackPlan',
+  'ComparisonInvestigationRequest',
+  'ComparisonInvestigationResult',
+  'ComparisonExport',
+]) {
   const types = await compileFromFile(`contracts/${name}.schema.json`, {
     bannerComment: '',
     additionalProperties: false,

@@ -13,11 +13,21 @@ from code_groove.agent import AgentContext, run_agent
 from code_groove.errors import GrooveError
 from code_groove.improvements import apply_edits, proposal_diff, source_hash
 from code_groove.incremental import INDEX_VERSION, PROMPT_VERSION, compatible, reuse_unchanged
+from code_groove.reconciliation import follow_reconciliation, reconciliation_scope
 from code_groove.repository import cached_chunks, follow_chunk, plan_repository, select_chunk
-from code_groove.schemas import Coverage, Evidence, ImprovementProposal, InvestigationResult, SemanticMap
+from code_groove.schemas import (
+    ComparisonInvestigationRequest,
+    ComparisonInvestigationResult,
+    Coverage,
+    Evidence,
+    ImprovementProposal,
+    InvestigationResult,
+    SemanticMap,
+)
 from code_groove.settings import ROOT, Settings
 from code_groove.source import build_index, github_snapshot, run_node, sample_snapshot
 from code_groove.storage import ArtifactStore, MetadataStore, Transaction
+from code_groove.structure import validate_comparison_request
 
 TERMINAL = {"completed", "partial", "failed", "cancelled"}
 DAILY_ANALYSIS_LIMIT = 10
@@ -189,7 +199,7 @@ class JobService:
                     project_id,
                     {
                         **(current_project or {}),
-                        "investigation_run_id": run_id,
+                        ("comparison_run_id" if body.get("comparison") else "investigation_run_id"): run_id,
                         "investigation_analysis_id": body["analysis_id"],
                         "updated_at": now,
                     },
@@ -462,6 +472,13 @@ class JobService:
                 if previous and previous.get("repository_plan"):
                     snapshot["repository_plan"] = plan_repository(index, sources)
                     prior_analysis = self.store.get("analyses", run["body"]["analysis_id"]) or {}
+                    if prior_analysis.get("integration_chunk_ids"):
+                        integration_chunks, integration_units = follow_reconciliation(
+                            previous, snapshot, prior_analysis
+                        )
+                        run["body"].update(
+                            integration_chunk_ids=integration_chunks, integration_unit_ids=integration_units
+                        )
                     matching = follow_chunk(
                         previous["repository_plan"],
                         snapshot["repository_plan"],
@@ -478,6 +495,7 @@ class JobService:
                 not run["body"].get("refresh")
                 or project.get("working_copy")
                 or run["body"].get("chunk_id")
+                or run["body"].get("integration_chunk_ids")
                 or project["source"]["kind"] == "local_snapshot"
             ):
                 snapshot = await asyncio.to_thread(self.artifacts.get, project["snapshot_key"])
@@ -575,7 +593,14 @@ class JobService:
                 )
             partition = None
             agent_index = snapshot["index"]
-            if snapshot.get("repository_plan"):
+            integration_context = []
+            if run["kind"] in ("investigation", "proposal") and (base_meta or {}).get(
+                "integration_chunk_ids"
+            ):
+                assert base_meta is not None
+                run["body"]["integration_chunk_ids"] = base_meta["integration_chunk_ids"]
+                run["body"]["integration_unit_ids"] = base_meta["integration_unit_ids"]
+            if snapshot.get("repository_plan") and not run["body"].get("integration_chunk_ids"):
                 plan = snapshot["repository_plan"]
                 available = cached_chunks(
                     plan,
@@ -615,6 +640,49 @@ class JobService:
                         {"status": "partial", "latest_analysis_id": saved["analysis_id"]},
                     )
                     return
+            if run["body"].get("integration_chunk_ids"):
+                chunk_ids = run["body"]["integration_chunk_ids"]
+                agent_index, partition = reconciliation_scope(
+                    snapshot, chunk_ids, run["body"]["integration_unit_ids"]
+                )
+                saved = [
+                    a
+                    for a in self.store.list("analyses", "project_id", run["project_id"])
+                    if a.get("chunk_id") in chunk_ids
+                    and a.get("snapshot_id") == snapshot["snapshot_id"]
+                    and a["owner_uid"] == run["owner_uid"]
+                    and a["expires_at"] > time.time()
+                ]
+                if run["body"].get("proposal_id") and prior_map:
+                    integration_context = [
+                        {
+                            "analysis_id": prior_map["analysis_id"],
+                            "responsibilities": prior_map["responsibilities"],
+                            "unknowns": prior_map["profile"]["unknowns"],
+                            "note": "Previous approved snapshot; all selected new code must be read again",
+                        }
+                    ]
+                elif {a["chunk_id"] for a in saved} != set(chunk_ids):
+                    raise GrooveError("INVALID_SELECTION", "統合元の保存結果を利用できません。")
+                for cid in [] if integration_context else chunk_ids:
+                    meta = max((a for a in saved if a["chunk_id"] == cid), key=lambda a: a["created_at"])
+                    value = self.artifacts.get(meta["artifact_key"])["map"]
+                    integration_context.append(
+                        {
+                            "chunk_id": cid,
+                            "analysis_id": value["analysis_id"],
+                            "responsibilities": value["responsibilities"],
+                            "unknowns": value["profile"]["unknowns"],
+                        }
+                    )
+                emit(
+                    "integration_selected",
+                    {
+                        "chunk_ids": chunk_ids,
+                        "units": len(agent_index["units"]),
+                        "message": "保存解釈を仮説として、新しい読取根拠で範囲間を統合調査",
+                    },
+                )
             if not partition and prior_map and compatible(prior_map, self.settings.gemini_model) and previous:
                 if (
                     previous["sources"] == snapshot["sources"]
@@ -656,6 +724,21 @@ class JobService:
                     raise GrooveError("STALE_BASE_ANALYSIS", "元の解析が見つかりません。", 409)
                 base = self.artifacts.get(analysis["artifact_key"])["map"]
 
+            if run["body"].get("comparison"):
+                comparison_request = ComparisonInvestigationRequest.model_validate(run["body"]["comparison"])
+                comparison = validate_comparison_request(snapshot, comparison_request)
+                selected_ids = {comparison_request.unit_a, comparison_request.unit_b}
+                agent_index = {
+                    **snapshot["index"],
+                    "units": [u for u in snapshot["index"]["units"] if u["unit_id"] in selected_ids],
+                }
+                run["body"]["comparison_context"] = {
+                    "a": comparison["a"],
+                    "b": comparison["b"],
+                    "rows": comparison["rows"][comparison_request.start_row : comparison_request.end_row],
+                    "prompt_version": "comparison-agent-v1",
+                }
+
             def guard():
                 self.guard(run_id, attempt)
 
@@ -684,7 +767,8 @@ class JobService:
                 model_count=run["model_requests"],
                 tool_count=run["tool_calls"],
                 started=time.monotonic() - max(0, time.time() - run["started_at"]),
-                repository_index=snapshot["index"] if partition else None,
+                repository_index=snapshot["index"] if partition or run["body"].get("comparison") else None,
+                integration_context=integration_context,
             )
             candidate = await run_agent(ctx)
             self.guard(run_id, attempt)
@@ -703,6 +787,19 @@ class JobService:
                 ).model_dump(mode="json")
                 collection = "proposals"
                 artifact_key = f"projects/{run['project_id']}/proposals/{result_id}/proposal.json.gz"
+            elif ctx.comparing:
+                assert base is not None
+                result = ComparisonInvestigationResult(
+                    **candidate.model_dump(),
+                    investigation_id=result_id,
+                    base_analysis_id=base["analysis_id"],
+                    origin="live",
+                    request=ComparisonInvestigationRequest.model_validate(run["body"]["comparison"]),
+                    evidence=ctx.evidence,
+                    model_id=self.settings.gemini_model,
+                ).model_dump(mode="json")
+                collection = "investigations"
+                artifact_key = f"projects/{run['project_id']}/investigations/{result_id}/result.json.gz"
             elif base:
                 result = InvestigationResult(
                     **candidate.model_dump(),
@@ -747,6 +844,7 @@ class JobService:
                     model_id=self.settings.gemini_model,
                     prompt_version=PROMPT_VERSION,
                     parent_analysis_id=run["body"].get("analysis_id"),
+                    integration_chunk_ids=run["body"].get("integration_chunk_ids", []),
                     created_at=datetime.now(UTC).isoformat(),
                 ).model_dump(mode="json")
                 self.mutate(run_id, attempt, {"status": "compiling"})
@@ -763,6 +861,7 @@ class JobService:
                                 "chunk_id": partition["chunk_id"],
                                 "paths": partition["paths"],
                                 "whole_repository_complete": False,
+                                "integration_chunk_ids": partition.get("integration_chunk_ids", []),
                             }
                         }
                         if partition
@@ -796,6 +895,7 @@ class JobService:
                     collection,
                     result_id,
                     {
+                        **({"kind": "structure_comparison"} if ctx.comparing else {}),
                         "owner_uid": run["owner_uid"],
                         "project_id": run["project_id"],
                         "artifact_key": artifact_key,
@@ -817,6 +917,8 @@ class JobService:
                                 "analysis_id": result_id,
                                 "inspected_units": result["map"]["coverage"]["inspected_units"],
                                 "unresolved_units": len(result["map"]["coverage"]["unresolved_unit_ids"]),
+                                "integration_chunk_ids": partition.get("integration_chunk_ids", []),
+                                "integration_unit_ids": partition["unit_ids"],
                             }
                             if partition and not base
                             else {}
@@ -840,9 +942,11 @@ class JobService:
                         run["project_id"],
                         {
                             **target,
-                            "latest_investigation_id": result_id,
+                            (
+                                "latest_comparison_id" if ctx.comparing else "latest_investigation_id"
+                            ): result_id,
                             "investigation_analysis_id": base["analysis_id"],
-                            "investigation_run_id": "",
+                            ("comparison_run_id" if ctx.comparing else "investigation_run_id"): "",
                             "updated_at": time.time(),
                         },
                     )

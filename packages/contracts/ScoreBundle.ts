@@ -16,7 +16,8 @@ export type GrammarVersion =
   | "groove-chamber-v6"
   | "groove-chamber-v7"
   | "groove-chamber-v8"
-  | "groove-chamber-v9";
+  | "groove-chamber-v9"
+  | "groove-chamber-v10";
 export type KitId = "paper-studio-v1" | "midnight-jazz-v2" | "midnight-jazz-v3" | "midnight-jazz-v4";
 export type KitHash = string;
 export type Bpm = 96;

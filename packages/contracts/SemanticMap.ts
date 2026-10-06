@@ -330,6 +330,8 @@ export type Verdict = "concern" | "justified" | "inconclusive";
 export type Label3 = string;
 export type Explanation = string;
 export type Alternative = string;
+export type CounterExplanation = string;
+export type CounterStatus = "not_checked" | "supported" | "rejected" | "undetermined";
 export type ChangeScenario = string;
 /**
  * @maxItems 96
@@ -417,6 +419,11 @@ export type AnalysisId = string;
 export type ProjectId = string;
 export type SnapshotId = string;
 export type ParentAnalysisId = string | null;
+/**
+ * @maxItems 4
+ */
+export type IntegrationChunkIds =
+  [] | [string] | [string, string] | [string, string, string] | [string, string, string, string];
 export type AnalysisDepth = "overview" | "focused";
 export type Origin = "live" | "recorded_live" | "fixture";
 export type EvidenceId = string;
@@ -455,6 +462,7 @@ export interface SemanticMap {
   project_id: ProjectId;
   snapshot_id: SnapshotId;
   parent_analysis_id?: ParentAnalysisId;
+  integration_chunk_ids?: IntegrationChunkIds;
   analysis_depth?: AnalysisDepth;
   origin: Origin;
   evidence: Evidence;
@@ -525,6 +533,8 @@ export interface ReviewSignal {
   label: Label3;
   explanation: Explanation;
   alternative: Alternative;
+  counter_explanation?: CounterExplanation;
+  counter_status?: CounterStatus;
   change_scenario?: ChangeScenario;
   alternative_evidence_ids?: AlternativeEvidenceIds;
   unit_ids: UnitIds;

@@ -45,7 +45,7 @@ test('real scoped recording connects notes, source receipts and honest provenanc
   await page.screenshot({
     path: process.env.E2E_BASE_URL
       ? 'artifacts/deployed-tsugiai-r13.png'
-      : 'artifacts/tsugiai-r13-evidence.png',
+      : 'artifacts/tsugiai-r14-evidence.png',
   });
   await page.getByRole('button', { name: 'Repositoryを開く', exact: true }).click();
   const dialog = page.getByRole('dialog');

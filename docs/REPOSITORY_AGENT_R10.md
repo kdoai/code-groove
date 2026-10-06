@@ -1,3 +1,5 @@
+> Historical record. This describes the version at that time, not R14 acceptance. Current specification: [SPEC.md](SPEC.md).
+
 # Repository Agent R10
 
 2026-10-03. Google Gen AI SDKの既存tool loopを、大きな固定スナップショットの分割検査へ拡張した。全文を毎回送らず、静的索引から範囲を決め、Geminiが必要なコード・関係・テスト候補を読んで根拠付き結果を提出する。

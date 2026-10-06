@@ -21,8 +21,10 @@ from code_groove.http_limits import BodyLimitMiddleware
 from code_groove.improvements import apply_edits, source_hash
 from code_groove.incremental import INDEX_VERSION
 from code_groove.jobs import DAILY_ANALYSIS_LIMIT, JobService
+from code_groove.reconciliation import reconciliation_scope
 from code_groove.repository import plan_repository, repository_status, validate_local_sources
 from code_groove.schemas import (
+    ComparisonInvestigationRequest,
     Contract,
     Evidence,
     Id,
@@ -33,6 +35,7 @@ from code_groove.schemas import (
 from code_groove.settings import ROOT, Settings
 from code_groove.source import build_index, parse_github_url, run_node, validate_scope
 from code_groove.storage import ArtifactStore, MetadataStore, Transaction
+from code_groove.structure import structure_data, validate_comparison_request
 from code_groove.validation import validate_candidate, validate_investigation
 
 SAMPLES = (
@@ -57,8 +60,10 @@ def studio_score(serialized_map: str, kit_hash: str) -> dict:
 
 
 def current_music(bundle: dict) -> dict:
+    if not bundle["score"]["scenes"]:
+        return bundle
     plan = bundle["score"]["scenes"][0]["repo"]
-    if plan["kit_id"] == "midnight-jazz-v4" and plan["grammar_version"] == "groove-chamber-v9":
+    if plan["kit_id"] == "midnight-jazz-v4" and plan["grammar_version"] == "groove-chamber-v10":
         return bundle
     kit = json.loads(
         (ROOT / "apps/web/public/audio/midnight-jazz-v4/manifest.json").read_text(encoding="utf-8")
@@ -103,6 +108,11 @@ class LocalImport(Contract):
 class ChunkRequest(Contract):
     chunk_id: Id
     retry_partial: bool = False
+
+
+class IntegrationRequest(Contract):
+    chunk_ids: list[Id] = Field(min_length=2, max_length=4)
+    unit_ids: list[Id] = Field(min_length=2, max_length=32)
 
 
 class Selection(Contract):
@@ -291,6 +301,14 @@ def create_app(settings: Settings | None = None, verifier: Callable[[str], str] 
         bundle = json.loads(file.read_text(encoding="utf-8"))
         return {"data": current_music(bundle)}
 
+    @app.get("/api/v1/samples/{sample_id}/repository-reference")
+    def sample_repository_reference(sample_id: str) -> dict:
+        if sample_id != "recorded-tsugiai-agents":
+            raise GrooveError("NOT_FOUND", "このサンプルに全体の参考コードはありません。", 404)
+        from code_groove.repository_reference import tsugiai_reference
+
+        return {"data": tsugiai_reference().model_dump()}
+
     @app.post("/api/v1/projects", status_code=202)
     def create_project(body: CreateProject, user: User, key: Key) -> dict:
         if body.source.kind == "github_public":
@@ -301,6 +319,90 @@ def create_app(settings: Settings | None = None, verifier: Callable[[str], str] 
         elif not body.source.sample_id or body.source.url or body.source.ref or body.source.scope_path:
             raise GrooveError("INVALID_SOURCE", "内蔵サンプルを指定してください。")
         return {"data": jobs.create(user, body.model_dump(mode="json"), key)}
+
+    @app.get("/api/v1/samples/{sample_id}/structure")
+    def sample_structure(
+        sample_id: str, unit_a: Id | None = None, unit_b: Id | None = None, markers: bool = False
+    ) -> dict:
+        bundle = sample_bundle(sample_id)["data"]
+        snapshot = {"snapshot_id": bundle["map"]["snapshot_id"], "sources": bundle["sources"]}
+        return {"data": structure_data(snapshot, unit_a, unit_b, markers)}
+
+    def comparison_demo_snapshot():
+        content = (ROOT / "fixtures/structure-comparison/examples.ts").read_text(encoding="utf-8")
+        sources = {"examples.ts": content}
+        return {"snapshot_id": "snap_structure_demo_v1", "sources": sources}
+
+    @app.get("/api/v1/comparison-demo/structure")
+    def comparison_demo(unit_a: Id | None = None, unit_b: Id | None = None, markers: bool = False) -> dict:
+        snapshot = comparison_demo_snapshot()
+        return {"data": {**structure_data(snapshot, unit_a, unit_b, markers), "sources": snapshot["sources"]}}
+
+    @app.post("/api/v1/samples/{sample_id}/comparison-investigations/mock")
+    def mock_comparison(sample_id: str, body: ComparisonInvestigationRequest) -> dict:
+        if settings.environment != "local" or settings.model_mode != "fixture":
+            raise GrooveError("NOT_FOUND", "ローカルのモック教材でのみ利用できます。", 404)
+        # Exercise the real bounded read/submit tools; no model, job or paid quota is used.
+        from code_groove.agent_tools import AgentContext, execute_tool
+        from code_groove.schemas import ComparisonInvestigationResult
+
+        if sample_id == "structure-demo":
+            snapshot = comparison_demo_snapshot()
+            base = {"analysis_id": "mock_initial_structure", "origin": "fixture"}
+        else:
+            bundle = sample_bundle(sample_id)["data"]
+            base = bundle["map"]
+            snapshot = {"snapshot_id": base["snapshot_id"], "sources": bundle["sources"]}
+        validate_comparison_request(snapshot, body)
+        index = build_index(snapshot["snapshot_id"], snapshot["sources"], repository=True)
+        ctx = AgentContext(
+            settings,
+            "p_comparison_mock",
+            snapshot["snapshot_id"],
+            snapshot["sources"],
+            index,
+            lambda *_: None,
+            lambda: None,
+            lambda _: None,
+            base=base,
+            selection={"comparison": body.model_dump(mode="json")},
+        )
+        for identifier in (body.unit_a, body.unit_b):
+            unit = next(u for u in index["units"] if u["unit_id"] == identifier)
+            execute_tool(
+                ctx,
+                "read_code",
+                {
+                    **{k: unit["primary_span"][k] for k in ("file_id", "start_line", "end_line")},
+                    "purpose": "モック経路で選択した関数本体を静的に読み直す",
+                },
+                f"mock_read_{identifier}",
+            )
+        candidate = execute_tool(
+            ctx,
+            "submit_investigation",
+            {
+                "candidate": {
+                    "interpretation": "inconclusive",
+                    "summary": "モック回答：両関数を読み直しました。構文上の違いだけでは目的に適合するか決められません。",
+                    "reason": "期待・観察・疑問を受け取る経路の技術検証です。実モデルによる判断ではありません。",
+                    "counter_explanation": "製品契約が異なれば意図した差の可能性があります。",
+                    "unknowns": ["仕様、実行動作、実モデルの説明の妥当性は未確認"],
+                    "evidence_ids": [e.evidence_id for e in ctx.evidence],
+                }
+            },
+            "mock_submit",
+        )
+        result = ComparisonInvestigationResult(
+            **candidate.model_dump(),
+            investigation_id=f"mock_{uuid.uuid4().hex}",
+            base_analysis_id=base["analysis_id"],
+            origin="fixture",
+            request=body,
+            evidence=ctx.evidence,
+            model_id="mock-no-model",
+        )
+        return {"data": result.model_dump(mode="json")}
 
     @app.post("/api/v1/projects/import", status_code=202)
     def import_project(body: LocalImport, user: User, key: Key) -> dict:
@@ -518,6 +620,36 @@ def create_app(settings: Settings | None = None, verifier: Callable[[str], str] 
             )
         }
 
+    @app.post("/api/v1/projects/{project_id}/integrations", status_code=202)
+    def integrate_partitions(project_id: str, body: IntegrationRequest, user: User, key: Key) -> dict:
+        project = own("projects", project_id, user)
+        snapshot = snapshot_for(project)
+        reconciliation_scope(snapshot, body.chunk_ids, body.unit_ids)
+        saved = {
+            a.get("chunk_id")
+            for a in store.list("analyses", "project_id", project_id)
+            if a["owner_uid"] == user
+            and a["expires_at"] > time.time()
+            and a.get("snapshot_id") == snapshot["snapshot_id"]
+        }
+        if not set(body.chunk_ids) <= saved:
+            raise GrooveError(
+                "INVALID_SELECTION", "同じスナップショットの保存結果がある範囲を選んでください。"
+            )
+        return {
+            "data": jobs.create(
+                user,
+                {
+                    "source": project["source"],
+                    "refresh": True,
+                    "integration_chunk_ids": body.chunk_ids,
+                    "integration_unit_ids": body.unit_ids,
+                },
+                key,
+                project=project,
+            )
+        }
+
     @app.get("/api/v1/projects/{project_id}/files")
     def get_files(project_id: str, user: User) -> dict:
         return {"data": snapshot_for(own("projects", project_id, user))["index"]}
@@ -631,6 +763,41 @@ def create_app(settings: Settings | None = None, verifier: Callable[[str], str] 
     def get_investigation(investigation_id: str, user: User) -> dict:
         return {"data": artifacts.get(own("investigations", investigation_id, user)["artifact_key"])}
 
+    @app.get("/api/v1/analyses/{analysis_id}/structure")
+    def analysis_structure(
+        analysis_id: str,
+        user: User,
+        unit_a: Id | None = None,
+        unit_b: Id | None = None,
+        markers: bool = False,
+    ) -> dict:
+        meta = own("analyses", analysis_id, user)
+        snapshot = artifacts.get(meta["snapshot_key"])
+        return {"data": structure_data(snapshot, unit_a, unit_b, markers)}
+
+    @app.post("/api/v1/analyses/{analysis_id}/comparison-investigations", status_code=202)
+    def compare_investigation(
+        analysis_id: str, body: ComparisonInvestigationRequest, user: User, key: Key
+    ) -> dict:
+        meta = own("analyses", analysis_id, user)
+        project = own("projects", meta["project_id"], user)
+        snapshot = artifacts.get(meta["snapshot_key"])
+        validate_comparison_request(snapshot, body)
+        return {
+            "data": jobs.create(
+                user,
+                {
+                    "analysis_id": analysis_id,
+                    "comparison": body.model_dump(mode="json"),
+                    "unit_ids": [body.unit_a, body.unit_b],
+                    "event_ids": [],
+                },
+                key,
+                "investigation",
+                project,
+            )
+        }
+
     @app.post("/api/v1/analyses/{analysis_id}/proposals", status_code=202)
     def propose_improvement(analysis_id: str, body: ProposalRequest, user: User, key: Key) -> dict:
         analysis = own("analyses", analysis_id, user)
@@ -722,6 +889,10 @@ def create_app(settings: Settings | None = None, verifier: Callable[[str], str] 
     @app.post("/api/v1/investigations/{investigation_id}/publish-interpretation")
     def publish(investigation_id: str, user: User) -> dict:
         meta = own("investigations", investigation_id, user)
+        if meta.get("kind") == "structure_comparison":
+            raise GrooveError(
+                "INVALID_STATE", "構造比較の回答は人の記録に関連付けます。意味譜面の更新ではありません。"
+            )
         result = artifacts.get(meta["artifact_key"])
         project = own("projects", meta["project_id"], user)
         previous = result["base_analysis_id"]
@@ -813,6 +984,11 @@ def create_app(settings: Settings | None = None, verifier: Callable[[str], str] 
                             "analysis_id": identifier,
                             **{
                                 k: base_meta[k]
+                                for k in ("integration_chunk_ids", "integration_unit_ids")
+                                if k in base_meta
+                            },
+                            **{
+                                k: base_meta[k]
                                 for k in (
                                     "chunk_id",
                                     "chunk_fingerprint",
@@ -851,8 +1027,8 @@ def create_app(settings: Settings | None = None, verifier: Callable[[str], str] 
     def events(
         run_id: str, user: User, after_seq: int = Query(0, ge=0), limit: int = Query(100, ge=1, le=100)
     ) -> dict:
-        own("runs", run_id, user)
-        values = sorted(store.list("run_events", "run_id", run_id), key=lambda e: e["seq"])
+        run = own("runs", run_id, user)
+        values = store.events_after(run_id, after_seq, limit, run.get("seq", 0))
         return {
             "data": [
                 {k: e[k] for k in ("seq", "type", "timestamp", "payload")}

@@ -1,3 +1,5 @@
+> Historical record. This describes the version at that time, not R14 acceptance. Current specification: [SPEC.md](SPEC.md).
+
 # R12: 審査で確かめられる実装と、残る仮説
 
 2026-10-03に[第5回 Agentic AI Hackathonの公式ページ](https://zenn.dev/hackathons/google-cloud-japan-ai-hackathon-vol5)を確認。以下は「課題の新規性と解決策の有効性」「自律性・エージェントらしさ」「実装品質と拡張性」への、Code Groove側の対応判断です。受賞や利用効果を実証したものではありません。

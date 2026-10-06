@@ -63,6 +63,8 @@ def review_context():
         alternative="契約が異なる可能性を確認した",
         change_scenario="仮に委譲先の返値の契約が変わると両実装を確認する。",
         alternative_evidence_ids=pattern.evidence_ids,
+        counter_explanation="Mock: distinct contracts were checked against both peer reads",
+        counter_status="rejected",
         unit_ids=[subject["unit_id"]],
         event_ids=["event_subject"],
         evidence_ids=list(proofs.values()),
@@ -204,6 +206,8 @@ def test_majority_is_descriptive_and_human_uncertainty_has_a_named_question():
     risk.event_ids = []
     risk.change_scenario = ""
     risk.alternative_evidence_ids = []
+    risk.counter_status = "not_checked"
+    risk.counter_explanation = ""
     candidate.review_signals.append(risk)
     validate_candidate(candidate, ctx.index, ctx.evidence, ctx.repository_index)
 

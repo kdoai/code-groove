@@ -1,83 +1,57 @@
 # Code Groove
 
-AIで増えたコードを、全体から聴く健康診断のワークスペースです。TypeScript / TSX / Python の公開リポジトリを固定 SHA で取得し、Gemini がコード・関係・テスト・設計理由を調べます。正常に動いていても将来の変更や読解を難しくしそうな構造を、根拠と別の説明を含めて検討します。初回に分かった問題も隠しません。Lint・バグ修正・通常のコードレビューと併用します。
+知らないコードの設計を、音からたどる開発支援ツールです。Geminiが静的なコードを読み、変更理由に基づく責務・意味イベント・根拠を提出します。固定規則で音に変換し、気になった音からコードと判断理由へ戻れます。
 
-中央はDTMのArrangementを参考にした演奏画面です。ディレクトリ階層、関数クリップ、実際に鳴るノート、共通伴奏、大きいコード表示、開閉できるAgent質問欄を１画面に収めます。ドラムなしの旋律・和音・歩くベース・2:1のスウィングを固定規則で編曲します。同じ役割は同じ旋律・色。まず配置を聴き、「この区間を選ぶ」から精密検査へ進みます。新しく確認した懸念は人の選択で演奏に反映し、正当な境界や経過観察も残します。
+音はAIの解釈を確かめる入口です。欠陥の証明や、通常のAIレビューより速いという実証はありません。
 
-**Theme** は責務ごと、**Repo** は実装の場所ごと。同じ意味イベント・音源・強さを保持し、配置だけを変えます。伴奏はコードの判断から区別して表示します。未確認のコードに意味を作ったり、音の違いだけで設計を悪いと判定したりしません。
-
-新しいAgentは範囲外の関数・呼出関係も探索し、実際に読んだ別実装から設計パターンと比較根拠を保存できます。多数派を良い設計とは判断せず、Correctness / Quality / Coherenceと人への確認事項を区別します。比較コードを並べて根拠行へ戻り、確認したCoherenceの差を固定リズムの差として表します。旧サンプルに新しい意味判定を付け足すことはしません。費用・採用範囲・未検証事項は [R13の改善](docs/DESIGN_REVIEW_R13.md) を参照。
+Agentの説明を読んだ後、「Agentの説明を二関数で問い直す · 構造を比較して聴く」から静的TypeScript二関数を選べます。左右コード・順序を保った構文対応・共有呼び出しフレーズを確認し、音なしでも期待／観察／疑問を記録できます。確認状態は再生やAI回答では変わりません。メモは端末内に保持し、明示操作でJSONへ書き出します。[使い方と境界](docs/STRUCTURE_COMPARISON.md)を参照してください。
 
 ## 試す
 
-主サンプルは、実在するTsugiaiの確定版 `35a9514` をGeminiが調べた記録です。Agent・共有型の11ファイルを取り込み、Checkout Agentの9実装（1/3範囲）を確認しました。残り2範囲、全51実装ファイルの意味解析、実行時動作は未検証です。実ノートから根拠行と読取記録へ戻り、元コードの版・MITライセンス・検査範囲を画面で確認できます。公開再生はログイン不要・新規モデル呼出し0件です。元コードは実行・変更せず、改善後も用意していません。ログイン後に記録を保存すると、同じ検査範囲を精密検査したり、未検査範囲の続きを明示的に依頼できます。日次解析上限は1ユーザー10回、日本時間09:00切替です。詳細と実測は [Tsugiai demo](docs/TSUGIAI_DEMO.md) に記録します。
+「実画面のデモを見る」でTsugiaiの実在コードを開きます。51ファイル・19,541行を参考として読み、Checkout Agentの9実装の**保存済みGemini実解析**を聴けます。再生にログイン・新規AI費用は不要です。
 
-初回ガイドは実画面の試聴・区間選択・質問・人の判断を案内します。「今後このメッセージを表示しない」は端末内に保存されます。Checkout Labは、小さな教材サンプルとして引き続き利用できます。
+保存済みの読取記録11ファイルと全体の参考コードは別です。未解析の参考コードに音は付きません。「確認する箇所」から根拠行を選び、伴奏なしで判断の打点を聴けます。反証未確認の懸念候補は欠陥と断定しません。演奏中のコードが発音中の位置へ追従し、質問はログイン前から入力できます。
 
-[アプリを開く](https://code-groove-web-a5ygiois2a-an.a.run.app)。配備イメージは [artifacts/deployment.json](artifacts/deployment.json) に記録します。審査用メールは `reviewer@example.invalid`。パスワードは `reviewer-password-placeholder` という Secret Manager の secret に保存し、リポジトリには置きません。
+[公開アプリ](https://code-groove-web-a5ygiois2a-an.a.run.app)。配備と実測の正本は`EXECUTION_PLAN.md`のR16欄です。店舗／Webの三つの同じ判断を聴く小さな比較教材もサンプルメニューから選べます。
 
-管理者が PowerShell でパスワードをクリップボードへ取得する手順：
+## 現在の機能と境界
 
-```powershell
-[private administrative command removed]
-```
+- TypeScript/TSX・Pythonの静的索引。入れ子の関数・lambda・メソッドも所有関係を保持します。対象のコードは実行しません。
+- ADKの単一カスタムAgentとGeminiアダプター。アプリが読取ツール、根拠検証、時間・トークン上限、停止を管理します。
+- 分割解析と保存再利用。2–4範囲・最大32実装の新規統合調査で、同じ変更理由かを読み直します。選択外とRepository全体は未判定です。
+- 音と根拠の双方向参照、音なしで選べる判断一覧、反証・検討案・判断保留を別表示します。
+- 追加調査、解釈の採用、改善案の差分承認。反映先はアプリ内コピーだけです。対象Repositoryにpushしません。
 
-実際に動くサンプルショップは [Checkout Lab](examples/checkout-lab/README.md)。ルートで `pnpm sample:checkout` を実行し、http://127.0.0.1:4174 を開きます。画面の「サンプル」メニューからZIPも取得できます。ZIP版は `npm ci` → `npm start` で単独起動します。録音の根拠と同じ決済コードがカート・クーポン・会員ポイント・注文保存を動かします。画面と起動用サーバーは保存済み解析の対象外です。
+模擬（fixture）／保存済み実解析（recorded_live）／新規実解析（live）を明示します。保存済みの説明を読む操作は新規解析ではありません。新規解析は招待アカウントで明示的に開始し、1ユーザー1日10回（UTC）などの上限を適用します。
 
-## 開発
+## 開発と検証
 
-Node 24 / pnpm 10.27.0 / Python 3.13 / uv。依存関係はロックファイルで固定しています。
+Node.js 24 / pnpm 10 / Python 3.13 / uvを使います。
 
 ```powershell
 pnpm install --frozen-lockfile
-uv sync --frozen
-Copy-Item .env.example .env
+uv sync --locked
 pnpm build:tools
-$env:PYTHONPATH='apps/backend;.'
-uv run python scripts/dev.py
+pnpm dev:web
+uv run uvicorn code_groove.app:app --app-dir apps/backend --port 8080
 ```
 
-別ターミナルで `pnpm dev:web` を実行し、`http://127.0.0.1:5173` を開きます。初期設定は模擬サンプルのみで、AI費用は発生しません。ライブ解析には Firebase 設定・サーバー allowlist・ADC と `MODEL_MODE=live` / `ENABLE_LIVE_ANALYSIS=true` が必要です。モデルは `gemini-3.8-flash`、global、MEDIUM。別モデルへの自動フォールバックはありません。
-
-## 変更に応じた検証
+既定はfixture/localです。開発環境で実解析を有効にしないでください。
 
 ```powershell
-pnpm test:changed --base <比較するGitコミット>
+pnpm typecheck
+pnpm lint
+pnpm test
+uv run ruff check apps/backend tests
+uv run mypy apps/backend/code_groove
+uv run pytest
+pnpm test:e2e
 ```
 
-文書のみの変更ではアプリのテストを実行しません。バックエンドは Python / 認可・寿命管理、楽譜は不変条件、UI・共有契約はブラウザ E2E を含めて検証します。初回・リリース時の全体確認は `pnpm test:changed --all`。有料モデルの評価は `uv run python scripts/live_agent_cases.py scattered justified` を明示した場合だけ実行します。通常の CI にはモデル認証情報を渡しません。
+有料・実モデルE2Eは明示的なopt-inです。通常検証では起動しません。テスト用の模擬Agentは意味解析の精度の証拠にはしません。
 
-`ruff` / `mypy` / ESLint / TypeScript を使用します。Python は snake_case、TS は camelCase、React コンポーネント・型は PascalCase、通信契約は snake_case。生成済み契約を手編集せず、`scripts/generate-contracts.py` と `scripts/generate-types.mjs` から更新してください。
+## 仕様・運用・提出
 
-## GCP と配備
+[現行仕様](docs/SPEC.md)、[音の規則](docs/SONIFICATION.md)、[構成](docs/TECHNICAL_GUIDE.md)、[データ扱い](docs/data-handling.md)、[費用](docs/cost-plan.md)、[運用・審査期間](docs/runbook.md)、[検証範囲](docs/acceptance.md)、[提出案内](docs/submission.md)を参照してください。実行記録は[EXECUTION_PLAN.md](EXECUTION_PLAN.md)、旧文書は[履歴](docs/history/R13/README.md)です。
 
-`artful-bonsai-491601-p3` / `asia-northeast1`。同一コンテナを公開 web と非公開 worker に分けています。Firestore の transaction、Cloud Tasks の OIDC、90秒 lease / 15秒 heartbeat、最大２回の worker attempt を使用します。生コードや credential をログに出しません。
-
-```powershell
-$env:PYTHONPATH='apps/backend;.'
-$env:GOOGLE_CLOUD_QUOTA_PROJECT='artful-bonsai-491601-p3'
-uv run python infra/gcp.py bootstrap
-uv run python scripts/create_reviewer.py
-uv run python infra/operations.py
-uv run python scripts/release.py --revision <40桁のGitコミットSHA>
-```
-
-通常の配備は GitHub Actions の **Deploy verified revision** を手動実行します。main の検証済みコードだけを対象にし、Workload Identity Federation をリポジトリの数値ID・所有者ID・main・production 環境に限定します。サービスアカウント鍵は作りません。基盤の IAM と Firebase 設定を変更する権限は CI に付与しません。
-
-インフラは min instances 0、web 最大２・worker 最大１、キュー同時実行１。常時稼働の DB / VM / Redis は使いません。各利用者は１実行同時、UTC日次10解析・10追加調査・10更新。全体で日次入力300万 / 出力30万トークンの予約上限。保存結果の再生は AI を呼びません。更新では変更された関数と影響する呼び出し元を再調査し、変更がなく索引・モデル・プロンプトも一致する場合は解析結果を再利用します。詳細は [差分解析](docs/INCREMENTAL.md)、[費用設計](docs/cost-plan.md) と [運用手順](docs/runbook.md)。
-
-## 構成と成果物
-
-- `apps/web`: React / SVG Arrangement / 読み取り専用 Monaco / Tone.js
-- `apps/backend/code_groove`: FastAPI / Firebase Auth / Gemini SDK の制限付きツールループ
-- `packages/groove-core`: 決定的な Theme / Repo コンパイラ
-- `packages/repo-indexer`: TypeScript Compiler API の静的索引。Python は隔離したASTアダプター。対象コードを実行しない
-- `fixtures`: 模擬サンプル・実解析記録・サーバー側の固定ソース
-- `examples/checkout-lab`: 検査した決済ロジックを使う、実行可能なローカルショップ
-- `prompts` / `contracts`: プロンプト・Pydantic正本から生成したスキーマ
-- `EXECUTION_PLAN.md` / `BLOCKERS.md`: 進捗・外部入力だけの残作業
-- `artifacts`: 実測トレース、スクリーンショット、信号検証。fixture と実解析を明示して分ける
-
-保存期限は７日。APIは期限切れを410で拒否し、Firestore TTL と GCS 14日 lifecycle で物理削除します。削除要求後は直ちに閲覧不能になり、worker が保存物を消します。現在の音源はCC BY 3.0の録音ピアノ・ベースと自作PCMです。出典・変更内容はアプリ内NOTICEと assets/audio-source に記載しています。
-
-仕様の詳細と採用した差分は [統合仕様](docs/SPEC.md) / [設計判断](docs/implementation-decisions.md)。[音楽と根拠の対応](docs/SONIFICATION.md)、[技術スタック・構成図・シーケンス・DFD](docs/TECHNICAL_GUIDE.md)、[検証記録](docs/acceptance.md)、[提出用説明・３分台本](docs/submission.md) も用意しています。技術検証と、人による聴きやすさの評価・YouTube公開は別々に記録します。
+東京・scale to zero・AIを除く月6,000円を目標とします。審査アカウント情報は公開文書・Git・動画に含めず、提出先の非公開欄へ別途登録します。

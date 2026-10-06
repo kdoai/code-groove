@@ -20,6 +20,7 @@ test('local import, repository coverage, saved playback and explicit continuatio
     unresolved_units: 0,
     files_without_units: ['src/types.ts'],
     cross_partition_review: 'not_run',
+    integrations: [] as { analysis_id: string; inspected_units: number }[],
     note: '模擬API。全体は未判定。',
     chunks: [
       {
@@ -32,6 +33,12 @@ test('local import, repository coverage, saved playback and explicit continuatio
         analysis_id: 'analysis_partition_a',
         inspected_units: 12,
         unresolved_units: 0,
+        unit_ids: Array.from({ length: 24 }, (_, i) => `unit_a_${i}`),
+        owner_units: Array.from({ length: 24 }, (_, i) => ({
+          unit_id: `unit_a_${i}`,
+          label: `first_${i}`,
+          span: { path: 'src/first/flow.ts', start_line: i + 1, end_line: i + 1 },
+        })),
       },
       {
         chunk_id: 'chunk_b',
@@ -42,10 +49,17 @@ test('local import, repository coverage, saved playback and explicit continuatio
         status: 'pending',
         inspected_units: 0,
         unresolved_units: 0,
+        unit_ids: Array.from({ length: 24 }, (_, i) => `unit_b_${i}`),
+        owner_units: Array.from({ length: 24 }, (_, i) => ({
+          unit_id: `unit_b_${i}`,
+          label: `second_${i}`,
+          span: { path: 'src/second/flow.ts', start_line: i + 1, end_line: i + 1 },
+        })),
       },
     ],
   };
   let continued = false;
+  let integrated = false;
   const posts: string[] = [];
   const jwt = [
     'eyJhbGciOiJub25lIn0',
@@ -96,13 +110,24 @@ test('local import, repository coverage, saved playback and explicit continuatio
     } else if (path === '/projects/p_repository')
       data = {
         run_id: continued ? 'run_continue' : 'run_import',
-        latest_analysis_id: continued ? 'analysis_partition_b' : 'analysis_partition_a',
+        latest_analysis_id: integrated
+          ? 'analysis_integrated'
+          : continued
+            ? 'analysis_partition_b'
+            : 'analysis_partition_a',
         source: { kind: 'local_snapshot' },
       };
     else if (path === '/projects/p_repository/bundle')
       data = {
         ...bundle,
-        map: { ...bundle.map, analysis_id: continued ? 'analysis_partition_b' : 'analysis_partition_a' },
+        map: {
+          ...bundle.map,
+          analysis_id: integrated
+            ? 'analysis_integrated'
+            : continued
+              ? 'analysis_partition_b'
+              : 'analysis_partition_a',
+        },
         repository,
       };
     else if (path === '/projects/p_repository/repository') data = repository;
@@ -124,11 +149,28 @@ test('local import, repository coverage, saved playback and explicit continuatio
         inspected_units: retryPartial ? 12 : 11,
       };
       data = { run_id: 'run_continue' };
-    } else if (path === '/runs/run_import' || path === '/runs/run_continue')
+    } else if (path === '/projects/p_repository/integrations') {
+      expect(route.request().postDataJSON()).toEqual({
+        chunk_ids: ['chunk_a', 'chunk_b'],
+        unit_ids: [...repository.chunks[0].unit_ids, 'unit_b_0'],
+      });
+      integrated = true;
+      repository.cross_partition_review = 'scoped';
+      repository.integrations = [{ analysis_id: 'analysis_integrated', inspected_units: 25 }];
+      data = { run_id: 'run_integrated' };
+    } else if (
+      path === '/runs/run_import' ||
+      path === '/runs/run_continue' ||
+      path === '/runs/run_integrated'
+    )
       data = {
         run_id: path.split('/').at(-1),
         status: 'partial',
-        result_id: continued ? 'analysis_partition_b' : 'analysis_partition_a',
+        result_id: integrated
+          ? 'analysis_integrated'
+          : continued
+            ? 'analysis_partition_b'
+            : 'analysis_partition_a',
       };
     else if (path.endsWith('/events')) data = [];
     else return route.continue();
@@ -158,7 +200,7 @@ test('local import, repository coverage, saved playback and explicit continuatio
   await expect(page.getByLabel('再生範囲').getByRole('option', { name: '表示中の検査範囲' })).toHaveCount(1);
   await page.getByRole('button', { name: '検査範囲と続きを選ぶ' }).click();
   await expect(page.getByRole('dialog')).toContainText('12実装は未検査');
-  await expect(page.getByRole('dialog')).toContainText('範囲間の整合性と全体の健全性は未判定');
+  await expect(page.getByRole('dialog')).toContainText('統合調査も選択した実装のみで、全体の健全性は未判定');
   await page.getByRole('button', { name: '保存結果を開く', exact: true }).click();
   expect(posts).toEqual(['/projects/import']);
   await page.getByRole('button', { name: '検査範囲と続きを選ぶ' }).click();
@@ -166,7 +208,7 @@ test('local import, repository coverage, saved playback and explicit continuatio
   await expect(page.locator('.refresh-bar')).toContainText('2/2範囲に保存結果 · 全体は未判定');
   await page.getByRole('button', { name: '検査範囲と続きを選ぶ' }).click();
   await expect(page.getByRole('dialog')).toContainText('一部未解決 (1)');
-  await page.screenshot({ path: 'artifacts/repository-r13-mock.png' });
+  await page.screenshot({ path: 'artifacts/repository-r14-mock.png' });
   expect(posts).toEqual(['/projects/import', '/projects/p_repository/chunks']);
   await page.getByRole('button', { name: '未解決を再検査', exact: true }).click();
   await page.getByRole('button', { name: '検査範囲と続きを選ぶ' }).click();
@@ -176,6 +218,23 @@ test('local import, repository coverage, saved playback and explicit continuatio
     '/projects/p_repository/chunks',
     '/projects/p_repository/chunks',
   ]);
+  const scope = page.locator('.integration-selection');
+  await scope.getByLabel('src/first / 12実装', { exact: true }).check();
+  await scope.getByLabel('src/second / 12実装', { exact: true }).check();
+  const integrateButton = scope.getByRole('button', { name: '選んだ範囲を新規統合調査' });
+  await expect(integrateButton).toBeDisabled();
+  await expect(scope.getByRole('alert')).toContainText('32実装を超えています');
+  await scope.locator('.integration-owners summary').click();
+  const owners = scope.locator('.integration-owners input');
+  for (let i = 24; i < 48; i++) await owners.nth(i).uncheck();
+  await expect(integrateButton).toBeDisabled();
+  await owners.nth(24).check();
+  await expect(integrateButton).toBeEnabled();
+  await expect(scope).toContainText('新規AI解析1回');
+  await integrateButton.click();
+  await page.getByRole('button', { name: '検査範囲と続きを選ぶ' }).click();
+  await expect(page.getByRole('button', { name: '保存した統合結果 / 25実装' })).toBeVisible();
+  expect(posts.at(-1)).toBe('/projects/p_repository/integrations');
   await page.getByRole('button', { name: '閉じる', exact: true }).click();
   await page.setViewportSize({ width: 1280, height: 720 });
   expect(await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight)).toBe(true);

@@ -11,7 +11,7 @@ from code_groove.errors import GrooveError
 from code_groove.incremental import INDEX_VERSION, PROMPT_VERSION
 from code_groove.source import EXCLUDED, sanitize, validate_scope
 
-PLAN_VERSION = "repository-partitions-v1"
+PLAN_VERSION = "repository-partitions-v2"
 CHUNK_UNITS = 24
 
 
@@ -67,11 +67,16 @@ def plan_repository(index: dict, sources: dict[str, str]) -> dict:
         if not re.search(r"\.(ts|tsx|py)$", p) or re.search(r"(^|/)tests?/|\.(test|spec)\.|(^|/)test_", p)
     }
     imports = {f["path"]: {i["path"] for i in f.get("imports", []) if i.get("path")} for f in index["files"]}
-    unresolved_local = any(
-        not i["resolved"] and (i["module"].startswith(".") or f["path"].endswith(".py"))
+    uncertain_paths = {
+        f["path"]
         for f in index["files"]
-        for i in f.get("imports", [])
-    )
+        if any(
+            not i["resolved"]
+            and i.get("resolution") != "external"
+            and (i["module"].startswith(".") or f["path"].endswith(".py"))
+            for i in f.get("imports", [])
+        )
+    }
     batches: list[list[dict]] = []
     for unit in owners:
         directory = str(PurePosixPath(unit["primary_span"]["path"]).parent)
@@ -103,7 +108,8 @@ def plan_repository(index: dict, sources: dict[str, str]) -> dict:
                 if target not in dependencies:
                     dependencies.add(target)
                     pending.append(target)
-        if unresolved_local:
+        uncertain = bool(dependencies & uncertain_paths)
+        if uncertain:
             dependencies = set(sources)
         signature = [
             (
@@ -123,6 +129,7 @@ def plan_repository(index: dict, sources: dict[str, str]) -> dict:
                 "unit_ids": [u["unit_id"] for u in batch],
                 "symbol_count": sum(len(u["member_symbol_ids"]) for u in batch),
                 "dependency_paths": sorted(dependencies),
+                "dependency_uncertainty": uncertain,
                 "fingerprint": digest(
                     {
                         "version": PLAN_VERSION,
@@ -150,7 +157,7 @@ def plan_repository(index: dict, sources: dict[str, str]) -> dict:
         "owners": owners,
         "relations": relations,
         "chunks": chunks,
-        "cache_dependency_uncertainty": unresolved_local,
+        "cache_dependency_uncertainty": bool(uncertain_paths),
         "note": "入れ子の関数は所有元へまとめ、全シンボルを索引に保持。分割結果の責務分類は独立で、全体の健全性は未判定。",
     }
 
@@ -247,6 +254,12 @@ def repository_status(snapshot: dict, analyses: list[dict], model_id: str) -> di
             {
                 **{k: chunk[k] for k in ("chunk_id", "label", "paths", "symbol_count")},
                 "units": len(chunk["unit_ids"]),
+                "unit_ids": chunk["unit_ids"],
+                "owner_units": [
+                    {"unit_id": u["unit_id"], "label": u["label"], "span": u["primary_span"]}
+                    for u in plan["owners"]
+                    if u["unit_id"] in chunk["unit_ids"]
+                ],
                 "status": "partial"
                 if analysis.get("unresolved_units", 0)
                 else "analyzed"
@@ -278,6 +291,20 @@ def repository_status(snapshot: dict, analyses: list[dict], model_id: str) -> di
         "inspected_units": sum(c["inspected_units"] for c in chunks),
         "pending_units": sum(c["units"] for c in chunks if c["status"] == "pending"),
         "unresolved_units": sum(c["unresolved_units"] for c in chunks),
-        "cross_partition_review": "not_run",
+        "cross_partition_review": "scoped"
+        if any(
+            a.get("integration_chunk_ids") and a.get("snapshot_id") == snapshot["snapshot_id"]
+            for a in analyses
+        )
+        else "not_run",
+        "integrations": [
+            {
+                "analysis_id": a["analysis_id"],
+                "chunk_ids": a["integration_chunk_ids"],
+                "inspected_units": a.get("inspected_units", 0),
+            }
+            for a in analyses
+            if a.get("integration_chunk_ids") and a.get("snapshot_id") == snapshot["snapshot_id"]
+        ],
         "chunks": chunks,
     }

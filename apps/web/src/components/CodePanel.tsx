@@ -13,15 +13,20 @@ export function CodePanel({
   bundle,
   following,
   toggleFollowing,
+  referenceSources,
 }: {
   bundle: Bundle;
   following?: boolean;
   toggleFollowing?: () => void;
+  referenceSources?: Record<string, string>;
 }) {
   const ws = useWorkspace();
   const event = bundle.map.events.find((e) => e.event_id === ws.eventId);
   const unit = bundle.map.units.find((u) => u.unit_id === ws.unitId) ?? bundle.map.units[0];
   const span = ws.codeSpan ?? event?.span ?? unit.primary_span;
+  const currentSpan = useRef(span);
+  currentSpan.current = span;
+  const referenceOnly = !(span.path in bundle.sources);
   const editor = useRef<monaco.editor.IStandaloneCodeEditor>(null);
   const decorations = useRef<monaco.editor.IEditorDecorationsCollection>(null);
   const highlight = () => {
@@ -48,40 +53,46 @@ export function CodePanel({
         range: new monaco.Range(span.start_line, 1, span.end_line, 1),
         options: {
           isWholeLine: true,
-          className: concernEvents.some(
-            (e) => e.span.start_line <= span.start_line && e.span.end_line >= span.end_line,
-          )
-            ? 'code-concern'
-            : 'code-highlight',
+          className: 'code-highlight',
           linesDecorationsClassName: 'code-line-marker',
         },
       },
     ]);
-    editor.current.setScrollTop(Math.max(0, editor.current.getTopForLineNumber(span.start_line) - 8));
+    editor.current.revealLinesInCenterIfOutsideViewport(span.start_line, span.end_line);
   };
   useEffect(highlight, [span.path, span.start_line, span.end_line]);
   const mount: OnMount = (value) => {
     editor.current = value;
     value.onDidLayoutChange(() => {
-      const line = useWorkspace.getState().codeSpan?.start_line ?? span.start_line;
-      value.setScrollTop(Math.max(0, value.getTopForLineNumber(line) - 8));
+      value.revealLinesInCenterIfOutsideViewport(
+        currentSpan.current.start_line,
+        currentSpan.current.end_line,
+      );
     });
     highlight();
   };
   return (
     <section className="code-panel">
       <div className="panel-heading">
-        <span>{span.path}</span>
+        <span data-testid="code-location">
+          {span.path}:{span.start_line}–{span.end_line}
+        </span>
         {toggleFollowing && (
           <button aria-pressed={following} onClick={toggleFollowing}>
             演奏に追従
           </button>
         )}
       </div>
+      {referenceOnly && (
+        <p className="reference-code-note">
+          同じ確定版の参考コード · Geminiの保存済み検査の対象外 · 演奏なし
+        </p>
+      )}
       <Editor
+        path={span.path}
         height="100%"
         language={span.path.endsWith('.py') ? 'python' : 'typescript'}
-        value={bundle.sources[span.path] ?? ''}
+        value={bundle.sources[span.path] ?? referenceSources?.[span.path] ?? ''}
         theme={ws.theme === 'dark' ? 'vs-dark' : 'vs'}
         onMount={mount}
         options={{
