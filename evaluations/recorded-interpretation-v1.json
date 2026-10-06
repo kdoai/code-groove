@@ -1,0 +1,1805 @@
+{
+  "protocol": {
+    "version": "recorded-source-review-v1",
+    "reviewed_on": "2026-10-07",
+    "corpus": "All six tracked fixtures/recorded-live/*.json at ad23a025b53301429568f52dc925ec04de580bc2",
+    "reviewer": "Codex source-grounded assessment; no independent human labels",
+    "new_model_requests": 0,
+    "source_execution": false,
+    "labels": {
+      "supported": "The main static assertion is supported by supplied source/contracts and its linked evidence. Appropriate hypotheses and explicit limits are not treated as defects.",
+      "partial": "The main idea is plausible but essential qualifications, responsibility distinctions or linked evidence are incomplete/overbroad; the source does not establish the stronger assertion.",
+      "contradicted": "An explicit material assertion is inconsistent with the supplied source/contracts.",
+      "undetermined": "Source cannot establish the asserted intent, future behavior or runtime property. This is not problem-free."
+    },
+    "scored_groups": [
+      "responsibility",
+      "meaning_event",
+      "review_signal",
+      "hypothesis",
+      "repository_profile",
+      "saved_investigation",
+      "investigation_hypothesis"
+    ],
+    "metrics": "Report each group's supported/partial/contradicted/undetermined counts and supported/all reviewed rate. Do not merge heterogeneous groups into a provider accuracy score. Evidence-span validity/hash checks are reported separately and do not prove semantics.",
+    "coverage": "Derive essential source obligations separately; report omitted interpretation coverage without counting every unmentioned implementation detail as a false statement.",
+    "biases": [
+      "Curated development corpus",
+      "Five authored examples and one selected external repository range",
+      "One saved run per case",
+      "Multiple prompt versions",
+      "Overlapping before/after return-policy examples",
+      "Not blind: reviewer knows Code Groove",
+      "LLM reviewer without independent human agreement",
+      "No execution or runtime behavior validation"
+    ],
+    "hypothesis_scoring": "Assess the evidence for the recorded status/disposition, not whether a rejected proposition is true. Open runtime hypotheses are undetermined, not errors.",
+    "event_scoring": "Composite: meaning plus responsibility fit plus primary code navigation. Separately report content support so a span/role issue is not called a false meaning. Read linked full evidence for inputs/adjacent syntax; require missing central operations/conditions to be navigable.",
+    "current_prompt_evaluated": false
+  },
+  "corpus": [
+    {
+      "case": "checkout-flow",
+      "path": "fixtures/recorded-live/checkout-flow.json",
+      "sha256": "726b5f8772c0bb2e53c259acd64829cb02491993e2a36c20d2a1a717e99a8388",
+      "origin": "recorded_live",
+      "model_id": "gemini-3.8-flash",
+      "prompt_version": "conductor-system-v6"
+    },
+    {
+      "case": "justified",
+      "path": "fixtures/recorded-live/justified.json",
+      "sha256": "94d1892933eeadc149b437438225b26abb15a3775eef786c5712033129a4648c",
+      "origin": "recorded_live",
+      "model_id": "gemini-3.8-flash",
+      "prompt_version": "conductor-system-v1"
+    },
+    {
+      "case": "returns-after",
+      "path": "fixtures/recorded-live/returns-after.json",
+      "sha256": "3e6e7490a45dde28dcadb09a9b7c2aa97612ed3d39d9a0995dc3847b5e1d134b",
+      "origin": "recorded_live",
+      "model_id": "gemini-3.8-flash",
+      "prompt_version": "conductor-system-v3"
+    },
+    {
+      "case": "returns-before",
+      "path": "fixtures/recorded-live/returns-before.json",
+      "sha256": "3f60c287e07666ddbe57bf6212b9bd758ff88483b4d19c3ff66e7a8360d75922",
+      "origin": "recorded_live",
+      "model_id": "gemini-3.8-flash",
+      "prompt_version": "conductor-system-v3"
+    },
+    {
+      "case": "scattered",
+      "path": "fixtures/recorded-live/scattered.json",
+      "sha256": "e9cbb804185f16386e371033428f93db68e33e3f2151ffcc8a5f8f65d4622a2c",
+      "origin": "recorded_live",
+      "model_id": "gemini-3.8-flash",
+      "prompt_version": "conductor-system-v1"
+    },
+    {
+      "case": "tsugiai-agents",
+      "path": "fixtures/recorded-live/tsugiai-agents.json",
+      "sha256": "611d393d849c20c4b1b07791363f1d619ed45f8297f6bbe2922dbf24a7881233",
+      "origin": "recorded_live",
+      "model_id": "gemini-3.8-flash",
+      "prompt_version": "conductor-system-v10-partitions"
+    }
+  ],
+  "annotations": [
+    {
+      "case": "checkout-flow",
+      "group": "responsibility",
+      "id": "resp_checkout",
+      "label": "supported",
+      "rationale": "invoice/rewardの調整、保存呼出、レシート生成に対応。saveOnceの内部保証までは主張しない。",
+      "linked_source_spans": [
+        {
+          "end_line": 37,
+          "file_id": "file_b65c63f8b3f860ab",
+          "path": "src/checkout.ts",
+          "start_line": 1
+        }
+      ]
+    },
+    {
+      "case": "checkout-flow",
+      "group": "responsibility",
+      "id": "resp_pricing",
+      "label": "supported",
+      "rationale": "明細と割引対象の集計、キャンペーン割引、与えられた送料の加算に対応。送料ルールの外部計算はない。",
+      "linked_source_spans": [
+        {
+          "end_line": 43,
+          "file_id": "file_e2a33e720b7e37a3",
+          "path": "src/pricing.ts",
+          "start_line": 1
+        }
+      ]
+    },
+    {
+      "case": "checkout-flow",
+      "group": "responsibility",
+      "id": "resp_rewards",
+      "label": "supported",
+      "rationale": "割引後の商品支払額を100セント単位のポイントへ変える。",
+      "linked_source_spans": [
+        {
+          "end_line": 38,
+          "file_id": "file_d55ba3a818bca9be",
+          "path": "src/rewards.ts",
+          "start_line": 1
+        }
+      ]
+    },
+    {
+      "case": "checkout-flow",
+      "group": "responsibility",
+      "id": "resp_preview",
+      "label": "supported",
+      "rationale": "キャッシュしたキャンペーンによるadvisory見積と表示に対応。サーバ再検証はREADMEが明記。",
+      "linked_source_spans": [
+        {
+          "end_line": 41,
+          "file_id": "file_4a04ca6a30d68873",
+          "path": "src/preview.ts",
+          "start_line": 1
+        }
+      ]
+    },
+    {
+      "case": "checkout-flow",
+      "group": "meaning_event",
+      "id": "evnt_quote_call",
+      "label": "supported",
+      "rationale": "quoteInvoiceへの入力と戻り値invoiceに対応。",
+      "linked_source_spans": [
+        {
+          "end_line": 37,
+          "file_id": "file_b65c63f8b3f860ab",
+          "path": "src/checkout.ts",
+          "start_line": 1
+        }
+      ],
+      "meaning_content_label": "supported"
+    },
+    {
+      "case": "checkout-flow",
+      "group": "meaning_event",
+      "id": "evnt_reward_decision",
+      "label": "supported",
+      "rationale": "memberIdがある場合だけaccrueRewardを呼ぶ三項分岐に対応。",
+      "linked_source_spans": [
+        {
+          "end_line": 37,
+          "file_id": "file_b65c63f8b3f860ab",
+          "path": "src/checkout.ts",
+          "start_line": 1
+        }
+      ],
+      "meaning_content_label": "supported"
+    },
+    {
+      "case": "checkout-flow",
+      "group": "meaning_event",
+      "id": "evnt_save_order",
+      "label": "supported",
+      "rationale": "OrderRecord構築とstore.saveOnce呼出に対応。永続化の実行成功は保証しない。",
+      "linked_source_spans": [
+        {
+          "end_line": 37,
+          "file_id": "file_b65c63f8b3f860ab",
+          "path": "src/checkout.ts",
+          "start_line": 1
+        }
+      ],
+      "meaning_content_label": "supported"
+    },
+    {
+      "case": "checkout-flow",
+      "group": "meaning_event",
+      "id": "evnt_receipt_creation",
+      "label": "supported",
+      "rationale": "items.reduceの個数とinvoice/reward表示による返却オブジェクトに対応。",
+      "linked_source_spans": [
+        {
+          "end_line": 37,
+          "file_id": "file_b65c63f8b3f860ab",
+          "path": "src/checkout.ts",
+          "start_line": 1
+        }
+      ],
+      "meaning_content_label": "supported"
+    },
+    {
+      "case": "checkout-flow",
+      "group": "meaning_event",
+      "id": "evnt_calc_subtotal",
+      "label": "supported",
+      "rationale": "全明細・gift-card除外明細を集計する。主範囲末尾に期限判定も含まれることは別イベントとの範囲境界の問題。",
+      "linked_source_spans": [
+        {
+          "end_line": 43,
+          "file_id": "file_e2a33e720b7e37a3",
+          "path": "src/pricing.ts",
+          "start_line": 1
+        }
+      ],
+      "meaning_content_label": "supported"
+    },
+    {
+      "case": "checkout-flow",
+      "group": "meaning_event",
+      "id": "evnt_campaign_decision",
+      "label": "partial",
+      "rationale": "意味は全ファイルの証拠が支持するが、主範囲14–18行から期限判定13行が欠け、最初に戻るコードだけでは説明が揃わない。",
+      "linked_source_spans": [
+        {
+          "end_line": 43,
+          "file_id": "file_e2a33e720b7e37a3",
+          "path": "src/pricing.ts",
+          "start_line": 1
+        }
+      ],
+      "meaning_content_label": "supported"
+    },
+    {
+      "case": "checkout-flow",
+      "group": "meaning_event",
+      "id": "evnt_calc_discount",
+      "label": "supported",
+      "rationale": "Math.minの割引式とsubtotal-discount+deliveryを支持。式開始は隣接18行にあるが主要引数と請求合計は主範囲内。",
+      "linked_source_spans": [
+        {
+          "end_line": 43,
+          "file_id": "file_e2a33e720b7e37a3",
+          "path": "src/pricing.ts",
+          "start_line": 1
+        }
+      ],
+      "meaning_content_label": "supported"
+    },
+    {
+      "case": "checkout-flow",
+      "group": "meaning_event",
+      "id": "evnt_invoice_summary",
+      "label": "supported",
+      "rationale": "Items/discount/Delivery/Totalを文字列化する条件に対応。",
+      "linked_source_spans": [
+        {
+          "end_line": 43,
+          "file_id": "file_e2a33e720b7e37a3",
+          "path": "src/pricing.ts",
+          "start_line": 1
+        }
+      ],
+      "meaning_content_label": "supported"
+    },
+    {
+      "case": "checkout-flow",
+      "group": "meaning_event",
+      "id": "evnt_reward_discount_decision",
+      "label": "supported",
+      "rationale": "campaign期限とminimumCentsの再判定に対応。",
+      "linked_source_spans": [
+        {
+          "end_line": 38,
+          "file_id": "file_d55ba3a818bca9be",
+          "path": "src/rewards.ts",
+          "start_line": 1
+        }
+      ],
+      "meaning_content_label": "supported"
+    },
+    {
+      "case": "checkout-flow",
+      "group": "meaning_event",
+      "id": "evnt_calc_points",
+      "label": "supported",
+      "rationale": "割引控除とMath.floor(paidMerchandiseCents/100)に対応。",
+      "linked_source_spans": [
+        {
+          "end_line": 38,
+          "file_id": "file_d55ba3a818bca9be",
+          "path": "src/rewards.ts",
+          "start_line": 1
+        }
+      ],
+      "meaning_content_label": "supported"
+    },
+    {
+      "case": "checkout-flow",
+      "group": "meaning_event",
+      "id": "evnt_describe_reward",
+      "label": "supported",
+      "rationale": "nullのゲスト案内とpoints/basis表示に対応。",
+      "linked_source_spans": [
+        {
+          "end_line": 38,
+          "file_id": "file_d55ba3a818bca9be",
+          "path": "src/rewards.ts",
+          "start_line": 1
+        }
+      ],
+      "meaning_content_label": "supported"
+    },
+    {
+      "case": "checkout-flow",
+      "group": "meaning_event",
+      "id": "evnt_preview_qualify",
+      "label": "supported",
+      "rationale": "availableとqualifiesによるキャッシュ期限・最低額の判定に対応。",
+      "linked_source_spans": [
+        {
+          "end_line": 41,
+          "file_id": "file_4a04ca6a30d68873",
+          "path": "src/preview.ts",
+          "start_line": 1
+        }
+      ],
+      "meaning_content_label": "supported"
+    },
+    {
+      "case": "checkout-flow",
+      "group": "meaning_event",
+      "id": "evnt_preview_saving_state",
+      "label": "supported",
+      "rationale": "savingCentsとnone/expired/below-minimum/appliedの区別に対応。",
+      "linked_source_spans": [
+        {
+          "end_line": 41,
+          "file_id": "file_4a04ca6a30d68873",
+          "path": "src/preview.ts",
+          "start_line": 1
+        }
+      ],
+      "meaning_content_label": "supported"
+    },
+    {
+      "case": "checkout-flow",
+      "group": "meaning_event",
+      "id": "evnt_describe_preview",
+      "label": "supported",
+      "rationale": "期限切れ・最低額・割引の見積表示分岐に対応。",
+      "linked_source_spans": [
+        {
+          "end_line": 41,
+          "file_id": "file_4a04ca6a30d68873",
+          "path": "src/preview.ts",
+          "start_line": 1
+        }
+      ],
+      "meaning_content_label": "supported"
+    },
+    {
+      "case": "checkout-flow",
+      "group": "hypothesis",
+      "id": "hyp_014a655e9d26481190df517260985197",
+      "label": "supported",
+      "rationale": "pricing/rewardsで同じキャンペーン条件と式があり、READMEが同じルールを明示。協調変更の根拠であり、実行時の不具合確定ではない。",
+      "linked_source_spans": [
+        {
+          "end_line": 43,
+          "file_id": "file_e2a33e720b7e37a3",
+          "path": "src/pricing.ts",
+          "start_line": 1
+        },
+        {
+          "end_line": 38,
+          "file_id": "file_d55ba3a818bca9be",
+          "path": "src/rewards.ts",
+          "start_line": 1
+        },
+        {
+          "end_line": 9,
+          "file_id": "file_b335630551682c19",
+          "path": "README.md",
+          "start_line": 1
+        }
+      ]
+    },
+    {
+      "case": "checkout-flow",
+      "group": "review_signal",
+      "id": "sig_campaign_policy_scatter",
+      "label": "supported",
+      "rationale": "pricing/rewardsの条件と式、具体的な協調変更シナリオが対応。ただしpreviewにも同じルールがあり網羅性に不足。",
+      "linked_source_spans": [
+        {
+          "end_line": 43,
+          "file_id": "file_e2a33e720b7e37a3",
+          "path": "src/pricing.ts",
+          "start_line": 1
+        },
+        {
+          "end_line": 38,
+          "file_id": "file_d55ba3a818bca9be",
+          "path": "src/rewards.ts",
+          "start_line": 1
+        }
+      ]
+    },
+    {
+      "case": "checkout-flow",
+      "group": "review_signal",
+      "id": "sig_preview_boundary_justified",
+      "label": "supported",
+      "rationale": "ブラウザのadvisoryとサーバ再検証という契約差が支持する。計算部分の共有が不可能とは言わない。",
+      "linked_source_spans": [
+        {
+          "end_line": 41,
+          "file_id": "file_4a04ca6a30d68873",
+          "path": "src/preview.ts",
+          "start_line": 1
+        },
+        {
+          "end_line": 43,
+          "file_id": "file_e2a33e720b7e37a3",
+          "path": "src/pricing.ts",
+          "start_line": 1
+        },
+        {
+          "end_line": 9,
+          "file_id": "file_b335630551682c19",
+          "path": "README.md",
+          "start_line": 1
+        }
+      ]
+    },
+    {
+      "case": "checkout-flow",
+      "group": "repository_profile",
+      "id": "profile",
+      "label": "supported",
+      "rationale": "注文・価格・特典・advisoryの分担とREADMEに対応。層間のポリシー所有は未決として残す。",
+      "linked_source_spans": []
+    },
+    {
+      "case": "justified",
+      "group": "responsibility",
+      "id": "resp_consumer_policy",
+      "label": "supported",
+      "rationale": "30日以内かつ非最終セール。READMEの一般消費者契約に対応。",
+      "linked_source_spans": [
+        {
+          "end_line": 6,
+          "file_id": "file_a87988382ae694f5",
+          "path": "src/consumer-policy.ts",
+          "start_line": 1
+        }
+      ]
+    },
+    {
+      "case": "justified",
+      "group": "responsibility",
+      "id": "resp_enterprise_policy",
+      "label": "supported",
+      "rationale": "90日以内かつレシート。READMEとテスト名のファイル内の契約コメントが支持。テスト合格とは扱わない。",
+      "linked_source_spans": [
+        {
+          "end_line": 7,
+          "file_id": "file_dcc20e2ba5448fb1",
+          "path": "src/enterprise-policy.ts",
+          "start_line": 1
+        },
+        {
+          "end_line": 4,
+          "file_id": "file_09982dcaf9353d04",
+          "path": "tests/enterprise-policy.test.ts",
+          "start_line": 1
+        }
+      ]
+    },
+    {
+      "case": "justified",
+      "group": "responsibility",
+      "id": "resp_refund_calculation",
+      "label": "supported",
+      "rationale": "5%手数料の丸め・非負補正に対応。",
+      "linked_source_spans": [
+        {
+          "end_line": 6,
+          "file_id": "file_bbdf2ac534e91ac6",
+          "path": "src/refund-amount.ts",
+          "start_line": 1
+        }
+      ]
+    },
+    {
+      "case": "justified",
+      "group": "responsibility",
+      "id": "resp_refund_notification",
+      "label": "supported",
+      "rationale": "顧客名と返金額の文字列整形に対応。",
+      "linked_source_spans": [
+        {
+          "end_line": 6,
+          "file_id": "file_d447a918c53e5667",
+          "path": "src/notification.ts",
+          "start_line": 1
+        }
+      ]
+    },
+    {
+      "case": "justified",
+      "group": "meaning_event",
+      "id": "evnt_consumer_eligibility",
+      "label": "supported",
+      "rationale": "主範囲5行の30日・非最終セール条件に一致。",
+      "linked_source_spans": [
+        {
+          "end_line": 6,
+          "file_id": "file_a87988382ae694f5",
+          "path": "src/consumer-policy.ts",
+          "start_line": 1
+        }
+      ],
+      "meaning_content_label": "supported"
+    },
+    {
+      "case": "justified",
+      "group": "meaning_event",
+      "id": "evnt_enterprise_eligibility",
+      "label": "supported",
+      "rationale": "主範囲5–6行の90日・レシート条件に一致。",
+      "linked_source_spans": [
+        {
+          "end_line": 7,
+          "file_id": "file_dcc20e2ba5448fb1",
+          "path": "src/enterprise-policy.ts",
+          "start_line": 1
+        }
+      ],
+      "meaning_content_label": "supported"
+    },
+    {
+      "case": "justified",
+      "group": "meaning_event",
+      "id": "evnt_calculate_refund",
+      "label": "supported",
+      "rationale": "主範囲5行の5%丸めとMath.maxに一致。",
+      "linked_source_spans": [
+        {
+          "end_line": 6,
+          "file_id": "file_bbdf2ac534e91ac6",
+          "path": "src/refund-amount.ts",
+          "start_line": 1
+        }
+      ],
+      "meaning_content_label": "supported"
+    },
+    {
+      "case": "justified",
+      "group": "meaning_event",
+      "id": "evnt_build_notification",
+      "label": "supported",
+      "rationale": "主範囲5行の顧客名・金額補間に一致。",
+      "linked_source_spans": [
+        {
+          "end_line": 6,
+          "file_id": "file_d447a918c53e5667",
+          "path": "src/notification.ts",
+          "start_line": 1
+        }
+      ],
+      "meaning_content_label": "supported"
+    },
+    {
+      "case": "justified",
+      "group": "hypothesis",
+      "id": "hyp_75fe4a8e030242109236bdb4707371ab",
+      "label": "supported",
+      "rationale": "rejectedという扱いを採点。異なる契約を無条件に同一責務へ統合しない判断が文書に合う。",
+      "linked_source_spans": [
+        {
+          "end_line": 6,
+          "file_id": "file_a87988382ae694f5",
+          "path": "src/consumer-policy.ts",
+          "start_line": 1
+        },
+        {
+          "end_line": 7,
+          "file_id": "file_dcc20e2ba5448fb1",
+          "path": "src/enterprise-policy.ts",
+          "start_line": 1
+        },
+        {
+          "end_line": 3,
+          "file_id": "file_b335630551682c19",
+          "path": "README.md",
+          "start_line": 1
+        },
+        {
+          "end_line": 4,
+          "file_id": "file_09982dcaf9353d04",
+          "path": "tests/enterprise-policy.test.ts",
+          "start_line": 1
+        }
+      ]
+    },
+    {
+      "case": "justified",
+      "group": "repository_profile",
+      "id": "profile",
+      "label": "supported",
+      "rationale": "四つの処理と共通引数・各処理の参照差を支持。unknowns空は調査済み・問題なしを意味しない。",
+      "linked_source_spans": []
+    },
+    {
+      "case": "justified",
+      "group": "saved_investigation",
+      "id": "find_justified_difference_contract",
+      "label": "supported",
+      "rationale": "READMEと契約コメントは30日/90日差を説明する。テスト名のファイルは例配列でassertionがなく、実行検証として扱えない。",
+      "linked_source_spans": [
+        {
+          "end_line": 6,
+          "file_id": "file_a87988382ae694f5",
+          "path": "src/consumer-policy.ts",
+          "start_line": 1
+        },
+        {
+          "end_line": 7,
+          "file_id": "file_dcc20e2ba5448fb1",
+          "path": "src/enterprise-policy.ts",
+          "start_line": 1
+        },
+        {
+          "end_line": 4,
+          "file_id": "file_09982dcaf9353d04",
+          "path": "tests/enterprise-policy.test.ts",
+          "start_line": 1
+        },
+        {
+          "end_line": 3,
+          "file_id": "file_b335630551682c19",
+          "path": "README.md",
+          "start_line": 1
+        }
+      ]
+    },
+    {
+      "case": "justified",
+      "group": "investigation_hypothesis",
+      "id": "hyp_75fe4a8e030242109236bdb4707371ab",
+      "label": "supported",
+      "rationale": "契約差による統合仮説の棄却を支持。主解析と同じ仮説で、独立した成功例ではない。",
+      "linked_source_spans": [
+        {
+          "end_line": 6,
+          "file_id": "file_a87988382ae694f5",
+          "path": "src/consumer-policy.ts",
+          "start_line": 1
+        },
+        {
+          "end_line": 7,
+          "file_id": "file_dcc20e2ba5448fb1",
+          "path": "src/enterprise-policy.ts",
+          "start_line": 1
+        },
+        {
+          "end_line": 4,
+          "file_id": "file_09982dcaf9353d04",
+          "path": "tests/enterprise-policy.test.ts",
+          "start_line": 1
+        },
+        {
+          "end_line": 3,
+          "file_id": "file_b335630551682c19",
+          "path": "README.md",
+          "start_line": 1
+        }
+      ]
+    },
+    {
+      "case": "justified",
+      "group": "investigation_hypothesis",
+      "id": "hyp_8aff626552b741e0b4fce17f2fc9c863",
+      "label": "supported",
+      "rationale": "期限とレシート条件の契約差はREADME・実装・契約コメントが説明。実行時の正しさは未評価。",
+      "linked_source_spans": [
+        {
+          "end_line": 6,
+          "file_id": "file_a87988382ae694f5",
+          "path": "src/consumer-policy.ts",
+          "start_line": 1
+        },
+        {
+          "end_line": 7,
+          "file_id": "file_dcc20e2ba5448fb1",
+          "path": "src/enterprise-policy.ts",
+          "start_line": 1
+        },
+        {
+          "end_line": 4,
+          "file_id": "file_09982dcaf9353d04",
+          "path": "tests/enterprise-policy.test.ts",
+          "start_line": 1
+        },
+        {
+          "end_line": 3,
+          "file_id": "file_b335630551682c19",
+          "path": "README.md",
+          "start_line": 1
+        }
+      ]
+    },
+    {
+      "case": "returns-after",
+      "group": "responsibility",
+      "id": "resp_return_policy",
+      "label": "supported",
+      "rationale": "共通evaluateReturnPolicyとPOLICY定数の期限・明細・手数料・有効期限に対応。",
+      "linked_source_spans": [
+        {
+          "file_id": "file_9f3aa426c1eb6fff",
+          "path": "src/return-policy.ts",
+          "start_line": 1,
+          "end_line": 38
+        },
+        {
+          "file_id": "file_b335630551682c19",
+          "path": "README.md",
+          "start_line": 1,
+          "end_line": 11
+        }
+      ]
+    },
+    {
+      "case": "returns-after",
+      "group": "responsibility",
+      "id": "resp_channel_adapters",
+      "label": "supported",
+      "rationale": "両アダプタは共通ポリシーを呼び、保存と監査へ別チャネル名を渡す。",
+      "linked_source_spans": [
+        {
+          "file_id": "file_164f40a38842f526",
+          "path": "src/channels.ts",
+          "start_line": 1,
+          "end_line": 26
+        },
+        {
+          "file_id": "file_b335630551682c19",
+          "path": "README.md",
+          "start_line": 1,
+          "end_line": 11
+        }
+      ]
+    },
+    {
+      "case": "returns-after",
+      "group": "responsibility",
+      "id": "resp_receipt_rendering",
+      "label": "supported",
+      "rationale": "見出し・金額・本文・理由の整形に対応。",
+      "linked_source_spans": [
+        {
+          "file_id": "file_d447a918c53e5667",
+          "path": "src/notification.ts",
+          "start_line": 1,
+          "end_line": 17
+        },
+        {
+          "file_id": "file_b335630551682c19",
+          "path": "README.md",
+          "start_line": 1,
+          "end_line": 11
+        }
+      ]
+    },
+    {
+      "case": "returns-after",
+      "group": "meaning_event",
+      "id": "evt_policy_window_check",
+      "label": "supported",
+      "rationale": "経過日数と会員別期限の範囲7–11行に対応。",
+      "linked_source_spans": [
+        {
+          "file_id": "file_9f3aa426c1eb6fff",
+          "path": "src/return-policy.ts",
+          "start_line": 1,
+          "end_line": 38
+        }
+      ],
+      "meaning_content_label": "supported"
+    },
+    {
+      "case": "returns-after",
+      "group": "meaning_event",
+      "id": "evt_policy_receipt_check",
+      "label": "supported",
+      "rationale": "receipt-requiredの追加条件16行に対応。",
+      "linked_source_spans": [
+        {
+          "file_id": "file_9f3aa426c1eb6fff",
+          "path": "src/return-policy.ts",
+          "start_line": 1,
+          "end_line": 38
+        }
+      ],
+      "meaning_content_label": "supported"
+    },
+    {
+      "case": "returns-after",
+      "group": "meaning_event",
+      "id": "evt_policy_lines_evaluation",
+      "label": "supported",
+      "rationale": "明細除外・残数・証明・期限の条件と集計18–27行に対応。",
+      "linked_source_spans": [
+        {
+          "file_id": "file_9f3aa426c1eb6fff",
+          "path": "src/return-policy.ts",
+          "start_line": 1,
+          "end_line": 38
+        }
+      ],
+      "meaning_content_label": "supported"
+    },
+    {
+      "case": "returns-after",
+      "group": "meaning_event",
+      "id": "evt_policy_fee_calculation",
+      "label": "supported",
+      "rationale": "plus無料と通常手数料、返金額の範囲29–34行に対応。",
+      "linked_source_spans": [
+        {
+          "file_id": "file_9f3aa426c1eb6fff",
+          "path": "src/return-policy.ts",
+          "start_line": 1,
+          "end_line": 38
+        }
+      ],
+      "meaning_content_label": "supported"
+    },
+    {
+      "case": "returns-after",
+      "group": "meaning_event",
+      "id": "evt_policy_expires_calculation",
+      "label": "supported",
+      "rationale": "quoteDaysを加える36行に対応。",
+      "linked_source_spans": [
+        {
+          "file_id": "file_9f3aa426c1eb6fff",
+          "path": "src/return-policy.ts",
+          "start_line": 1,
+          "end_line": 38
+        }
+      ],
+      "meaning_content_label": "supported"
+    },
+    {
+      "case": "returns-after",
+      "group": "meaning_event",
+      "id": "evt_web_save_quote",
+      "label": "supported",
+      "rationale": "saveQuote('web', quote)の11行に対応。",
+      "linked_source_spans": [
+        {
+          "file_id": "file_164f40a38842f526",
+          "path": "src/channels.ts",
+          "start_line": 1,
+          "end_line": 26
+        }
+      ],
+      "meaning_content_label": "supported"
+    },
+    {
+      "case": "returns-after",
+      "group": "meaning_event",
+      "id": "evt_web_record_audit",
+      "label": "supported",
+      "rationale": "channel:'web'のaudit.record、12行に対応。",
+      "linked_source_spans": [
+        {
+          "file_id": "file_164f40a38842f526",
+          "path": "src/channels.ts",
+          "start_line": 1,
+          "end_line": 26
+        }
+      ],
+      "meaning_content_label": "supported"
+    },
+    {
+      "case": "returns-after",
+      "group": "meaning_event",
+      "id": "evt_store_save_quote",
+      "label": "supported",
+      "rationale": "saveQuote('store', quote)の23行に対応。",
+      "linked_source_spans": [
+        {
+          "file_id": "file_164f40a38842f526",
+          "path": "src/channels.ts",
+          "start_line": 1,
+          "end_line": 26
+        }
+      ],
+      "meaning_content_label": "supported"
+    },
+    {
+      "case": "returns-after",
+      "group": "meaning_event",
+      "id": "evt_store_record_audit",
+      "label": "supported",
+      "rationale": "channel:'store'のaudit.record、24行に対応。",
+      "linked_source_spans": [
+        {
+          "file_id": "file_164f40a38842f526",
+          "path": "src/channels.ts",
+          "start_line": 1,
+          "end_line": 26
+        }
+      ],
+      "meaning_content_label": "supported"
+    },
+    {
+      "case": "returns-after",
+      "group": "meaning_event",
+      "id": "evt_receipt_heading_decision",
+      "label": "supported",
+      "rationale": "適格SKU数によるheading分岐に対応。",
+      "linked_source_spans": [
+        {
+          "file_id": "file_d447a918c53e5667",
+          "path": "src/notification.ts",
+          "start_line": 1,
+          "end_line": 17
+        }
+      ],
+      "meaning_content_label": "supported"
+    },
+    {
+      "case": "returns-after",
+      "group": "meaning_event",
+      "id": "evt_receipt_body_format",
+      "label": "supported",
+      "rationale": "details配列とjoinによる通知本文に対応。",
+      "linked_source_spans": [
+        {
+          "file_id": "file_d447a918c53e5667",
+          "path": "src/notification.ts",
+          "start_line": 1,
+          "end_line": 17
+        }
+      ],
+      "meaning_content_label": "supported"
+    },
+    {
+      "case": "returns-after",
+      "group": "hypothesis",
+      "id": "hyp_5db563a9cd2e4d39ae9faca329f7a83f",
+      "label": "partial",
+      "rationale": "現在の別ルーティングは支持できるが、将来の独立性を考慮した作者の設計意図はREADMEに明記されていない。supported断定を狭める必要。",
+      "linked_source_spans": [
+        {
+          "file_id": "file_b335630551682c19",
+          "path": "README.md",
+          "start_line": 1,
+          "end_line": 11
+        },
+        {
+          "file_id": "file_164f40a38842f526",
+          "path": "src/channels.ts",
+          "start_line": 1,
+          "end_line": 26
+        }
+      ]
+    },
+    {
+      "case": "returns-after",
+      "group": "review_signal",
+      "id": "sig_channel_adapter_boundary",
+      "label": "partial",
+      "rationale": "保存・監査のチャネル差は支持。波及を避けるため別々に保たれているという意図は推測。分離を維持する候補理由として条件付きで述べるべき。",
+      "linked_source_spans": [
+        {
+          "file_id": "file_164f40a38842f526",
+          "path": "src/channels.ts",
+          "start_line": 1,
+          "end_line": 26
+        },
+        {
+          "file_id": "file_b335630551682c19",
+          "path": "README.md",
+          "start_line": 1,
+          "end_line": 11
+        }
+      ]
+    },
+    {
+      "case": "returns-after",
+      "group": "repository_profile",
+      "id": "profile",
+      "label": "supported",
+      "rationale": "共通ポリシーとチャネル識別ルーティングに対応。将来の異なるルールはunknownとして残す。",
+      "linked_source_spans": []
+    },
+    {
+      "case": "returns-before",
+      "group": "responsibility",
+      "id": "resp_return_policy",
+      "label": "supported",
+      "rationale": "二実装の同じ期限・証明・対象明細・手数料・有効期限を同じ責務にまとめる。READMEが同じ所有者を明記。",
+      "linked_source_spans": [
+        {
+          "file_id": "file_3ebeb8f6cd0fa4c9",
+          "path": "src/store-return.ts",
+          "start_line": 1,
+          "end_line": 50
+        },
+        {
+          "file_id": "file_2a927094877257d1",
+          "path": "src/web-return.ts",
+          "start_line": 1,
+          "end_line": 49
+        },
+        {
+          "file_id": "file_b335630551682c19",
+          "path": "README.md",
+          "start_line": 1,
+          "end_line": 12
+        }
+      ]
+    },
+    {
+      "case": "returns-before",
+      "group": "responsibility",
+      "id": "resp_channel_orchestration",
+      "label": "supported",
+      "rationale": "findRequest→見積→チャネル別saveQuote/auditという静的呼出構造に対応。",
+      "linked_source_spans": [
+        {
+          "file_id": "file_3ebeb8f6cd0fa4c9",
+          "path": "src/store-return.ts",
+          "start_line": 1,
+          "end_line": 50
+        },
+        {
+          "file_id": "file_2a927094877257d1",
+          "path": "src/web-return.ts",
+          "start_line": 1,
+          "end_line": 49
+        },
+        {
+          "file_id": "file_9b828d0520a87cd1",
+          "path": "src/contracts.ts",
+          "start_line": 1,
+          "end_line": 35
+        }
+      ]
+    },
+    {
+      "case": "returns-before",
+      "group": "responsibility",
+      "id": "resp_receipt_notification",
+      "label": "supported",
+      "rationale": "見出し・本文・金額表示を組み立てる。戻り値は文字列を含むオブジェクト。",
+      "linked_source_spans": [
+        {
+          "file_id": "file_d447a918c53e5667",
+          "path": "src/notification.ts",
+          "start_line": 1,
+          "end_line": 17
+        },
+        {
+          "file_id": "file_9b828d0520a87cd1",
+          "path": "src/contracts.ts",
+          "start_line": 1,
+          "end_line": 35
+        }
+      ]
+    },
+    {
+      "case": "returns-before",
+      "group": "meaning_event",
+      "id": "evt_render_receipt",
+      "label": "supported",
+      "rationale": "通知本文の文字列生成を支持。関数全体の戻り値が文字列だとは読まない。",
+      "linked_source_spans": [
+        {
+          "file_id": "file_d447a918c53e5667",
+          "path": "src/notification.ts",
+          "start_line": 1,
+          "end_line": 17
+        }
+      ],
+      "meaning_content_label": "supported"
+    },
+    {
+      "case": "returns-before",
+      "group": "meaning_event",
+      "id": "evt_store_window_check",
+      "label": "supported",
+      "rationale": "経過日数・会員期限・証明を計算する範囲に対応。",
+      "linked_source_spans": [
+        {
+          "file_id": "file_3ebeb8f6cd0fa4c9",
+          "path": "src/store-return.ts",
+          "start_line": 1,
+          "end_line": 50
+        }
+      ],
+      "meaning_content_label": "supported"
+    },
+    {
+      "case": "returns-before",
+      "group": "meaning_event",
+      "id": "evt_store_item_eligibility",
+      "label": "supported",
+      "rationale": "最終セール・残数・証明・期限によるSKU抽出と金額集計に対応。",
+      "linked_source_spans": [
+        {
+          "file_id": "file_3ebeb8f6cd0fa4c9",
+          "path": "src/store-return.ts",
+          "start_line": 1,
+          "end_line": 50
+        }
+      ],
+      "meaning_content_label": "supported"
+    },
+    {
+      "case": "returns-before",
+      "group": "meaning_event",
+      "id": "evt_store_fee_quote",
+      "label": "supported",
+      "rationale": "plus無料/通常3%と見積有効期限7日の組立に対応。",
+      "linked_source_spans": [
+        {
+          "file_id": "file_3ebeb8f6cd0fa4c9",
+          "path": "src/store-return.ts",
+          "start_line": 1,
+          "end_line": 50
+        }
+      ],
+      "meaning_content_label": "supported"
+    },
+    {
+      "case": "returns-before",
+      "group": "meaning_event",
+      "id": "evt_web_window_check",
+      "label": "supported",
+      "rationale": "店舗と同じ期限・証明条件で配置が異なる。",
+      "linked_source_spans": [
+        {
+          "file_id": "file_2a927094877257d1",
+          "path": "src/web-return.ts",
+          "start_line": 1,
+          "end_line": 49
+        }
+      ],
+      "meaning_content_label": "supported"
+    },
+    {
+      "case": "returns-before",
+      "group": "meaning_event",
+      "id": "evt_web_item_eligibility",
+      "label": "supported",
+      "rationale": "continueを使うが店舗と同じ除外・残数・証明・期限条件。",
+      "linked_source_spans": [
+        {
+          "file_id": "file_2a927094877257d1",
+          "path": "src/web-return.ts",
+          "start_line": 1,
+          "end_line": 49
+        }
+      ],
+      "meaning_content_label": "supported"
+    },
+    {
+      "case": "returns-before",
+      "group": "meaning_event",
+      "id": "evt_web_fee_quote",
+      "label": "supported",
+      "rationale": "店舗と同じ会員別手数料と7日有効期限。",
+      "linked_source_spans": [
+        {
+          "file_id": "file_2a927094877257d1",
+          "path": "src/web-return.ts",
+          "start_line": 1,
+          "end_line": 49
+        }
+      ],
+      "meaning_content_label": "supported"
+    },
+    {
+      "case": "returns-before",
+      "group": "meaning_event",
+      "id": "evt_submit_store",
+      "label": "supported",
+      "rationale": "店舗の取得・見積・保存・監査の呼出に対応。外部サービス実行は未検証。",
+      "linked_source_spans": [
+        {
+          "file_id": "file_3ebeb8f6cd0fa4c9",
+          "path": "src/store-return.ts",
+          "start_line": 1,
+          "end_line": 50
+        }
+      ],
+      "meaning_content_label": "supported"
+    },
+    {
+      "case": "returns-before",
+      "group": "meaning_event",
+      "id": "evt_submit_web",
+      "label": "supported",
+      "rationale": "Webの取得・見積・保存・監査の呼出に対応。外部サービス実行は未検証。",
+      "linked_source_spans": [
+        {
+          "file_id": "file_2a927094877257d1",
+          "path": "src/web-return.ts",
+          "start_line": 1,
+          "end_line": 49
+        }
+      ],
+      "meaning_content_label": "supported"
+    },
+    {
+      "case": "returns-before",
+      "group": "hypothesis",
+      "id": "hyp_5c032e3210904674ba91046d002736ee",
+      "label": "supported",
+      "rationale": "rejectedを採点。同じ所有者・同じ返品ルールというREADMEが、意図的に異なるポリシー説を支持しない。",
+      "linked_source_spans": [
+        {
+          "file_id": "file_b335630551682c19",
+          "path": "README.md",
+          "start_line": 1,
+          "end_line": 12
+        }
+      ]
+    },
+    {
+      "case": "returns-before",
+      "group": "review_signal",
+      "id": "sig_policy_scattering",
+      "label": "supported",
+      "rationale": "同じ会員期限と手数料を二箇所で変更する具体的シナリオを支持。重複だけで欠陥とは判定しない。",
+      "linked_source_spans": [
+        {
+          "file_id": "file_3ebeb8f6cd0fa4c9",
+          "path": "src/store-return.ts",
+          "start_line": 1,
+          "end_line": 50
+        },
+        {
+          "file_id": "file_2a927094877257d1",
+          "path": "src/web-return.ts",
+          "start_line": 1,
+          "end_line": 49
+        },
+        {
+          "file_id": "file_b335630551682c19",
+          "path": "README.md",
+          "start_line": 1,
+          "end_line": 12
+        }
+      ]
+    },
+    {
+      "case": "returns-before",
+      "group": "review_signal",
+      "id": "sig_justified_channel_submit",
+      "label": "supported",
+      "rationale": "文書は保存・監査ルーティングの違いを明示し、別境界の理由となる。ただし分離が唯一の設計とは証明しない。",
+      "linked_source_spans": [
+        {
+          "file_id": "file_3ebeb8f6cd0fa4c9",
+          "path": "src/store-return.ts",
+          "start_line": 1,
+          "end_line": 50
+        },
+        {
+          "file_id": "file_2a927094877257d1",
+          "path": "src/web-return.ts",
+          "start_line": 1,
+          "end_line": 49
+        },
+        {
+          "file_id": "file_b335630551682c19",
+          "path": "README.md",
+          "start_line": 1,
+          "end_line": 12
+        }
+      ]
+    },
+    {
+      "case": "returns-before",
+      "group": "repository_profile",
+      "id": "profile",
+      "label": "supported",
+      "rationale": "同じポリシーと別ルーティングはREADMEに明記。現在正しいという文書上の前提は実行検証ではない。",
+      "linked_source_spans": []
+    },
+    {
+      "case": "scattered",
+      "group": "responsibility",
+      "id": "resp_eligibility",
+      "label": "supported",
+      "rationale": "店頭とオンラインの30日・非最終セール・レシート条件が同じ。将来同じ所有者であるとは断定しない。",
+      "linked_source_spans": [
+        {
+          "file_id": "file_d0dd8b3e9acfddd3",
+          "path": "src/counter-refund.ts",
+          "start_line": 1,
+          "end_line": 7
+        },
+        {
+          "file_id": "file_90643d579ec69ce1",
+          "path": "src/online-refund.ts",
+          "start_line": 1,
+          "end_line": 7
+        }
+      ]
+    },
+    {
+      "case": "scattered",
+      "group": "responsibility",
+      "id": "resp_amount",
+      "label": "supported",
+      "rationale": "5%の丸めと非負の返金額を計算する実装に対応。",
+      "linked_source_spans": [
+        {
+          "file_id": "file_bbdf2ac534e91ac6",
+          "path": "src/refund-amount.ts",
+          "start_line": 1,
+          "end_line": 7
+        }
+      ]
+    },
+    {
+      "case": "scattered",
+      "group": "responsibility",
+      "id": "resp_notification",
+      "label": "supported",
+      "rationale": "顧客名と金額を通知文字列にする実装に対応。",
+      "linked_source_spans": [
+        {
+          "file_id": "file_d447a918c53e5667",
+          "path": "src/notification.ts",
+          "start_line": 1,
+          "end_line": 7
+        }
+      ]
+    },
+    {
+      "case": "scattered",
+      "group": "meaning_event",
+      "id": "event_counter_eligibility",
+      "label": "supported",
+      "rationale": "店頭の三つの条件と主範囲5–6行が対応。",
+      "linked_source_spans": [
+        {
+          "file_id": "file_d0dd8b3e9acfddd3",
+          "path": "src/counter-refund.ts",
+          "start_line": 1,
+          "end_line": 7
+        }
+      ],
+      "meaning_content_label": "supported"
+    },
+    {
+      "case": "scattered",
+      "group": "meaning_event",
+      "id": "event_online_eligibility",
+      "label": "supported",
+      "rationale": "オンラインの三つの条件と主範囲5–6行が対応。",
+      "linked_source_spans": [
+        {
+          "file_id": "file_90643d579ec69ce1",
+          "path": "src/online-refund.ts",
+          "start_line": 1,
+          "end_line": 7
+        }
+      ],
+      "meaning_content_label": "supported"
+    },
+    {
+      "case": "scattered",
+      "group": "meaning_event",
+      "id": "event_fee_calculation",
+      "label": "supported",
+      "rationale": "Math.round(price * 0.05)に対応。",
+      "linked_source_spans": [
+        {
+          "file_id": "file_bbdf2ac534e91ac6",
+          "path": "src/refund-amount.ts",
+          "start_line": 1,
+          "end_line": 7
+        }
+      ],
+      "meaning_content_label": "supported"
+    },
+    {
+      "case": "scattered",
+      "group": "meaning_event",
+      "id": "event_net_refund_calculation",
+      "label": "supported",
+      "rationale": "Math.max(0, price - fee)に対応。",
+      "linked_source_spans": [
+        {
+          "file_id": "file_bbdf2ac534e91ac6",
+          "path": "src/refund-amount.ts",
+          "start_line": 1,
+          "end_line": 7
+        }
+      ],
+      "meaning_content_label": "supported"
+    },
+    {
+      "case": "scattered",
+      "group": "meaning_event",
+      "id": "event_notification_formatting",
+      "label": "supported",
+      "rationale": "greetingと返金額の補間に対応。",
+      "linked_source_spans": [
+        {
+          "file_id": "file_d447a918c53e5667",
+          "path": "src/notification.ts",
+          "start_line": 1,
+          "end_line": 7
+        }
+      ],
+      "meaning_content_label": "supported"
+    },
+    {
+      "case": "scattered",
+      "group": "hypothesis",
+      "id": "hyp_8ff93a5c4eb247d5882d729d5b43f537",
+      "label": "supported",
+      "rationale": "二箇所の同一判定という観察は支持できる。将来のポリシー差は反証質問として残されている。",
+      "linked_source_spans": [
+        {
+          "file_id": "file_d0dd8b3e9acfddd3",
+          "path": "src/counter-refund.ts",
+          "start_line": 1,
+          "end_line": 7
+        },
+        {
+          "file_id": "file_90643d579ec69ce1",
+          "path": "src/online-refund.ts",
+          "start_line": 1,
+          "end_line": 7
+        }
+      ]
+    },
+    {
+      "case": "scattered",
+      "group": "repository_profile",
+      "id": "profile",
+      "label": "supported",
+      "rationale": "返金判定・金額・通知という目的に対応。上位の統括関数は不明として保持。",
+      "linked_source_spans": []
+    },
+    {
+      "case": "tsugiai-agents",
+      "group": "responsibility",
+      "id": "resp_agent_orchestration",
+      "label": "supported",
+      "rationale": "create_checkout_agent内の指示文生成・生成設定・LlmAgent構築に対応。",
+      "linked_source_spans": [
+        {
+          "end_line": 154,
+          "file_id": "file_1d8dbf87c025064a",
+          "path": "agents/checkout_agent/agent.py",
+          "start_line": 1
+        }
+      ]
+    },
+    {
+      "case": "tsugiai-agents",
+      "group": "responsibility",
+      "id": "resp_response_lifecycle",
+      "label": "partial",
+      "rationale": "保存・完了・保留のセッション反映は支持するが、同じ責務に含めたrequest_photoは辞書返却だけでセッションを変更しない。定義と割当が不一致。",
+      "linked_source_spans": [
+        {
+          "end_line": 120,
+          "file_id": "file_a232501b52931428",
+          "path": "agents/checkout_agent/tools.py",
+          "start_line": 1
+        },
+        {
+          "end_line": 150,
+          "file_id": "file_a232501b52931428",
+          "path": "agents/checkout_agent/tools.py",
+          "start_line": 110
+        }
+      ]
+    },
+    {
+      "case": "tsugiai-agents",
+      "group": "responsibility",
+      "id": "resp_session_progress",
+      "label": "supported",
+      "rationale": "テンプレートとdone回答、重要なfollowupの集計に対応。",
+      "linked_source_spans": [
+        {
+          "end_line": 216,
+          "file_id": "file_a232501b52931428",
+          "path": "agents/checkout_agent/tools.py",
+          "start_line": 121
+        }
+      ]
+    },
+    {
+      "case": "tsugiai-agents",
+      "group": "responsibility",
+      "id": "resp_checkout_completion",
+      "label": "supported",
+      "rationale": "phase3の完了抑止と通常時complete_session/生成action返却に対応。実際の引き継ぎ簿生成はここでは実行しない。",
+      "linked_source_spans": [
+        {
+          "end_line": 216,
+          "file_id": "file_a232501b52931428",
+          "path": "agents/checkout_agent/tools.py",
+          "start_line": 121
+        }
+      ]
+    },
+    {
+      "case": "tsugiai-agents",
+      "group": "responsibility",
+      "id": "resp_runtime_context",
+      "label": "supported",
+      "rationale": "サービス参照とセッションIDへの代入に対応。並行実行の隔離保証は不明。",
+      "linked_source_spans": [
+        {
+          "end_line": 120,
+          "file_id": "file_a232501b52931428",
+          "path": "agents/checkout_agent/tools.py",
+          "start_line": 1
+        }
+      ]
+    },
+    {
+      "case": "tsugiai-agents",
+      "group": "meaning_event",
+      "id": "evnt_format_phase3_prompt",
+      "label": "supported",
+      "rationale": "実装のNG所属条件、期待値不一致文面とformat呼出を説明。期待値判定が業務的に正しいかは別途不明。",
+      "linked_source_spans": [
+        {
+          "end_line": 154,
+          "file_id": "file_1d8dbf87c025064a",
+          "path": "agents/checkout_agent/agent.py",
+          "start_line": 1
+        }
+      ],
+      "meaning_content_label": "supported"
+    },
+    {
+      "case": "tsugiai-agents",
+      "group": "meaning_event",
+      "id": "evnt_format_normal_prompt",
+      "label": "partial",
+      "rationale": "通常モードの項目展開は支持するが主範囲83–102行には前モード末尾が入り、指示文への結合106行が欠ける。86–106行の案内が適切。",
+      "linked_source_spans": [
+        {
+          "end_line": 154,
+          "file_id": "file_1d8dbf87c025064a",
+          "path": "agents/checkout_agent/agent.py",
+          "start_line": 1
+        }
+      ],
+      "meaning_content_label": "supported"
+    },
+    {
+      "case": "tsugiai-agents",
+      "group": "meaning_event",
+      "id": "evnt_instantiate_agent",
+      "label": "supported",
+      "rationale": "生成設定・instruction・toolsを渡したLlmAgent構築とreturnに対応。",
+      "linked_source_spans": [
+        {
+          "end_line": 154,
+          "file_id": "file_1d8dbf87c025064a",
+          "path": "agents/checkout_agent/agent.py",
+          "start_line": 1
+        }
+      ],
+      "meaning_content_label": "supported"
+    },
+    {
+      "case": "tsugiai-agents",
+      "group": "meaning_event",
+      "id": "evnt_bind_services",
+      "label": "supported",
+      "rationale": "globalサービス二変数への代入に対応。",
+      "linked_source_spans": [
+        {
+          "end_line": 120,
+          "file_id": "file_a232501b52931428",
+          "path": "agents/checkout_agent/tools.py",
+          "start_line": 1
+        }
+      ],
+      "meaning_content_label": "supported"
+    },
+    {
+      "case": "tsugiai-agents",
+      "group": "meaning_event",
+      "id": "evnt_bind_session_id",
+      "label": "supported",
+      "rationale": "global _current_session_idへの代入に対応。",
+      "linked_source_spans": [
+        {
+          "end_line": 120,
+          "file_id": "file_a232501b52931428",
+          "path": "agents/checkout_agent/tools.py",
+          "start_line": 1
+        }
+      ],
+      "meaning_content_label": "supported"
+    },
+    {
+      "case": "tsugiai-agents",
+      "group": "meaning_event",
+      "id": "evnt_save_response",
+      "label": "supported",
+      "rationale": "CheckoutResponse構築とadd_responseを支持。初期化ガード後の処理であり常時成功とは主張しない。",
+      "linked_source_spans": [
+        {
+          "end_line": 120,
+          "file_id": "file_a232501b52931428",
+          "path": "agents/checkout_agent/tools.py",
+          "start_line": 1
+        }
+      ],
+      "meaning_content_label": "supported"
+    },
+    {
+      "case": "tsugiai-agents",
+      "group": "meaning_event",
+      "id": "evnt_append_parking_lot",
+      "label": "supported",
+      "rationale": "セッション取得成功時の配列追加とupdate_sessionに対応。セッション不在時にもsuccessを返す分岐は説明に未収録。",
+      "linked_source_spans": [
+        {
+          "end_line": 120,
+          "file_id": "file_a232501b52931428",
+          "path": "agents/checkout_agent/tools.py",
+          "start_line": 1
+        }
+      ],
+      "meaning_content_label": "supported"
+    },
+    {
+      "case": "tsugiai-agents",
+      "group": "meaning_event",
+      "id": "evnt_create_photo_request",
+      "label": "partial",
+      "rationale": "辞書を返すmeaning自体は支持。割当先の『セッションへ反映』という責務定義は支持できない。イベント意味と割当を分ける必要。",
+      "linked_source_spans": [
+        {
+          "end_line": 120,
+          "file_id": "file_a232501b52931428",
+          "path": "agents/checkout_agent/tools.py",
+          "start_line": 1
+        }
+      ],
+      "meaning_content_label": "supported"
+    },
+    {
+      "case": "tsugiai-agents",
+      "group": "meaning_event",
+      "id": "evnt_mark_done",
+      "label": "supported",
+      "rationale": "該当回答のdone化とupdate_sessionを支持。セッション/該当回答不在時の戻り値は説明に未収録。",
+      "linked_source_spans": [
+        {
+          "end_line": 150,
+          "file_id": "file_a232501b52931428",
+          "path": "agents/checkout_agent/tools.py",
+          "start_line": 110
+        }
+      ],
+      "meaning_content_label": "supported"
+    },
+    {
+      "case": "tsugiai-agents",
+      "group": "meaning_event",
+      "id": "evnt_calculate_progress",
+      "label": "supported",
+      "rationale": "pending_items・critical_items集計を支持。meaningの『保留』は未完了を指しparking_lotとは別で、用語を区別するとよい。",
+      "linked_source_spans": [
+        {
+          "end_line": 216,
+          "file_id": "file_a232501b52931428",
+          "path": "agents/checkout_agent/tools.py",
+          "start_line": 121
+        }
+      ],
+      "meaning_content_label": "supported"
+    },
+    {
+      "case": "tsugiai-agents",
+      "group": "meaning_event",
+      "id": "evnt_complete_session",
+      "label": "supported",
+      "rationale": "phase3は完了呼出を抑止、それ以外complete_sessionと生成action返却に対応。実行された経路は推測しない。",
+      "linked_source_spans": [
+        {
+          "end_line": 216,
+          "file_id": "file_a232501b52931428",
+          "path": "agents/checkout_agent/tools.py",
+          "start_line": 121
+        }
+      ],
+      "meaning_content_label": "supported"
+    },
+    {
+      "case": "tsugiai-agents",
+      "group": "hypothesis",
+      "id": "hypo_session_concurrency",
+      "label": "undetermined",
+      "rationale": "共有変数は観察可能だが、並行リクエストの実際の干渉は静的資料で確定できない。openとプロセス分離の反証質問を保つ扱いは妥当。誤りではない。",
+      "linked_source_spans": [
+        {
+          "end_line": 120,
+          "file_id": "file_a232501b52931428",
+          "path": "agents/checkout_agent/tools.py",
+          "start_line": 1
+        }
+      ]
+    },
+    {
+      "case": "tsugiai-agents",
+      "group": "hypothesis",
+      "id": "hypo_unused_storage_service",
+      "label": "partial",
+      "rationale": "tools.py全216行には参照がないが、紐付いた根拠は1–120行のみ。『どの関数からも』の否定証明には後半も必要。",
+      "linked_source_spans": [
+        {
+          "end_line": 120,
+          "file_id": "file_a232501b52931428",
+          "path": "agents/checkout_agent/tools.py",
+          "start_line": 1
+        }
+      ]
+    },
+    {
+      "case": "tsugiai-agents",
+      "group": "review_signal",
+      "id": "sig_agent_responsibility_mixing",
+      "label": "supported",
+      "rationale": "同一factoryに不一致判定・プロンプト生成・モデル設定が入ることを支持。変更シナリオは現在の配置への条件付き推論で、欠陥確定ではない。",
+      "linked_source_spans": [
+        {
+          "end_line": 154,
+          "file_id": "file_1d8dbf87c025064a",
+          "path": "agents/checkout_agent/agent.py",
+          "start_line": 1
+        },
+        {
+          "end_line": 50,
+          "file_id": "file_12b3729365fdd4a9",
+          "path": "agents/checkout_agent/prompts.py",
+          "start_line": 1
+        }
+      ]
+    },
+    {
+      "case": "tsugiai-agents",
+      "group": "review_signal",
+      "id": "sig_tools_global_state_coupling",
+      "label": "contradicted",
+      "rationale": "『各ツール』の大域状態依存にrequest_photo(94–113行)が反例。『隔離が損なわれている』は実行条件未確認の断定。依存する五ツールを限定列挙し隔離は不明にすべき。",
+      "linked_source_spans": [
+        {
+          "end_line": 120,
+          "file_id": "file_a232501b52931428",
+          "path": "agents/checkout_agent/tools.py",
+          "start_line": 1
+        }
+      ]
+    },
+    {
+      "case": "tsugiai-agents",
+      "group": "repository_profile",
+      "id": "profile",
+      "label": "supported",
+      "rationale": "Agent生成・ツール・外部サービスを静的に支持。並行実行を検証課題として保持。Storage未使用はtools.py内だけの観察。",
+      "linked_source_spans": []
+    }
+  ]
+}
