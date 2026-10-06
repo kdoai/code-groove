@@ -254,6 +254,7 @@ def create_app(settings: Settings | None = None, verifier: Callable[[str], str] 
         return {
             "data": {
                 "live_enabled": settings.enable_live_analysis,
+                "local_mock_enabled": settings.environment == "local" and settings.model_mode == "fixture",
                 "model_id": settings.gemini_model,
                 "daily_analysis_limit": DAILY_ANALYSIS_LIMIT,
                 "firebase": {

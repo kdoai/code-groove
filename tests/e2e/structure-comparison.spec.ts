@@ -219,6 +219,7 @@ test('authenticated comparison request, cancellation and answer retention use di
     }),
   );
   const requests: Record<string, any>[] = [];
+  let adoptionCalls = 0;
   let status = 'investigating';
   await page.route('**/api/v1/**', async (route) => {
     const url = new URL(route.request().url()),
@@ -236,9 +237,10 @@ test('authenticated comparison request, cancellation and answer retention use di
         },
       };
     else if (path.endsWith('/bundle')) data = bundle;
-    else if (path.endsWith('/projects') && path.startsWith('/samples/'))
+    else if (path.endsWith('/projects') && path.startsWith('/samples/')) {
+      adoptionCalls++;
       data = { project_id: 'p_mock', analysis_id: bundle.map.analysis_id };
-    else if (path === '/projects/p_mock') data = { latest_analysis_id: bundle.map.analysis_id, run_id: '' };
+    } else if (path === '/projects/p_mock') data = { latest_analysis_id: bundle.map.analysis_id, run_id: '' };
     else if (path === '/projects/p_mock/repository') data = null;
     else if (path.endsWith('/structure')) {
       if (!url.searchParams.has('unit_a')) data = inventory;
@@ -288,7 +290,6 @@ test('authenticated comparison request, cancellation and answer retention use di
   await page.getByLabel('メールアドレス', { exact: true }).fill('reviewer@example.invalid');
   await page.getByLabel('パスワード', { exact: true }).fill('mock-password-only');
   await page.getByRole('dialog').getByRole('button', { name: 'ログイン', exact: true }).click();
-  await page.getByRole('button', { name: 'この記録を保存して精密検査', exact: true }).click();
   await page.getByRole('button', { name: /Agentの説明を二関数で問い直す/ }).click();
   const dialog = page.getByRole('dialog', { name: '構造を比較して聴く' });
   for (const [side, label] of [
@@ -315,6 +316,7 @@ test('authenticated comparison request, cancellation and answer retention use di
   await ask.click();
   await expect(dialog.locator('.structure-answer')).toContainText('モックAPIの比較回答');
   expect(requests).toHaveLength(2);
+  expect(adoptionCalls).toBe(1);
   expect(requests[1]).not.toHaveProperty('scene_id');
   expect(requests[1].question).toContain('触れていない');
   expect(requests[1].snapshot_id).toBe(input.snapshot_id);

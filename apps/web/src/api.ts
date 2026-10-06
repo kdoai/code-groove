@@ -78,6 +78,7 @@ export type ImportSnapshot = { revision: string; label: string; sources: Record<
 export type PublicConfig = {
   daily_analysis_limit: number;
   live_enabled: boolean;
+  local_mock_enabled?: boolean;
   firebase: { apiKey: string; authDomain: string; projectId: string; appId: string };
   model_id: string;
 };

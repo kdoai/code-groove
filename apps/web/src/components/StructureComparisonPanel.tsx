@@ -11,7 +11,7 @@ import type {
   ComparisonInvestigationRequest,
   ComparisonInvestigationResult,
 } from '../../../../packages/contracts/ComparisonExport';
-import { api, currentUser, type Bundle } from '../api';
+import { api, currentUser, type Bundle, type PublicConfig } from '../api';
 import { useWorkspace } from '../state';
 import { useComparisonRecords } from '../comparisonState';
 import { structurePlayer } from '../audio/structurePlayer';
@@ -95,6 +95,7 @@ function SourceSide({
 
 export function StructureComparisonPanel({ bundle, close }: { bundle: Bundle; close: () => void }) {
   const dialog = useRef<HTMLDialogElement>(null);
+  const copiedSample = useRef<{ project_id: string; analysis_id: string } | undefined>(undefined);
   const ws = useWorkspace();
   const store = useComparisonRecords();
   const [material, setMaterial] = useState('current');
@@ -142,7 +143,16 @@ export function StructureComparisonPanel({ bundle, close }: { bundle: Bundle; cl
   const pending = requesting || (!!runId && !run.isError && !terminal.includes(run.data?.status ?? 'queued'));
   const row = comparison?.rows.find((r) => r.row_id === selectedRow) ?? comparison?.rows[rangeStart];
   const sources = data.data?.sources ?? inventory.data?.sources ?? bundle.sources;
-  const mockAvailable = demo || !!ws.sampleId;
+  const config = useQuery({
+    queryKey: ['config'],
+    queryFn: () => api<PublicConfig>('/config'),
+    staleTime: Infinity,
+  });
+  const mockAvailable = !!config.data?.local_mock_enabled && (demo || !!ws.sampleId);
+  const liveAvailable =
+    !demo &&
+    (!ws.sampleId ||
+      ['recorded-returns-before', 'recorded-checkout-flow', 'recorded-tsugiai-agents'].includes(ws.sampleId));
 
   useEffect(() => {
     engine.pause();
@@ -233,8 +243,18 @@ export function StructureComparisonPanel({ bundle, close }: { bundle: Bundle; cl
         store.update(key, {}, 'investigation_requested', { origin: 'fixture', request });
         store.answer(key, answer);
       } else {
+        if (!currentUser || !liveAvailable)
+          throw new Error('実解析の二関数を選び、ログイン後に追加調査してください。');
+        let analysisId = bundle.map.analysis_id;
+        if (ws.sampleId) {
+          copiedSample.current ??= await api<{ project_id: string; analysis_id: string }>(
+            `/samples/${ws.sampleId}/projects`,
+            {},
+          );
+          analysisId = copiedSample.current.analysis_id;
+        }
         const response = await api<{ run_id: string }>(
-          `/analyses/${bundle.map.analysis_id}/comparison-investigations`,
+          `/analyses/${analysisId}/comparison-investigations`,
           request,
         );
         store.update(key, {}, 'investigation_requested', {
@@ -625,7 +645,9 @@ export function StructureComparisonPanel({ bundle, close }: { bundle: Bundle; cl
                 </button>
               ) : (
                 <button
-                  disabled={!currentUser || !record.question.trim() || pending || rangeEnd === 0}
+                  disabled={
+                    !currentUser || !liveAvailable || !record.question.trim() || pending || rangeEnd === 0
+                  }
                   onClick={() => void investigate()}
                 >
                   この疑問をAgentに追加調査する
@@ -643,6 +665,22 @@ export function StructureComparisonPanel({ bundle, close }: { bundle: Bundle; cl
             </div>
             {!mockAvailable && !currentUser && (
               <p>追加調査にはログインと利用許可が必要です。比較・記録・書き出しはそのまま使えます。</p>
+            )}
+            {!mockAvailable && !liveAvailable && (
+              <p>この模擬教材は比較・記録・書き出し用です。新規調査は実解析の二関数から依頼してください。</p>
+            )}
+            {copiedSample.current && (
+              <button
+                onClick={() =>
+                  ws.set({
+                    projectId: copiedSample.current!.project_id,
+                    analysisId: copiedSample.current!.analysis_id,
+                    sampleId: '',
+                  })
+                }
+              >
+                保存した自分のプロジェクトを開く
+              </button>
             )}
             {record.answers.map((answer) => (
               <article key={answer.investigation_id} className="structure-answer">

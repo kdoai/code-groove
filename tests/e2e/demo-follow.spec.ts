@@ -5,6 +5,33 @@ test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('code-groove-hide-guide', 'true'));
 });
 
+test('production comparison keeps anonymous records usable and hides local-only mock requests', async ({
+  page,
+}) => {
+  let writes = 0;
+  page.on('request', (request) => {
+    if (request.method() === 'POST' && request.url().includes('/api/v1/')) writes++;
+  });
+  if (!process.env.E2E_BASE_URL)
+    await page.route('**/api/v1/config', async (route) => {
+      const response = await route.fetch();
+      const value = await response.json();
+      value.data.local_mock_enabled = false;
+      await route.fulfill({ json: value });
+    });
+  await page.goto('/projects/sample-recorded-returns-before/inspect');
+  await page.getByRole('button', { name: /Agentの説明を二関数で問い直す/ }).click();
+  const dialog = page.getByRole('dialog', { name: '構造を比較して聴く' });
+  await dialog.getByRole('textbox', { name: '疑問', exact: true }).fill('この差は意図された仕様ですか？');
+  await expect(dialog.getByRole('button', { name: /モック追加調査を試す/ })).toHaveCount(0);
+  await expect(
+    dialog.getByRole('button', { name: 'この疑問をAgentに追加調査する', exact: true }),
+  ).toBeDisabled();
+  await expect(dialog.getByRole('button', { name: 'ローカルJSONに書き出す', exact: true })).toBeEnabled();
+  await expect(dialog).toContainText('追加調査にはログイン');
+  expect(writes).toBe(0);
+});
+
 test('explicit chat send after authentication adopts the recording and retains the draft (mock API)', async ({
   page,
 }) => {
@@ -121,6 +148,9 @@ test('real repository browsing, Agent icon and logged-out chat preserve honest s
     await expect(input).toBeInViewport();
     await expect(page.locator('.review-code')).toBeInViewport();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    await page.screenshot({
+      path: `artifacts/${process.env.E2E_BASE_URL ? 'deployed' : 'demo'}-reference-r16-${viewport.width}.png`,
+    });
   }
   expect(writes).toBe(0);
   expect(errors).toEqual([]);
