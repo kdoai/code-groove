@@ -147,6 +147,7 @@ test('real repository browsing, Agent icon and logged-out chat preserve honest s
     await page.setViewportSize(viewport);
     await expect(input).toBeInViewport();
     await expect(page.locator('.review-code')).toBeInViewport();
+    await expect(page.locator('.composer-now')).toBeInViewport();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     await page.screenshot({
       path: `artifacts/${process.env.E2E_BASE_URL ? 'deployed' : 'demo'}-reference-r16-${viewport.width}.png`,
@@ -221,6 +222,16 @@ test('walkthrough spotlight follows button layout changes and viewport resizing'
   await expect.poll(tracksTarget).toBe(true);
   await page.getByRole('button', { name: '次へ', exact: true }).click();
   await expect(page.locator('.tour-card')).toContainText('確認したい箇所');
+  await expect(page.locator('.review-focus')).toHaveAttribute('open', '');
+  await expect
+    .poll(() =>
+      page.evaluate(() => {
+        const content = document.querySelector('[data-tour-content]')!.getBoundingClientRect();
+        const spotlight = document.querySelector('.spotlight-window')!.getBoundingClientRect();
+        return spotlight.bottom >= content.bottom + 7 && spotlight.left <= content.left - 7;
+      }),
+    )
+    .toBe(true);
   await page.getByRole('button', { name: '自分で使ってみる', exact: true }).click();
   await expect(page.locator('.spotlight-tour')).toHaveCount(0);
 });

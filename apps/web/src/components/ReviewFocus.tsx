@@ -18,8 +18,17 @@ export function ReviewFocus({
 }) {
   const ws = useWorkspace();
   const [error, setError] = useState('');
+  const [expanded, setExpanded] = useState(() => window.innerHeight > 850);
   const generation = useRef(0);
   const frame = useRef(0);
+  useEffect(() => {
+    const query = window.matchMedia('(max-height: 850px)');
+    const resize = () => {
+      if (query.matches) setExpanded(false);
+    };
+    query.addEventListener('change', resize);
+    return () => query.removeEventListener('change', resize);
+  }, []);
   useEffect(
     () => () => {
       generation.current++;
@@ -55,11 +64,16 @@ export function ReviewFocus({
     }
   }
   return (
-    <details className="review-focus" data-tour="review-focus" open>
+    <details
+      className="review-focus"
+      data-tour="review-focus"
+      open={expanded}
+      onToggle={(event) => setExpanded(event.currentTarget.open)}
+    >
       <summary>
         確認する箇所 · {signals.length} 件 <small>音の心地よさで良否は判定しません</small>
       </summary>
-      <div className="review-focus-list">
+      <div className="review-focus-list" data-tour-content>
         {signals.map((signal) => {
           const event = bundle.map.events.find(
             (event) => signal.event_ids.includes(event.event_id) && event.state === 'grounded',

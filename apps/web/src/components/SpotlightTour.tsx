@@ -17,6 +17,7 @@ const steps = [
   {
     target: 'review-focus',
     title: '03 / 確認したい箇所を絞って聴く',
+    action: '[data-tour="review-focus"] summary',
     copy: '「確認する箇所」で根拠行を選び、「伴奏なしで聴く」で判断の打点を聴きます。保存された懸念には反証未確認のものもあります。欠陥と断定せず、右の説明とコードで確かめてください。質問はログイン前から入力できます。',
   },
 ];
@@ -36,7 +37,19 @@ export function SpotlightTour({ close, ready = true }: { close: () => void; read
     const update = () => {
       const target = document.querySelector(`[data-tour="${current.target}"]`);
       if (target) {
-        const next = target.getBoundingClientRect();
+        let next = target.getBoundingClientRect();
+        const content = target.matches('details[open]') ? target.querySelector('[data-tour-content]') : null;
+        if (content) {
+          const bounds = content.getBoundingClientRect();
+          const left = Math.min(next.left, bounds.left),
+            top = Math.min(next.top, bounds.top);
+          next = new DOMRect(
+            left,
+            top,
+            Math.max(next.right, bounds.right) - left,
+            Math.max(next.bottom, bounds.bottom) - top,
+          );
+        }
         const position = `${next.left}:${next.top}:${next.width}:${next.height}`;
         if (position !== previous) {
           previous = position;
@@ -57,7 +70,12 @@ export function SpotlightTour({ close, ready = true }: { close: () => void; read
     if (!ready || performed.current.has(step)) return;
     performed.current.add(step);
     const action = current.action ? document.querySelector<HTMLButtonElement>(current.action) : null;
-    if (action && !(current.target === 'play' && engine.playing)) action.click();
+    if (
+      action &&
+      !(current.target === 'play' && engine.playing) &&
+      !(current.target === 'review-focus' && action.closest('details')?.open)
+    )
+      action.click();
   }, [step, ready, current]);
   useEffect(() => {
     if (!automatic || !ready) return;
