@@ -18,4 +18,4 @@
 
 東京、min=0、web max=2／worker max=1、Tasks同時実行1、private workerを維持します。Firestoreイベントpollは新しいseq範囲だけを読取ります。AIの予約・清算、全体token上限、日次10回を確認します。予算アラートは自動停止ではありません。
 
-R14はlocalの変更です。新しいADK依存のimageサイズ・cold start・本番モデル接続・GCP実請求の確認は配備前に行います。認証情報を表示するコマンドを公開手順・動画・ログに入れません。
+R16はR14/R15の変更を含めて配備済みです。配備したsource SHAは4437eae34da65904ce4900716d737b072e9f27e3で、revisionと実際の公開環境チェックはEXECUTION_PLAN.mdおよびartifacts/deployed-public-r16.json、artifacts/deployed-runtime-r16.jsonに記録しています。公開ブラウザ6件、API等12項目、runtime設定9項目の確認は通過しました。本番モデル接続・モデル精度・利用者の聴取効果・imageサイズ・cold start・GCP実請求は今回測定していません。認証情報を表示するコマンドを公開手順・動画・ログに入れません。
