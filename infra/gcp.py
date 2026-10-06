@@ -433,7 +433,9 @@ def deploy(image):
             )
     state.update(worker_url=worker, web_url=web, image=image)
     save(state)
-    (ROOT / "artifacts/deployment.json").write_text(
+    report = ROOT / "artifacts/deployment.json"
+    report.parent.mkdir(parents=True, exist_ok=True)
+    report.write_text(
         json.dumps({k: state[k] for k in ("project", "region", "web_url", "worker_url", "image")}, indent=2),
         encoding="utf-8",
     )

@@ -28,7 +28,7 @@ dev = [
 ]
 
 [tool.pytest.ini_options]
-pythonpath = ["apps/backend"]
+pythonpath = ["apps/backend", "."]
 testpaths = ["tests"]
 asyncio_mode = "auto"
 markers = ["live: real paid model calls (opt-in)"]

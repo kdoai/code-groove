@@ -1,4 +1,4 @@
-name: Verify affected code
+name: CI and deploy
 on:
   push:
     branches: [main]
@@ -7,11 +7,16 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: verify-${{ github.ref }}
-  cancel-in-progress: true
+  group: pipeline-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 jobs:
+  secrets:
+    name: Secret scan
+    uses: ./.github/workflows/secrets.yml
   verify:
+    name: Verify code
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
         with:
@@ -35,3 +40,11 @@ jobs:
           else
             pnpm test:changed --base "$BASE"
           fi
+  deploy:
+    name: Deploy production
+    needs: [verify, secrets]
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    permissions:
+      contents: read
+      id-token: write
+    uses: ./.github/workflows/deploy.yml

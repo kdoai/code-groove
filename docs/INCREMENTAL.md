@@ -1,4 +1,4 @@
-# 索引・再利用・範囲間統合 — R14
+# 索引・再利用・範囲間統合
 
 静的索引の版は`typescript-6-python-3.13-v4-lexical`、分割計画は`repository-partitions-v2`です。Pythonの入れ子関数、async、lambda、入れ子クラスのメソッドを索引化し、最外の所有元に集約して意味解析します。継承・動的属性・実行時dispatchは推定せず未解決です。
 
