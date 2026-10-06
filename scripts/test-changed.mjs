@@ -83,10 +83,18 @@ const sample =
       path,
     ),
   );
-console.log(JSON.stringify({ backend, music, web, sample, preflight, files: files.length }));
+const interpretation =
+  all ||
+  files.some((path) =>
+    /^(evaluations\/|fixtures\/recorded-live\/|scripts\/evaluate-recorded-interpretation\.py$|docs\/INTERPRETATION_EVALUATION\.md$)/.test(
+      path,
+    ),
+  );
+console.log(JSON.stringify({ backend, music, web, sample, preflight, interpretation, files: files.length }));
 if (process.argv.includes('--list')) process.exit(0);
 if (tooling && !backend) run('uv', ['run', 'ruff', 'check', 'infra', 'scripts']);
 if (tooling && !web) run('pnpm', ['exec', 'eslint', 'scripts/*.mjs']);
+if (interpretation) run('uv', ['run', 'python', 'scripts/evaluate-recorded-interpretation.py']);
 if (backend || music || web || preflight) run('pnpm', ['build:tools']);
 if (backend) {
   run('uv', ['run', 'ruff', 'check', 'apps/backend', 'scripts', 'tests', 'infra']);
