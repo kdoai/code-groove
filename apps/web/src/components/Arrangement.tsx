@@ -6,23 +6,25 @@ import { engine } from '../audio/engine';
 import { useWorkspace } from '../state';
 import { DemoComparison } from './DemoComparison';
 import { ReviewFocus } from './ReviewFocus';
+import { focusedExcerpt } from '../audio/excerpts';
+import { useAudition } from '../hooks/useAudition';
+import { signalSelection } from '../reviewNavigation';
 const motifColors = ['#c7cfff', '#a6ddce', '#aad4ef', '#e4bfde', '#b8debd', '#edc4ae'];
 export function Arrangement({
   bundle,
   plan,
   following,
   select,
-  followPlayback,
   compare,
 }: {
   bundle: Bundle;
   plan: ScorePlan;
   following: boolean;
   select: (note: ScheduledNote, seek?: boolean) => void;
-  followPlayback: () => void;
   compare: () => void;
 }) {
   const ws = useWorkspace();
+  const auditionState = useAudition();
   const [active, setActive] = useState<ScheduledNote[]>([]),
     [audioError, setAudioError] = useState('');
   const trackHeads = useRef(new Map<string, HTMLDivElement>()),
@@ -31,7 +33,6 @@ export function Arrangement({
   const total = plan.total_bars * 1920;
   const musical = plan.notes.filter((n) => n.kind !== 'pulse' || !ws.pulseMuted);
   function noteColor(note: ScheduledNote) {
-    if (note.kind === 'cue') return '#ffbc66';
     if (!note.event_id) return '#74849c';
     const role = bundle.map.responsibilities.find((r) => r.responsibility_id === note.responsibility_id);
     return motifColors[Number(role?.motif_id.slice(1) ?? 0)];
@@ -55,9 +56,6 @@ export function Arrangement({
     observer.observe(container);
     return () => observer.disconnect();
   }, [selectedPath]);
-  const signal =
-    bundle.map.review_signals?.find((s) => s.verdict === 'concern' && s.unit_ids.includes(ws.unitId)) ??
-    bundle.map.review_signals?.find((s) => s.verdict === 'concern');
   useEffect(() => {
     let frame = 0,
       last = 0;
@@ -65,20 +63,21 @@ export function Arrangement({
       const left = `${Math.min(100, (engine.tick / total) * 100)}%`;
       trackHeads.current.forEach((head) => (head.style.left = left));
       if (now - last > 90) {
-        const sounding = engine.playing
-          ? musical.filter(
-              (n) =>
-                !ws.instrumentMutes.includes(n.voice) &&
-                !(ws.focusEvidence && n.kind === 'accompaniment') &&
-                !(
-                  n.responsibility_id &&
-                  (ws.muted.includes(n.responsibility_id) ||
-                    (ws.solo.length > 0 && !ws.solo.includes(n.responsibility_id)))
-                ) &&
-                n.tick <= engine.tick &&
-                engine.tick < n.tick + n.duration_ms * 0.768,
-            )
-          : [];
+        const sounding =
+          engine.playing && engine.getAuditionState() === 'idle'
+            ? musical.filter(
+                (n) =>
+                  !ws.instrumentMutes.includes(n.voice) &&
+                  !(ws.focusEvidence && n.kind === 'accompaniment') &&
+                  !(
+                    n.responsibility_id &&
+                    (ws.muted.includes(n.responsibility_id) ||
+                      (ws.solo.length > 0 && !ws.solo.includes(n.responsibility_id)))
+                  ) &&
+                  n.tick <= engine.tick &&
+                  engine.tick < n.tick + n.duration_ms * 0.768,
+              )
+            : [];
         setActive(sounding);
         const linked =
           sounding.find((n) => n.kind === 'cue') ??
@@ -96,22 +95,13 @@ export function Arrangement({
     return () => cancelAnimationFrame(frame);
   }, [plan, following, ws.instrumentMutes, ws.focusEvidence, ws.pulseMuted, ws.muted, ws.solo]);
   async function audition() {
-    const cue =
-      musical.find((n) => n.kind === 'cue' && n.signal_id === signal?.signal_id) ??
-      musical.find((n) => n.event_id && n.unit_id === ws.unitId);
-    if (
-      !cue ||
-      (ws.playbackFile &&
-        ws.playbackFile !== bundle.map.events.find((e) => e.event_id === cue.event_id)?.span.path)
-    )
-      return;
-    select(cue, false);
-    followPlayback();
-    engine.stop();
-    engine.seek(Math.max(0, cue.tick - 1920));
+    const eventIds = bundle.map.events
+      .filter((item) => item.unit_id === ws.unitId && item.state === 'grounded')
+      .map((item) => item.event_id);
+    const excerpt = focusedExcerpt(plan, eventIds);
     try {
-      await engine.play();
       setAudioError('');
+      await engine.playAudition(excerpt.plan);
     } catch {
       setAudioError('音源の読込に失敗しました。');
     }
@@ -141,12 +131,12 @@ export function Arrangement({
           <Headphones size={16} />
           <b>演奏</b>
         </span>
-        <ReviewFocus bundle={bundle} plan={plan} select={select} followPlayback={followPlayback} />
+        <ReviewFocus bundle={bundle} plan={plan} />
         <details className="motif-legend workspace-menu">
           <summary>凡例</summary>
           <div>
             <p>
-              同じ役割は同じ色・リズム。健康の点数ではありません。精密検査の応答は、根拠のある将来の負担候補です。
+              同じ責務は同じ色・旋律。小さな丸印から保存された説明と根拠を確認できます。反証の確認は欠陥の確定を意味しません。
             </p>
             {bundle.map.responsibilities.map((r) => {
               const note = musical.find(
@@ -336,6 +326,30 @@ export function Arrangement({
                     </button>
                   );
                 })}
+                {(bundle.map.review_signals ?? []).flatMap((signal) => {
+                  const anchor = musical.find(
+                    (note) =>
+                      note.kind === 'data' &&
+                      signal.event_ids.includes(note.event_id ?? '') &&
+                      bundle.map.events.find((item) => item.event_id === note.event_id)?.span.path === file,
+                  );
+                  return anchor
+                    ? [
+                        <button
+                          key={signal.signal_id}
+                          className={`candidate-mark ${ws.signalId === signal.signal_id ? 'selected' : ''}`}
+                          data-testid="candidate-mark"
+                          style={{ left: `${(anchor.tick / total) * 100}%` }}
+                          aria-label={`確認候補：${signal.label}`}
+                          title={`確認候補：${signal.label} · 根拠と別の説明を読む`}
+                          onClick={() => {
+                            engine.pause();
+                            ws.set({ ...signalSelection(bundle, signal), following: false });
+                          }}
+                        />,
+                      ]
+                    : [];
+                })}
                 {groups
                   .filter(
                     (n) => bundle.map.units.find((u) => u.unit_id === n.unit_id)?.primary_span.path === file,
@@ -418,19 +432,29 @@ export function Arrangement({
           event ? `${event.span.path}:${event.span.start_line}–${event.span.end_line}` : undefined
         }
       >
-        <span className={current?.kind === 'cue' ? 'warning' : ''}>
+        <span role="status" data-testid="audition-status">
           {audioError ||
-            (event
-              ? `演奏中 · ${event.label}`
-              : active.length
-                ? '発音中：共通伴奏（コード根拠なし）'
-                : '音を選ぶと、下のコードに根拠を表示')}
+            (auditionState !== 'idle'
+              ? auditionState === 'loading'
+                ? '対象の音を準備中 · 再生設定は保持'
+                : '対象の旋律だけ試聴中 · 最大10秒'
+              : event
+                ? `演奏中 · ${event.label}`
+                : active.length
+                  ? '発音中：共通伴奏（コード根拠なし）'
+                  : '音を選ぶと、下のコードに根拠を表示')}
         </span>
-        {ws.unitId && (
-          <button className="audition" data-tour="audition" onClick={() => void audition()}>
-            <Play size={12} />
-            この区間を聴く
+        {auditionState !== 'idle' ? (
+          <button className="audition" onClick={() => engine.pause()}>
+            試聴を取消
           </button>
+        ) : (
+          ws.unitId && (
+            <button className="audition" data-tour="audition" onClick={() => void audition()}>
+              <Play size={12} />
+              この区間を聴く
+            </button>
+          )
         )}
       </div>
     </section>
