@@ -5,6 +5,7 @@ import type { Bundle } from '../api';
 import { useWorkspace } from '../state';
 import { DesignReview, reviewAxes } from './DesignReview';
 import { CandidateDetails } from './CandidateDetails';
+import { CallRelationshipsPanel } from './CallRelationshipsPanel';
 export type TraceEvent = { seq: number; type: string; timestamp: string; payload: Record<string, any> };
 
 function EvidenceTrail({ bundle, evidenceIds }: { bundle: Bundle; evidenceIds: string[] }) {
@@ -184,6 +185,7 @@ export function AgentPanel({
           <EvidenceTrail bundle={bundle} evidenceIds={event?.evidence_ids ?? unit.evidence_ids} />
         )}
         <DesignReview bundle={bundle} signal={selectedSignal} />
+        <CallRelationshipsPanel bundle={bundle} />
         {overview && role && (
           <div className="motif-map" data-tour="investigate">
             <div className="section-label">

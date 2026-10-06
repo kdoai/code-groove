@@ -6,6 +6,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "apps/backend"))
 from code_groove.schemas import (  # noqa: E402
+    CallRelationships,
     ComparisonExport,
     ComparisonInvestigationRequest,
     ComparisonInvestigationResult,
@@ -21,6 +22,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--check", action="store_true")
 args = parser.parse_args()
 for model in (
+    CallRelationships,
     SemanticMap,
     ScoreBundle,
     InvestigationResult,

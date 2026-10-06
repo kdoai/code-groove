@@ -191,6 +191,30 @@ class Evidence(Contract):
     created_by_tool_event_id: Id
 
 
+class StaticCallLink(Contract):
+    link_id: Id
+    name: str = Field(max_length=160)
+    call_span: Span
+    callee_span: Span | None
+    resolution: Literal["static_definition", "unresolved"]
+    return_spans: list[Span] = Field(max_length=16)
+    result_binding: str | None
+    use_spans: list[Span] = Field(max_length=16)
+    use_status: Literal["named_references", "immediate_expression", "unresolved"]
+    truncated: bool
+    limitations: list[str] = Field(max_length=8)
+
+
+class CallRelationships(Contract):
+    extraction_version: Literal["static-call-links-v1"] = "static-call-links-v1"
+    snapshot_id: Id
+    unit_span: Span
+    status: Literal["ready", "unsupported"]
+    links: list[StaticCallLink] = Field(max_length=24)
+    truncated: bool
+    limitations: list[str] = Field(max_length=12)
+
+
 class Responsibility(Contract):
     responsibility_id: Id
     label: str = Field(min_length=1, max_length=24)
