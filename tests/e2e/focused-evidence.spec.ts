@@ -128,16 +128,24 @@ test('two small implementations compare the recorded responsibility melody with 
   await expect(dialog.locator('.structure-source mark')).not.toHaveCount(0);
   await comparison.getByRole('button', { name: '責務の試聴を取消' }).click();
   await expect(comparison.getByRole('status')).toHaveText('停止中');
+  await expect(comparison).toContainText('項目:0件（対応不明）');
+  await expect(comparison.getByText('対応不明の箇所を見る', { exact: true })).toHaveCount(0);
+  await dialog.getByRole('checkbox', { name: '音を使う', exact: true }).uncheck();
+  await expect(comparison.getByRole('button', { name: '責務のAを聴く', exact: true })).toBeDisabled();
+  await dialog.locator('.structure-rows button').first().click();
+  await expect(dialog.locator('.structure-source mark')).not.toHaveCount(0);
+  await page.screenshot({ path: 'artifacts/responsibility-comparison-small-fixture.png' });
+  const unmatched = dialog
+    .getByLabel('Bの関数', { exact: true })
+    .locator('option')
+    .filter({ hasText: /^buildNotification ·/ });
+  await dialog.getByLabel('Bの関数', { exact: true }).selectOption((await unmatched.getAttribute('value'))!);
   await comparison.getByText('対応不明の箇所を見る', { exact: true }).click();
   await comparison
     .getByRole('button', { name: /行（対応不明）/ })
     .first()
     .click();
   await expect(dialog.locator('.structure-source mark')).not.toHaveCount(0);
-  await dialog.getByRole('checkbox', { name: '音を使う', exact: true }).uncheck();
-  await expect(comparison.getByRole('button', { name: '責務のAを聴く', exact: true })).toBeDisabled();
-  await dialog.locator('.structure-rows button').first().click();
-  await expect(dialog.locator('.structure-source mark')).not.toHaveCount(0);
-  await page.screenshot({ path: 'artifacts/responsibility-comparison-small-fixture.png' });
+  await page.screenshot({ path: 'artifacts/responsibility-comparison-unmatched-fixture.png' });
   expect(writes).toBe(0);
 });
