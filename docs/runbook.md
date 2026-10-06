@@ -2,7 +2,7 @@
 
 ## 配備
 
-通常の配備はGitHub Actionsの「Deploy verified revision」を手動実行します。既定ブランチの検証済みcommitを対象に、Cloud Runのwebと非公開workerを更新します。配備後はヘルスチェック、公開サンプルの再生、認証が必要なAPIのアクセス制御を確認します。
+mainへマージすると、GitHub Actionsの「CI and deploy」がテストと秘密情報検査を実行します。両方が成功した場合、Cloud Buildでイメージを作り、Cloud Runのwebと非公開workerを更新します。配備後はイメージ・revision・トラフィック、ヘルスチェック、公開サンプル、APIのアクセス制御を確認します。詳細は[CI/CD](CI_CD.md)を参照してください。
 
 配備したイメージとrevisionは非公開の運用記録に保存します。障害時は、その記録から直前の動作確認済みイメージへ戻します。
 

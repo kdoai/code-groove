@@ -9,11 +9,13 @@ type Unit = {
   label: string;
   primary_span: Span;
   calls: string[];
+  start_offset: number;
+  end_offset: number;
   parent_unit_id?: string;
 };
 const id = (value: string) => createHash('sha256').update(value).digest('hex').slice(0, 16);
 
-export function indexSnapshot(input: { snapshot_id: string; sources: Record<string, string> }) {
+export function createSnapshotProgram(input: { snapshot_id: string; sources: Record<string, string> }) {
   const virtual = new Map<string, ts.SourceFile>();
   const absolute = (path: string) => posix.normalize(`/snapshot/${path}`);
   for (const [path, source] of Object.entries(input.sources)) {
@@ -61,6 +63,11 @@ export function indexSnapshot(input: { snapshot_id: string; sources: Record<stri
     { noEmit: true, noLib: true, module: ts.ModuleKind.ESNext },
     host,
   );
+  return { program, virtual, absolute, resolve };
+}
+
+export function indexSnapshot(input: { snapshot_id: string; sources: Record<string, string> }) {
+  const { program, virtual, absolute, resolve } = createSnapshotProgram(input);
   const checker = program.getTypeChecker();
   const files = [],
     units: Unit[] = [],
@@ -113,6 +120,8 @@ export function indexSnapshot(input: { snapshot_id: string; sources: Record<stri
           label: name,
           primary_span: { file_id: fileId, path, start_line: start, end_line: end },
           calls: [],
+          start_offset: node.getStart(file),
+          end_offset: node.end,
           ...(parentUnitId ? { parent_unit_id: parentUnitId } : {}),
         };
         owner = unitId;

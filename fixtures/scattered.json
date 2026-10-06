@@ -382,7 +382,7 @@
   },
   "score": {
     "analysis_id": "analysis_scattered",
-    "score_hash": "ada1935532f971fb8b80e8cf18380ab9e54195260797ba7ef6567e8ae0b126b8",
+    "score_hash": "5fde7b0fcad02f1461fd1e0039d78875b4e1b388ef95d70b4bc7cd407b3e5105",
     "scenes": [
       {
         "scene_id": "scene_1",
@@ -394,7 +394,7 @@
         ],
         "theme": {
           "scene_id": "scene_1",
-          "grammar_version": "groove-chamber-v9",
+          "grammar_version": "groove-chamber-v10",
           "kit_id": "midnight-jazz-v4",
           "kit_hash": "a302b56825512936a014a556a88819affd50de65c9d68ff3acb544702dc919f7",
           "bpm": 96,
@@ -702,10 +702,10 @@
               "kind": "data",
               "tick": 1920,
               "voice": "piano",
-              "midi": 79,
+              "midi": 72,
               "variant": 0,
-              "velocity": 0.55,
-              "duration_ms": 540,
+              "velocity": 0.58,
+              "duration_ms": 650,
               "pan": -0.25,
               "evidence_ids": [
                 "evidence_1"
@@ -1160,10 +1160,10 @@
               "kind": "data",
               "tick": 5760,
               "voice": "piano",
-              "midi": 81,
+              "midi": 76,
               "variant": 0,
-              "velocity": 0.48,
-              "duration_ms": 700,
+              "velocity": 0.52,
+              "duration_ms": 520,
               "pan": -0.25,
               "evidence_ids": [
                 "evidence_1"
@@ -2263,7 +2263,7 @@
         },
         "repo": {
           "scene_id": "scene_1",
-          "grammar_version": "groove-chamber-v9",
+          "grammar_version": "groove-chamber-v10",
           "kit_id": "midnight-jazz-v4",
           "kit_hash": "a302b56825512936a014a556a88819affd50de65c9d68ff3acb544702dc919f7",
           "bpm": 96,
@@ -3265,10 +3265,10 @@
               "kind": "data",
               "tick": 7680,
               "voice": "piano",
-              "midi": 79,
+              "midi": 72,
               "variant": 0,
-              "velocity": 0.55,
-              "duration_ms": 540,
+              "velocity": 0.58,
+              "duration_ms": 650,
               "pan": -0.25,
               "evidence_ids": [
                 "evidence_1"
@@ -3494,10 +3494,10 @@
               "kind": "data",
               "tick": 9600,
               "voice": "piano",
-              "midi": 81,
+              "midi": 76,
               "variant": 0,
-              "velocity": 0.48,
-              "duration_ms": 700,
+              "velocity": 0.52,
+              "duration_ms": 520,
               "pan": -0.25,
               "evidence_ids": [
                 "evidence_1"

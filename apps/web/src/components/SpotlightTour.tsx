@@ -5,36 +5,20 @@ import { engine } from '../audio/engine';
 const steps = [
   {
     target: 'album',
-    title: '01 / 実在するAgentの設計を引き継ぐ',
-    copy: 'TsugiaiのCheckout Agentの9実装を確認した、保存済みGemini解析です。関連資料も含む11ファイルを表示しています。残り2範囲・リポジトリ全体・実行動作は未検証です。',
+    title: '01 / 何の音かを確かめる',
+    copy: '実在するTsugiaiの確定版を表示します。51ファイル・19,541行の参考コードと、Checkout Agentの9実装をGeminiが読んだ保存記録です。参考コードに未解析の音は付きません。',
   },
   {
     target: 'play',
-    title: '02 / 責務の配置を聴く',
-    copy: '実際のPlayで演奏します。同じ役割は同じ旋律・リズム。複数の旋律が重なる箇所、別のファイルで戻る旋律を探します。繰り返しだけで悪いコードとは判定しません。',
+    title: '02 / 音から実コードへ戻る',
+    copy: '発音中のファイルと根拠行を、下のコード画面が追いかけます。同じ責務・意味キーに同じ音高を割り当てます。伴奏の心地よさは、コードの品質の判定ではありません。',
     action: '[data-tour="play"]',
   },
   {
-    target: 'audition',
-    title: '03 / 気になった区間をもう一度',
-    copy: '実際のボタンで選択した関数を聴き直します。ノートを押すと発音の根拠行へ。ベースと和音は共通伴奏です。',
-    action: '[data-tour="audition"]',
-  },
-  {
-    target: 'mark',
-    title: '04 / ここを精密検査したい',
-    copy: 'この区間を選ぶと演奏を止め、その音の位置を保持します。右側で同じ旋律が現れるファイルも辿れます。',
-    action: '[data-tour="mark"]',
-  },
-  {
-    target: 'chat',
-    title: '05 / Agentに関係と将来の負担を聞く',
-    copy: '選択から実コードを読み直し、将来の変更負担と正当な境界を検討します。初回に見つけた懸念も隠しません。案内中は有料調査を始めません。',
-  },
-  {
-    target: 'chat',
-    title: '06 / 経過観察か、改善かを決める',
-    copy: '調査結果を確認して演奏へ反映。改善が妥当ならGeminiへ差分を依頼し、あなたが採用・却下を決めます。採用後の独立した再健診で初めて聴き比べが現れます。',
+    target: 'review-focus',
+    title: '03 / 確認したい箇所を絞って聴く',
+    action: '[data-tour="review-focus"] summary',
+    copy: '「確認候補」で根拠行を選び、「伴奏なしで聴く」で判断の打点を聴きます。保存された懸念には反証未確認のものもあります。欠陥と断定せず、右の説明とコードで確かめてください。質問はログイン前から入力できます。',
   },
 ];
 
@@ -48,25 +32,50 @@ export function SpotlightTour({ close, ready = true }: { close: () => void; read
   useEffect(() => {
     if (!ready) return;
     let frame = 0;
+    let previous = '';
+    document.querySelector(`[data-tour="${current.target}"]`)?.scrollIntoView({ block: 'nearest' });
     const update = () => {
       const target = document.querySelector(`[data-tour="${current.target}"]`);
       if (target) {
-        target.scrollIntoView({ block: 'nearest' });
-        setRect(target.getBoundingClientRect());
+        let next = target.getBoundingClientRect();
+        const content = target.matches('details[open]') ? target.querySelector('[data-tour-content]') : null;
+        if (content) {
+          const bounds = content.getBoundingClientRect();
+          const left = Math.min(next.left, bounds.left),
+            top = Math.min(next.top, bounds.top);
+          next = new DOMRect(
+            left,
+            top,
+            Math.max(next.right, bounds.right) - left,
+            Math.max(next.bottom, bounds.bottom) - top,
+          );
+        }
+        const position = `${next.left}:${next.top}:${next.width}:${next.height}`;
+        if (position !== previous) {
+          previous = position;
+          setRect(next);
+        }
+      } else if (previous !== 'missing') {
+        previous = 'missing';
+        setRect(undefined);
       }
+      frame = requestAnimationFrame(update);
     };
     frame = requestAnimationFrame(update);
-    window.addEventListener('resize', update);
     return () => {
       cancelAnimationFrame(frame);
-      window.removeEventListener('resize', update);
     };
   }, [step, ready, current.target]);
   useEffect(() => {
     if (!ready || performed.current.has(step)) return;
     performed.current.add(step);
     const action = current.action ? document.querySelector<HTMLButtonElement>(current.action) : null;
-    if (action && !(current.target === 'play' && engine.playing)) action.click();
+    if (
+      action &&
+      !(current.target === 'play' && engine.playing) &&
+      !(current.target === 'review-focus' && action.closest('details')?.open)
+    )
+      action.click();
   }, [step, ready, current]);
   useEffect(() => {
     if (!automatic || !ready) return;
@@ -96,11 +105,11 @@ export function SpotlightTour({ close, ready = true }: { close: () => void; read
       {rect && (
         <div
           className="spotlight-window"
-          style={{ left: rect.left - 5, top: rect.top - 5, width: rect.width + 10, height: rect.height + 10 }}
+          style={{ left: rect.left - 8, top: rect.top - 8, width: rect.width + 16, height: rect.height + 16 }}
         />
       )}
       <div
-        className={`tour-card ${step === 5 ? 'tour-left' : ''}`}
+        className={`tour-card ${step === steps.length - 1 ? 'tour-left' : ''}`}
         role="dialog"
         aria-modal="false"
         aria-label={current.title}
@@ -109,7 +118,7 @@ export function SpotlightTour({ close, ready = true }: { close: () => void; read
           <X size={17} />
         </button>
         <span className="eyebrow">
-          LIVE PRODUCT WALKTHROUGH · {step + 1} / {steps.length}
+          SAVED ANALYSIS WALKTHROUGH · {step + 1} / {steps.length}
         </span>
         <h3>{current.title}</h3>
         <p>{current.copy}</p>

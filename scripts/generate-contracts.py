@@ -6,16 +6,31 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "apps/backend"))
 from code_groove.schemas import (  # noqa: E402
+    ComparisonExport,
+    ComparisonInvestigationRequest,
+    ComparisonInvestigationResult,
     ImprovementProposal,
     InvestigationResult,
     ScoreBundle,
     SemanticMap,
+    StructureComparison,
+    StructurePlaybackPlan,
 )
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--check", action="store_true")
 args = parser.parse_args()
-for model in (SemanticMap, ScoreBundle, InvestigationResult, ImprovementProposal):
+for model in (
+    SemanticMap,
+    ScoreBundle,
+    InvestigationResult,
+    ImprovementProposal,
+    StructureComparison,
+    StructurePlaybackPlan,
+    ComparisonInvestigationRequest,
+    ComparisonInvestigationResult,
+    ComparisonExport,
+):
     content = json.dumps(model.model_json_schema(), ensure_ascii=False, indent=2) + "\n"
     path = ROOT / "contracts" / f"{model.__name__}.schema.json"
     if args.check:

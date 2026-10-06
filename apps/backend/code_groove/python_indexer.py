@@ -14,10 +14,11 @@ def digest(value: str) -> str:
 
 
 def index_python(snapshot_id: str, sources: dict[str, str]) -> dict:
+    child: ast.AST
     files: list[dict[str, Any]] = []
     units: list[dict[str, Any]] = []
     relations: list[dict[str, Any]] = []
-    trees, symbols, bindings, unit_nodes = {}, {}, {}, {}
+    symbols, bindings, unit_nodes = {}, {}, {}
     for path, source in sorted(sources.items()):
         if not path.endswith(".py"):
             continue
@@ -37,64 +38,117 @@ def index_python(snapshot_id: str, sources: dict[str, str]) -> dict:
         except (SyntaxError, ValueError, RecursionError):
             file["parse_errors"] = 1
             continue
-        trees[path] = tree
-        imported = {}
-        for node in tree.body:
+
+        def resolve_import(node, path=path, file=file):
+            imported: dict[str, tuple[str | None, str]] = {}
             if isinstance(node, ast.Import):
-                for alias in node.names:
-                    module = alias.name.replace(".", "/")
-                    target = next(
-                        (p for p in [module + ".py", module + "/__init__.py"] if p in sources), None
-                    )
-                    file["imports"].append({"module": alias.name, "resolved": bool(target), "path": target})
-                    imported[alias.asname or alias.name] = (target, "")
-            if isinstance(node, ast.ImportFrom):
-                base = posixpath.dirname(path) if node.level else ""
-                for _ in range(max(0, node.level - 1)):
+                entries = [(alias, alias.name, 0, "") for alias in node.names]
+            elif isinstance(node, ast.ImportFrom):
+                entries = [(alias, node.module or "", node.level, alias.name) for alias in node.names]
+            else:
+                return imported
+            for alias, module_name, level, symbol in entries:
+                base = posixpath.dirname(path) if level else ""
+                for _ in range(max(0, level - 1)):
                     base = posixpath.dirname(base)
-                module = posixpath.join(base, (node.module or "").replace(".", "/"))
-                target = next((p for p in [module + ".py", module + "/__init__.py"] if p in sources), None)
+                module = posixpath.join(base, module_name.replace(".", "/"))
+                options = [module + ".py", module + "/__init__.py"]
+                # A common src-layout is resolved only when its target is unambiguous.
+                if not level:
+                    options += ["src/" + option for option in options]
+                targets = [option for option in options if option in sources]
+                target = targets[0] if len(targets) == 1 else None
+                imported_symbol = symbol
+                if isinstance(node, ast.ImportFrom) and (not target or not module_name):
+                    submodule = posixpath.join(module, symbol)
+                    children = [p for p in (submodule + ".py", submodule + "/__init__.py") if p in sources]
+                    if len(children) == 1:
+                        target, imported_symbol = children[0], ""
+                external = not level and module_name.split(".")[0] in sys.stdlib_module_names
                 file["imports"].append(
-                    {"module": node.module or ".", "resolved": bool(target), "path": target}
+                    {
+                        "module": "." * level + module_name,
+                        "resolved": bool(target),
+                        "path": target,
+                        "resolution": "local" if target else "external" if external else "unresolved_local",
+                    }
                 )
-                for alias in node.names:
-                    imported[alias.asname or alias.name] = (target, alias.name)
-        bindings[path] = imported
+                imported[alias.asname or alias.name] = (target, imported_symbol)
+            return imported
+
+        global_bindings = {}
+        for child in tree.body:
+            global_bindings.update(resolve_import(child))
+        bindings[path] = global_bindings
         if not is_source:
             continue
-        declarations: list[tuple[ast.FunctionDef | ast.AsyncFunctionDef, str | None]] = [
-            (node, None) for node in tree.body if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
-        ]
-        declarations.extend(
-            (method, parent.name)
-            for parent in tree.body
-            if isinstance(parent, ast.ClassDef)
-            for method in parent.body
-            if isinstance(method, (ast.FunctionDef, ast.AsyncFunctionDef))
-        )
-        for node, class_name in declarations:
-            label = f"{class_name}.{node.name}" if class_name else node.name
-            unit_id = f"unit_{digest(f'{snapshot_id}:{path}:python:{node.lineno}:{node.end_lineno}')}"
-            units.append(
-                {
+
+        def visit(
+            node,
+            prefix="",
+            parent_id=None,
+            class_name=None,
+            scope_bindings=None,
+            path=path,
+            file_id=file_id,
+            global_bindings=global_bindings,
+        ):
+            child: ast.AST
+            current_bindings = dict(scope_bindings or global_bindings)
+            if isinstance(node, ast.ClassDef):
+                name = f"{prefix}.{node.name}" if prefix else node.name
+                for child in node.body:
+                    visit(child, name, parent_id, name, current_bindings)
+                return
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda)):
+                name = (
+                    node.name
+                    if not isinstance(node, ast.Lambda)
+                    else f"lambda_{node.lineno}_{node.col_offset}"
+                )
+                label = f"{prefix}.{name}" if prefix else name
+                start_line = min([node.lineno, *[d.lineno for d in getattr(node, "decorator_list", [])]])
+                identity = f"{snapshot_id}:{path}:python:{node.lineno}:{node.end_lineno}"
+                if isinstance(node, ast.Lambda):
+                    identity += f":lambda:{node.col_offset}"
+                unit_id = f"unit_{digest(identity)}"
+                unit = {
                     "unit_id": unit_id,
                     "symbol_id": unit_id,
                     "label": label,
                     "primary_span": {
                         "file_id": file_id,
                         "path": path,
-                        "start_line": node.lineno,
+                        "start_line": start_line,
                         "end_line": node.end_lineno,
                     },
                     "calls": [],
                 }
-            )
-            symbols[(path, label)] = unit_id
-            unit_nodes[unit_id] = (node, class_name)
+                if parent_id:
+                    unit["parent_unit_id"] = parent_id
+                units.append(unit)
+                symbols[(path, label)] = unit_id
+                # Collect this scope's imports, skipping nested definitions.
+                pending = list(ast.iter_child_nodes(node))
+                while pending:
+                    child = pending.pop()
+                    if isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda, ast.ClassDef)):
+                        continue
+                    current_bindings.update(resolve_import(child))
+                    pending.extend(ast.iter_child_nodes(child))
+                unit_nodes[unit_id] = (node, class_name, label, current_bindings)
+                for child in ast.iter_child_nodes(node):
+                    visit(child, label, unit_id, class_name, current_bindings)
+                return
+            for child in ast.iter_child_nodes(node):
+                visit(child, prefix, parent_id, class_name, current_bindings)
+
+        for child in tree.body:
+            visit(child)
     for unit in units:
         path = unit["primary_span"]["path"]
-        node, class_name = unit_nodes[unit["unit_id"]]
-        stack: list[ast.AST] = list(node.body)
+        node, class_name, label, scope_bindings = unit_nodes[unit["unit_id"]]
+        stack: list[ast.AST] = [node.body] if isinstance(node, ast.Lambda) else list(node.body)
         while stack:
             child = stack.pop()
             if isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda, ast.ClassDef)):
@@ -103,14 +157,19 @@ def index_python(snapshot_id: str, sources: dict[str, str]) -> dict:
                 name = ast.unparse(child.func)[:160]
                 target = None
                 if isinstance(child.func, ast.Name):
-                    imported_path, imported_name = bindings[path].get(name, (path, name))
+                    imported_path, imported_name = scope_bindings.get(name, (path, name))
                     target = symbols.get((imported_path, imported_name))
+                    if name not in scope_bindings:
+                        lexical = label.split(".")
+                        while lexical and not target:
+                            target = symbols.get((path, ".".join([*lexical, name])))
+                            lexical.pop()
                 elif isinstance(child.func, ast.Attribute) and isinstance(child.func.value, ast.Name):
                     receiver = child.func.value.id
                     if receiver in ("self", "cls") and class_name:
                         target = symbols.get((path, f"{class_name}.{child.func.attr}"))
                     else:
-                        imported_path, imported_name = bindings[path].get(receiver, (path, receiver))
+                        imported_path, imported_name = scope_bindings.get(receiver, (path, receiver))
                         target = symbols.get(
                             (
                                 imported_path,

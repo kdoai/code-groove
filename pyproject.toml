@@ -3,16 +3,32 @@ name = "code-groove"
 version = "0.1.0"
 requires-python = ">=3.13,<3.14"
 dependencies = [
-  "fastapi", "uvicorn[standard]", "pydantic-settings", "google-genai",
-  "firebase-admin", "google-cloud-firestore", "google-cloud-storage",
-  "google-cloud-tasks", "httpx"
+  "fastapi",
+  "uvicorn[standard]",
+  "pydantic-settings",
+  "google-genai",
+  "firebase-admin",
+  "google-cloud-firestore",
+  "google-cloud-storage",
+  "google-cloud-tasks",
+  "httpx",
+    "google-adk==2.11.0",
 ]
 
 [dependency-groups]
-dev = ["pytest", "pytest-asyncio", "ruff", "mypy", "numpy", "scipy"]
+dev = [
+    "pytest",
+    "pytest-asyncio",
+    "ruff",
+    "mypy",
+    "numpy",
+    "scipy",
+    "imageio-ffmpeg>=0.6.0",
+    "pillow>=12.3.0",
+]
 
 [tool.pytest.ini_options]
-pythonpath = ["apps/backend"]
+pythonpath = ["apps/backend", "."]
 testpaths = ["tests"]
 asyncio_mode = "auto"
 markers = ["live: real paid model calls (opt-in)"]

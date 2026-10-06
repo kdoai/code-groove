@@ -6,6 +6,7 @@ from code_groove.agent import AgentContext, execute_tool, model_error_reason, ru
 from code_groove.errors import GrooveError
 from code_groove.schemas import AnalysisCandidate
 from code_groove.settings import ROOT, Settings
+from google import genai
 from google.genai import errors, types
 
 
@@ -34,10 +35,18 @@ def context():
     return ctx, value, saved
 
 
-class Client:
+class Client(genai.Client):
     def __init__(self, factory):
         self.factory, self.calls, self.closed = factory, [], False
-        self.aio = SimpleNamespace(models=self, aclose=self.close)
+        self.test_aio = SimpleNamespace(models=self, aclose=self.aclose)
+
+    @property
+    def aio(self):
+        return self.test_aio
+
+    @property
+    def vertexai(self):
+        return False
 
     async def count_tokens(self, **_kwargs):
         return types.CountTokensResponse(total_tokens=100)
@@ -51,8 +60,11 @@ class Client:
             ),
         )
 
-    async def close(self):
+    def close(self):
         self.closed = True
+
+    async def aclose(self):
+        self.close()
 
 
 @pytest.mark.asyncio
@@ -216,3 +228,19 @@ def test_provider_error_diagnostics_never_include_raw_source_or_credentials():
     assert model_error_reason("Invalid thought_signature: secret bytes") == "signature_validation"
     assert model_error_reason("Request ending with a model turn") == "conversation_validation"
     assert model_error_reason("password=private provider detail") == "provider_rejected"
+
+
+@pytest.mark.asyncio
+async def test_integration_prompt_allows_bounded_conclusions_and_requires_new_reads(monkeypatch):
+    ctx, _value, _saved = context()
+    ctx.repository_index = ctx.index
+    ctx.integration_context = [{"chunk_id": "chunk_saved", "responsibilities": [], "unknowns": []}]
+    client = Client(lambda _number: types.Content(role="model", parts=[types.Part(text="No submission")]))
+    monkeypatch.setattr("code_groove.agent.create_model_client", lambda _settings: client)
+    with pytest.raises(GrooveError, match="AGENT_DID_NOT_SUBMIT"):
+        await run_agent(ctx)
+    prompt = client.calls[0]["config"].system_instruction
+    assert "Re-read all selected implementations" in prompt
+    assert "Saved interpretations are hypotheses, never fresh evidence" in prompt
+    assert "Do not claim consistency outside the selected scope" in prompt
+    assert "Do not claim cross-partition consistency" not in prompt

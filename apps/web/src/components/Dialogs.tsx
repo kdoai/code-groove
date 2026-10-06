@@ -118,9 +118,14 @@ export function AuthDialog({ close, done }: { close: () => void; done: () => voi
 }
 export const sampleLabels = [
   {
+    id: 'recorded-returns-before',
+    label: '音の比較教材 / 店舗とWebの返品ルール',
+    detail: '教材の保存済みGemini実解析 · 5実装 · 同じ判断の音と根拠を比較',
+  },
+  {
     id: 'recorded-tsugiai-agents',
-    label: 'Tsugiai / 実在するAgentの引き継ぎ',
-    detail: 'Python・TypeScript · Checkout Agentの9実装 · 保存済みGemini実解析',
+    label: '主デモ / Tsugiaiの実在コード',
+    detail: '51ファイル・19,541行を参照 · Checkout Agentの9実装に保存済みGemini実解析',
   },
   {
     id: 'recorded-checkout-flow',
@@ -301,7 +306,7 @@ export function Onboarding({ close, loadSample }: { close: () => void; loadSampl
         <span className="eyebrow">LISTEN. LOCATE. ASK.</span>
         <h2>引き継いだコードの、設計を聴こう。</h2>
         <p>
-          実在するTsugiaiのAgent実装を使います。役割の配置を聴き、音を選んで、判断を支えるコードへ戻る短い案内です。
+          実在するTsugiaiの51ファイルを表示します。Checkout Agentの保存済み解析を聴き、発音中の根拠行へ戻ります。確認する箇所を伴奏なしで聴き、Agentの説明と反証の記録を確かめてください。
         </p>
         <small>保存済みの譜面を使用 · 案内で新しいAI費用は発生しません</small>
       </div>

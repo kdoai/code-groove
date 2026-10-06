@@ -30,6 +30,17 @@ export type Bundle = {
   repository?: RepositoryStatus;
   partition?: { chunk_id: string; paths: string[]; whole_repository_complete: false };
 };
+export type RepositoryReference = {
+  origin: 'committed_source_reference';
+  revision: string;
+  repository_url: string;
+  license: string;
+  semantic_analysis: 'not_run';
+  source_lines: number;
+  indexed_symbols: number;
+  sources: Record<string, string>;
+  source_sha256: Record<string, string>;
+};
 export type RepositoryStatus = {
   snapshot_id: string;
   eligible_source_files: number;
@@ -42,12 +53,19 @@ export type RepositoryStatus = {
   unresolved_units: number;
   files_without_units: string[];
   note: string;
-  cross_partition_review: 'not_run';
+  cross_partition_review: 'not_run' | 'scoped';
+  integrations?: { analysis_id: string; chunk_ids: string[]; inspected_units: number }[];
   chunks: {
     chunk_id: string;
     label: string;
     paths: string[];
     units: number;
+    unit_ids?: string[];
+    owner_units?: {
+      unit_id: string;
+      label: string;
+      span: { path: string; start_line: number; end_line: number };
+    }[];
     symbol_count: number;
     status: 'pending' | 'partial' | 'analyzed';
     analysis_id?: string;
@@ -60,6 +78,7 @@ export type ImportSnapshot = { revision: string; label: string; sources: Record<
 export type PublicConfig = {
   daily_analysis_limit: number;
   live_enabled: boolean;
+  local_mock_enabled?: boolean;
   firebase: { apiKey: string; authDomain: string; projectId: string; appId: string };
   model_id: string;
 };

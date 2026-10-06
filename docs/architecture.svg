@@ -48,7 +48,7 @@
   <text x="738" y="697" class="small">Hashes · lifecycle 14 days</text>
   <rect x="1001" y="568" width="343" height="155" class="box"/>
   <text x="1024" y="607" class="label">Gemini API on Vertex</text>
-  <text x="1024" y="640" class="small">Google Gen AI SDK · global endpoint</text>
+  <text x="1024" y="640" class="small">ADK + Gen AI · global endpoint</text>
   <text x="1024" y="668" class="small">Read / draft tools · human approval</text>
   <text x="1024" y="697" class="small">Token / call limits · kill switch</text>
   <path d="M342 252H431" class="line"/>

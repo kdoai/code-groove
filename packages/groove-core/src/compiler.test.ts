@@ -43,6 +43,21 @@ describe('deterministic musical invariants', () => {
     const b = await compileGroove({ ...map, analysis_id: 'another', created_at: 'tomorrow' }, 'kit');
     expect(a.score_hash).toBe(b.score_hash);
   });
+  it('gives the recorded store/web policy pairs equal pitch without changing their evidence or timing', async () => {
+    const map = load('recorded-live/returns-before');
+    const saved = JSON.stringify(map);
+    const score = await compileGroove(map, 'kit');
+    for (const concept of ['check_return_window', 'evaluate_item_eligibility', 'calculate_fee_quote']) {
+      const pair = map.events.filter((e) => e.concept_key === concept);
+      expect(new Set(pair.map((e) => e.span.path)).size).toBe(2);
+      const notes = pair.map((e) => score.scenes.flatMap((s) => s.repo.notes).find((n) => n.kind === 'data' && n.event_id === e.event_id)!);
+      expect(notes[0].midi).toBe(notes[1].midi);
+      expect(notes[0].voice).toBe(notes[1].voice);
+      expect(notes[0].tick).not.toBe(notes[1].tick);
+      expect(notes[0].evidence_ids).toEqual(pair[0].evidence_ids);
+    }
+    expect(JSON.stringify(map)).toBe(saved);
+  });
   it('preserves the hash across storage key ordering in real multi-span evidence', async () => {
     const map = load('recorded-live/tsugiai-agents');
     const reorderKeys = (value: unknown): unknown => {
@@ -61,11 +76,13 @@ describe('deterministic musical invariants', () => {
     expect(one.scenes).toEqual(two.scenes);
     expect(one.score_hash).toBe(two.score_hash);
   });
-  it('rejects ungrounded-only material and duplicate semantic order', async () => {
+  it('retains an explicitly silent unresolved result and rejects duplicate semantic order', async () => {
     const map = load('mixed');
-    await expect(
-      compileGroove({ ...map, events: map.events.map((e) => ({ ...e, state: 'unresolved' })) }, 'kit'),
-    ).rejects.toThrow('NO_GROUNDED_EVENTS');
+    const silent = await compileGroove(
+      { ...map, events: map.events.map((e) => ({ ...e, state: 'unresolved' })) },
+      'kit',
+    );
+    expect(silent.scenes).toEqual([]);
     map.events[1].semantic_order = map.events[0].semantic_order;
     await expect(compileGroove(map, 'kit')).rejects.toThrow('DUPLICATE_ORDER');
   });

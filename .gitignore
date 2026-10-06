@@ -21,6 +21,7 @@ gha-creds-*.json
 artifacts/*.wav
 artifacts/*.mp4
 !artifacts/code-groove-demo.mp4
+!artifacts/code-groove-demo-r14.mp4
 artifacts/*.webm
 artifacts/demo-recording/
 

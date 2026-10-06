@@ -41,6 +41,8 @@ def fresh_review(base, sources, ctx=None):
         )
     signal["evidence_ids"] = [e.evidence_id for e in ctx.evidence]
     signal["alternative_evidence_ids"] = signal["evidence_ids"]
+    signal["counter_explanation"] = "Mock counter-explanation checked with fresh evidence"
+    signal["counter_status"] = "rejected"
     return ctx, InvestigationCandidate(
         review_signals=[signal],
         findings=[

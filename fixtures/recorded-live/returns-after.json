@@ -504,7 +504,7 @@
   },
   "score": {
     "analysis_id": "analysis_0b3f110823ea46329a60bc4416ca8f59",
-    "score_hash": "d03ae14ed9b4df565d71556c653b7499b6f716ae0d744eeaa1170a3915573752",
+    "score_hash": "104c3a00e13af4536126269ebe7096e70dd167ffd032d1546a474fdbf9cbea21",
     "scenes": [
       {
         "scene_id": "scene_1",
@@ -516,7 +516,7 @@
         ],
         "theme": {
           "scene_id": "scene_1",
-          "grammar_version": "groove-chamber-v9",
+          "grammar_version": "groove-chamber-v10",
           "kit_id": "midnight-jazz-v4",
           "kit_hash": "a302b56825512936a014a556a88819affd50de65c9d68ff3acb544702dc919f7",
           "bpm": 96,
@@ -1928,10 +1928,10 @@
               "kind": "data",
               "tick": 11040,
               "voice": "vibes",
-              "midi": 72,
+              "midi": 67,
               "variant": 1,
-              "velocity": 0.55,
-              "duration_ms": 540,
+              "velocity": 0.58,
+              "duration_ms": 625,
               "pan": 0.2,
               "evidence_ids": [
                 "ev_b47a14b8bed24cdc85dcb5fa74faf005"
@@ -2215,10 +2215,10 @@
               "kind": "data",
               "tick": 13440,
               "voice": "vibes",
-              "midi": 76,
+              "midi": 69,
               "variant": 1,
-              "velocity": 0.48,
-              "duration_ms": 700,
+              "velocity": 0.52,
+              "duration_ms": 520,
               "pan": 0.2,
               "evidence_ids": [
                 "ev_b47a14b8bed24cdc85dcb5fa74faf005"
@@ -2860,7 +2860,7 @@
         },
         "repo": {
           "scene_id": "scene_1",
-          "grammar_version": "groove-chamber-v9",
+          "grammar_version": "groove-chamber-v10",
           "kit_id": "midnight-jazz-v4",
           "kit_hash": "a302b56825512936a014a556a88819affd50de65c9d68ff3acb544702dc919f7",
           "bpm": 96,
@@ -3574,15 +3574,15 @@
               "note_id": "note_evt_store_save_quote",
               "kind": "data",
               "tick": 5280,
-              "duration_ms": 540,
+              "duration_ms": 625,
               "voice": "vibes",
               "variant": 1,
-              "velocity": 0.55,
+              "velocity": 0.58,
               "pan": 0.2,
               "evidence_ids": [
                 "ev_b47a14b8bed24cdc85dcb5fa74faf005"
               ],
-              "midi": 72,
+              "midi": 67,
               "event_id": "evt_store_save_quote",
               "responsibility_id": "resp_channel_adapters",
               "unit_id": "unit_80cdf1ba31960a68"
@@ -3633,10 +3633,10 @@
               "kind": "data",
               "tick": 5760,
               "voice": "vibes",
-              "midi": 76,
+              "midi": 69,
               "variant": 1,
-              "velocity": 0.48,
-              "duration_ms": 700,
+              "velocity": 0.52,
+              "duration_ms": 520,
               "pan": 0.2,
               "evidence_ids": [
                 "ev_b47a14b8bed24cdc85dcb5fa74faf005"

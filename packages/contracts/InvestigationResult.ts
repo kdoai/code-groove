@@ -39,6 +39,8 @@ export type Verdict = "concern" | "justified" | "inconclusive";
 export type Label = string;
 export type Explanation = string;
 export type Alternative = string;
+export type CounterExplanation = string;
+export type CounterStatus = "not_checked" | "supported" | "rejected" | "undetermined";
 export type ChangeScenario = string;
 /**
  * @maxItems 96
@@ -327,6 +329,8 @@ export interface ReviewSignal {
   label: Label;
   explanation: Explanation;
   alternative: Alternative;
+  counter_explanation?: CounterExplanation;
+  counter_status?: CounterStatus;
   change_scenario?: ChangeScenario;
   alternative_evidence_ids?: AlternativeEvidenceIds;
   unit_ids: UnitIds;
