@@ -540,17 +540,12 @@ export default function App() {
     ws.codeSpan?.path ??
     data?.map.units.find((u) => u.unit_id === ws.unitId)?.primary_span.path ??
     data?.map.units[0]?.primary_span.path;
+  const playbackPath = ws.playbackFile || selectedFile;
   const fileUnits = useMemo(
-    () => data?.map.units.filter((u) => u.primary_span.path === selectedFile).map((u) => u.unit_id),
-    [data?.map.units, selectedFile],
+    () => data?.map.units.filter((u) => u.primary_span.path === playbackPath).map((u) => u.unit_id),
+    [data?.map.units, playbackPath],
   );
   const playbackUnits = ws.playbackFile ? fileUnits : undefined;
-  useEffect(() => {
-    if (ws.playbackFile && selectedFile && selectedFile !== ws.playbackFile) {
-      engine.pause();
-      ws.set({ playbackFile: selectedFile });
-    }
-  }, [selectedFile, ws.playbackFile]);
   const playbackScene = ws.wholeWork ? 0 : ws.scene;
   const plan = useMemo(
     () =>

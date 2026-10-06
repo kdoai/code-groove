@@ -23,7 +23,12 @@ export function DesignReview({ bundle, signal }: { bundle: Bundle; signal?: Revi
     return (
       <div className="comparison-source">
         <b>{title}</b>
-        <button className="evidence-link" onClick={() => ws.set({ codeSpan: span, screen: 'inspect' })}>
+        <button
+          className="evidence-link"
+          onClick={() =>
+            ws.set({ codeSpan: span, screen: 'inspect', signalId: signal?.signal_id ?? '', following: false })
+          }
+        >
           {span.path}:{span.start_line}–{span.end_line}
           <ArrowUpRight size={14} />
         </button>

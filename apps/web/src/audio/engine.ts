@@ -1,5 +1,5 @@
 import * as Tone from 'tone';
-import type { ScorePlan } from '../../../../packages/contracts/ScoreBundle';
+import type { ScorePlan, ScheduledNote } from '../../../../packages/contracts/ScoreBundle';
 import { tickSeconds } from '../../../../packages/groove-core/src/compiler';
 import {
   instrumentEnvelope,
@@ -24,6 +24,27 @@ class GrooveEngine {
   private supportMuted = false;
   private samples: KitSample[] = [];
   private playbackSequence = 0;
+  private planSequence = 0;
+  private audition?: {
+    original: ScorePlan;
+    tick: number;
+    onNote?: (note: ScheduledNote) => void;
+    finished?: () => void;
+  };
+  private auditionState: 'idle' | 'loading' | 'playing' = 'idle';
+  private auditionListeners = new Set<() => void>();
+  private auditionTimeout?: ReturnType<typeof setTimeout>;
+  subscribeAudition = (listener: () => void) => {
+    this.auditionListeners.add(listener);
+    return () => {
+      this.auditionListeners.delete(listener);
+    };
+  };
+  getAuditionState = () => this.auditionState;
+  private notifyAudition(state: typeof this.auditionState) {
+    this.auditionState = state;
+    this.auditionListeners.forEach((listener) => listener());
+  }
   loading?: Promise<void>;
 
   async load() {
@@ -83,6 +104,10 @@ class GrooveEngine {
   }
   configure(plan: ScorePlan) {
     this.stop();
+    this.configurePlan(plan);
+  }
+  private configurePlan(plan: ScorePlan) {
+    const generation = ++this.planSequence;
     const transport = Tone.getTransport();
     this.scheduleIds.forEach((id) => transport.clear(id));
     this.scheduleIds = [];
@@ -90,18 +115,20 @@ class GrooveEngine {
     transport.bpm.value = 96;
     transport.loopStart = 0;
     transport.loopEnd = tickSeconds(plan.total_bars * 1920);
-    transport.loop = this.loop;
+    transport.loop = this.audition ? false : this.loop;
     for (const note of plan.notes) {
       this.scheduleIds.push(
         transport.schedule((time) => {
+          if (this.planSequence !== generation) return;
           const responsibility = note.responsibility_id ?? '';
-          if (this.supportMuted && note.kind === 'accompaniment') return;
-          if (this.instruments.has(note.voice)) return;
+          if (!this.audition && this.supportMuted && note.kind === 'accompaniment') return;
+          if (!this.audition && this.instruments.has(note.voice)) return;
           if (
-            note.kind === 'pulse'
+            !this.audition &&
+            (note.kind === 'pulse'
               ? this.pulseMuted
               : responsibility &&
-                (this.muted.has(responsibility) || (this.solo.size > 0 && !this.solo.has(responsibility)))
+                (this.muted.has(responsibility) || (this.solo.size > 0 && !this.solo.has(responsibility))))
           )
             return;
           const sample = instrumentSample(note, this.samples, this.kit);
@@ -122,40 +149,104 @@ class GrooveEngine {
             panner.dispose();
           };
           player.start(time, 0, Math.min(buffer.duration, (note.duration_ms / 1000) * player.playbackRate));
+          const audition = this.audition;
+          if (audition?.onNote)
+            Tone.getDraw().schedule(() => {
+              if (this.audition === audition) audition.onNote?.(note);
+            }, time);
         }, tickSeconds(note.tick)),
       );
     }
     this.scheduleIds.push(
       transport.schedule(
         (time) => {
-          if (!this.loop) Tone.getDraw().schedule(() => this.stop(), time);
+          if (this.audition || !this.loop)
+            Tone.getDraw().schedule(() => {
+              if (this.planSequence !== generation) return;
+              if (this.audition) this.pause();
+              else this.stop();
+            }, time);
         },
         tickSeconds(plan.total_bars * 1920),
       ),
     );
   }
   async play(shouldStart: () => boolean = () => true) {
+    if (this.audition) this.pause();
+    return this.startPlayback(shouldStart);
+  }
+  private async startPlayback(shouldStart: () => boolean) {
     const sequence = ++this.playbackSequence;
     await Tone.start();
     await this.load();
-    if (this.plan && sequence === this.playbackSequence && shouldStart()) Tone.getTransport().start('+0.03');
+    if (this.plan && sequence === this.playbackSequence && shouldStart()) {
+      Tone.getTransport().start('+0.03');
+      return true;
+    }
+    return false;
+  }
+  async playAudition(plan: ScorePlan, onNote?: (note: ScheduledNote) => void, finished?: () => void) {
+    this.pause();
+    if (!this.plan || !plan.notes.length || plan.total_bars <= 0) return false;
+    const audition = { original: this.plan, tick: this.tick, onNote, finished };
+    this.audition = audition;
+    this.configurePlan(plan);
+    Tone.getTransport().seconds = 0;
+    this.notifyAudition('loading');
+    try {
+      const started = await this.startPlayback(() => this.audition === audition);
+      if (this.audition !== audition) return false;
+      if (!started) {
+        this.pause();
+        return false;
+      }
+      this.notifyAudition('playing');
+      this.auditionTimeout = setTimeout(
+        () => {
+          if (this.audition === audition) this.pause();
+        },
+        tickSeconds(plan.total_bars * 1920) * 1000 + 500,
+      );
+      return true;
+    } catch (error) {
+      if (this.audition !== audition) return false;
+      this.pause();
+      throw error;
+    }
+  }
+  private restoreAudition() {
+    const audition = this.audition;
+    if (!audition) return;
+    this.audition = undefined;
+    clearTimeout(this.auditionTimeout);
+    this.configurePlan(audition.original);
+    Tone.getTransport().seconds = tickSeconds(audition.tick);
+    this.notifyAudition('idle');
+    audition.finished?.();
   }
   pause() {
     this.playbackSequence++;
     Tone.getTransport().pause();
     this.release();
+    this.restoreAudition();
   }
   stop() {
     this.playbackSequence++;
     Tone.getTransport().stop();
     Tone.getTransport().seconds = 0;
     this.release();
+    this.restoreAudition();
+    Tone.getTransport().seconds = 0;
   }
   private release() {
     for (const player of this.active) player.stop(Tone.now() + 0.01);
   }
   get tick() {
+    if (this.audition) return this.audition.tick;
     return Math.max(0, (Tone.getTransport().seconds * 480 * 96) / 60);
+  }
+  get auditionDurationSeconds() {
+    return this.audition ? (this.plan?.total_bars ?? 0) * 2.5 : 0;
   }
   get playing() {
     return Tone.getTransport().state === 'started';
@@ -169,7 +260,7 @@ class GrooveEngine {
   }
   setLoop(value: boolean) {
     this.loop = value;
-    Tone.getTransport().loop = value;
+    Tone.getTransport().loop = this.audition ? false : value;
   }
   setFilters(muted: string[], solo: string[], pulseMuted: boolean) {
     this.muted = new Set(muted);
@@ -183,6 +274,7 @@ class GrooveEngine {
     this.supportMuted = value;
   }
   seek(tick: number) {
+    if (this.audition) this.pause();
     this.playbackSequence++;
     this.release();
     Tone.getTransport().seconds = tickSeconds(

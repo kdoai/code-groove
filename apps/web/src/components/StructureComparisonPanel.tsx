@@ -5,6 +5,7 @@ import type {
   SyntaxProjection,
 } from '../../../../packages/contracts/StructureComparison';
 import type { StructurePlaybackPlan } from '../../../../packages/contracts/StructurePlaybackPlan';
+import type { Span } from '../../../../packages/contracts/SemanticMap';
 import type {
   ComparisonExport,
   ComparisonHumanRecord,
@@ -16,6 +17,9 @@ import { useWorkspace } from '../state';
 import { useComparisonRecords } from '../comparisonState';
 import { structurePlayer } from '../audio/structurePlayer';
 import { engine } from '../audio/engine';
+import { playbackPlan } from '../audio/playback';
+import { responsibilityComparison, sequenceExcerpts } from '../audio/excerpts';
+import { useAudition } from '../hooks/useAudition';
 import '../styles/structure-comparison.css';
 
 type Inventory = {
@@ -47,14 +51,30 @@ function SourceSide({
   source,
   eventId,
   side,
+  meaningSpan,
 }: {
   projection: SyntaxProjection;
   source: string;
   eventId: string | null;
   side: string;
+  meaningSpan?: Span;
 }) {
   const event = projection.events.find((e) => e.event_id === eventId);
-  const location = event?.location ?? projection.location;
+  const lineOffset = (line: number) =>
+    source
+      .split('\n')
+      .slice(0, line - 1)
+      .reduce((offset, text) => offset + text.length + 1, 0);
+  const location = meaningSpan
+    ? {
+        ...projection.location,
+        ...meaningSpan,
+        start_column: 1,
+        end_column: 1,
+        start_offset: lineOffset(meaningSpan.start_line),
+        end_offset: lineOffset(meaningSpan.end_line + 1),
+      }
+    : (event?.location ?? projection.location);
   const start = projection.location.start_offset,
     end = projection.location.end_offset;
   const highlightStart = Math.max(start, location.start_offset),
@@ -62,7 +82,7 @@ function SourceSide({
   const mark = useRef<HTMLElement>(null);
   useEffect(() => {
     mark.current?.scrollIntoView({ block: 'nearest' });
-  }, [eventId]);
+  }, [eventId, meaningSpan]);
   return (
     <section className="structure-source" aria-label={`${side}の読取専用コード`}>
       <strong>
@@ -71,7 +91,7 @@ function SourceSide({
       </strong>
       <pre tabIndex={0} aria-label={`${side}のコード`}>
         <code>
-          {event ? (
+          {event || meaningSpan ? (
             <>
               {source.slice(start, highlightStart)}
               <mark ref={mark}>{source.slice(highlightStart, highlightEnd)}</mark>
@@ -82,7 +102,11 @@ function SourceSide({
           )}
         </code>
       </pre>
-      {!event && <small>この対応行の元位置はなし／未確定です。関数全体を参考表示しています。</small>}
+      {meaningSpan ? (
+        <small>保存された責務の根拠範囲です。左右の構文対応を推定するものではありません。</small>
+      ) : (
+        !event && <small>この対応行の元位置はなし／未確定です。関数全体を参考表示しています。</small>
+      )}
       <small>
         静的抽出: {projection.status} · 元コード SHA-256 {projection.source_hash.slice(0, 12)}
       </small>
@@ -105,10 +129,12 @@ export function StructureComparisonPanel({ bundle, close }: { bundle: Bundle; cl
   const [markers, setMarkers] = useState(false),
     [sound, setSound] = useState(true);
   const [selectedRow, setSelectedRow] = useState('');
+  const [meaningNote, setMeaningNote] = useState('');
   const [playing, setPlaying] = useState(false),
     [requesting, setRequesting] = useState(false);
   const [error, setError] = useState('');
   const demo = material === 'demo';
+  const auditionState = useAudition();
   const base = demo
     ? '/comparison-demo/structure'
     : ws.sampleId
@@ -142,7 +168,26 @@ export function StructureComparisonPanel({ bundle, close }: { bundle: Bundle; cl
   });
   const pending = requesting || (!!runId && !run.isError && !terminal.includes(run.data?.status ?? 'queued'));
   const row = comparison?.rows.find((r) => r.row_id === selectedRow) ?? comparison?.rows[rangeStart];
+  const meaningEvent = bundle.map.events.find((event) => event.event_id === meaningNote);
   const sources = data.data?.sources ?? inventory.data?.sources ?? bundle.sources;
+  const repoPlan = playbackPlan(bundle.score, 'repo', 0, true);
+  const semanticUnit = (projection?: SyntaxProjection) => {
+    if (!projection || projection.snapshot_id !== bundle.map.snapshot_id) return undefined;
+    const matches = bundle.map.units.filter(
+      (unit) =>
+        unit.label === projection.label &&
+        unit.primary_span.path === projection.location.path &&
+        unit.primary_span.start_line === projection.location.start_line &&
+        unit.primary_span.end_line === projection.location.end_line,
+    );
+    return matches.length === 1 ? matches[0] : undefined;
+  };
+  const semanticA = semanticUnit(comparison?.a),
+    semanticB = semanticUnit(comparison?.b);
+  const melodies =
+    !demo && repoPlan && semanticA && semanticB
+      ? responsibilityComparison(repoPlan, bundle.map, semanticA.unit_id, semanticB.unit_id)
+      : undefined;
   const config = useQuery({
     queryKey: ['config'],
     queryFn: () => api<PublicConfig>('/config'),
@@ -157,7 +202,10 @@ export function StructureComparisonPanel({ bundle, close }: { bundle: Bundle; cl
   useEffect(() => {
     engine.pause();
     dialog.current?.showModal();
-    return () => structurePlayer.stop();
+    return () => {
+      structurePlayer.stop();
+      engine.pause();
+    };
   }, []);
   useEffect(() => {
     if (recordKey) useComparisonRecords.getState().ensure(recordKey);
@@ -179,10 +227,35 @@ export function StructureComparisonPanel({ bundle, close }: { bundle: Bundle; cl
 
   function stop(log = true) {
     structurePlayer.stop();
+    engine.pause();
     setPlaying(false);
     if (log && recordKey) store.update(recordKey, {}, 'stop');
   }
+  async function playResponsibilities(mode: 'A' | 'B' | 'A→B') {
+    if (!melodies || !sound) return;
+    stop(false);
+    setError('');
+    const plan =
+      mode === 'A→B' ? sequenceExcerpts(melodies.a, melodies.b) : mode === 'A' ? melodies.a : melodies.b;
+    try {
+      await engine.playAudition(plan, (note) => {
+        setMeaningNote(note.event_id ?? '');
+        store.update(recordKey, {}, 'responsibility_code_navigation', {
+          event_id: note.event_id,
+          unit_id: note.unit_id,
+        });
+      });
+      store.update(recordKey, {}, 'responsibility_playback_started', {
+        mode,
+        bars: melodies.a.total_bars,
+        shared_volume: ws.volume,
+      });
+    } catch {
+      setError('責務の音源を読み込めませんでした。元の再生設定に戻りました。コードと説明は読めます。');
+    }
+  }
   function chooseRow(rowId: string, side?: string, fromSound = false) {
+    setMeaningNote('');
     setSelectedRow(rowId);
     store.update(recordKey, {}, fromSound ? 'audio_code_navigation' : 'code_navigation', {
       row_id: rowId,
@@ -303,6 +376,15 @@ export function StructureComparisonPanel({ bundle, close }: { bundle: Bundle; cl
             },
           },
       presentation: {
+        responsibility_playback: melodies
+          ? {
+              bars_per_side: melodies.a.total_bars,
+              omitted_bars: melodies.omittedBars,
+              uncertain_keys: melodies.uncertainKeys,
+              shared_volume: ws.volume,
+              bpm: 96,
+            }
+          : null,
         sound_enabled: sound,
         markers,
         presentation_order: ['A', 'B'],
@@ -440,6 +522,65 @@ export function StructureComparisonPanel({ bundle, close }: { bundle: Bundle; cl
             引数・名前を保持: A <code>{comparison.a.signature}</code> / B{' '}
             <code>{comparison.b.signature}</code>
           </p>
+          <section className="responsibility-comparison" aria-label="責務の旋律で比較">
+            <b>全体演奏と同じ責務の旋律で比較</b>
+            {melodies ? (
+              <>
+                <p>
+                  96 BPM · 共通の音量設定 · 両側とも先頭{melodies.a.total_bars}
+                  小節。配置・小節内の間隔と休符を保ちます。構文の対応行とは別の演奏範囲です。
+                </p>
+                <div className="structure-controls">
+                  {(['A', 'B', 'A→B'] as const).map((mode) => (
+                    <button key={mode} disabled={!sound} onClick={() => void playResponsibilities(mode)}>
+                      責務の{mode}を聴く
+                    </button>
+                  ))}
+                  <button onClick={() => stop(false)}>責務の試聴を取消</button>
+                  <span role="status">
+                    {auditionState === 'idle'
+                      ? '停止中'
+                      : auditionState === 'loading'
+                        ? '音源を準備中'
+                        : '責務を試聴中'}
+                  </span>
+                </div>
+                <small>
+                  Aの残り{melodies.omittedBars[0]}小節 / Bの残り{melodies.omittedBars[1]}
+                  小節。保存された責務・意味キーが一対一で対応しない項目:{melodies.uncertainKeys.length}
+                  件（対応不明）。音に反映できない値・条件の違いは両側のコードで確認します。
+                </small>
+                {!!melodies.uncertainKeys.length && (
+                  <details>
+                    <summary>対応不明の箇所を見る</summary>
+                    <p>片側のみの記録や繰り返しは、左右の対応を確定していません。</p>
+                    {melodies.uncertainKeys.map((key) => {
+                      const events = bundle.map.events.filter(
+                        (event) =>
+                          event.state === 'grounded' &&
+                          [semanticA?.unit_id, semanticB?.unit_id].includes(event.unit_id) &&
+                          `${event.responsibility_id}:${event.concept_key}` === key,
+                      );
+                      return (
+                        <p key={key}>
+                          {events.map((event) => (
+                            <button key={event.event_id} onClick={() => setMeaningNote(event.event_id)}>
+                              {event.unit_id === semanticA?.unit_id ? 'A' : 'B'} · {event.label} ·{' '}
+                              {event.span.start_line}–{event.span.end_line}行（対応不明）
+                            </button>
+                          ))}
+                        </p>
+                      );
+                    })}
+                  </details>
+                )}
+              </>
+            ) : (
+              <p>
+                この二関数には両側の根拠付き旋律がありません。責務の音は補完せず、コードと静的な構文比較を表示します。
+              </p>
+            )}
+          </section>
           <div className="structure-controls">
             <label>
               <input
@@ -526,12 +667,14 @@ export function StructureComparisonPanel({ bundle, close }: { bundle: Bundle; cl
           <div className="structure-sources">
             <SourceSide
               side="A"
+              meaningSpan={meaningEvent?.unit_id === semanticA?.unit_id ? meaningEvent?.span : undefined}
               projection={comparison.a}
               source={sources[comparison.a.location.path] ?? ''}
               eventId={row?.a ?? null}
             />
             <SourceSide
               side="B"
+              meaningSpan={meaningEvent?.unit_id === semanticB?.unit_id ? meaningEvent?.span : undefined}
               projection={comparison.b}
               source={sources[comparison.b.location.path] ?? ''}
               eventId={row?.b ?? null}

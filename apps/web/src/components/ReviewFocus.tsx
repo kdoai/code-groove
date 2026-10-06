@@ -1,62 +1,41 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { Play, ArrowUpRight } from 'lucide-react';
-import type { ScorePlan, ScheduledNote } from '../../../../packages/contracts/ScoreBundle';
+import type { ScorePlan } from '../../../../packages/contracts/ScoreBundle';
+import type { ReviewSignal } from '../../../../packages/contracts/SemanticMap';
 import type { Bundle } from '../api';
 import { useWorkspace } from '../state';
 import { engine } from '../audio/engine';
+import { focusedExcerpt } from '../audio/excerpts';
+import { playbackPlan } from '../audio/playback';
+import { counterStatusText, signalSelection, verdictText } from '../reviewNavigation';
 
-export function ReviewFocus({
-  bundle,
-  plan,
-  select,
-  followPlayback,
-}: {
-  bundle: Bundle;
-  plan: ScorePlan;
-  select: (note: ScheduledNote, seek?: boolean) => void;
-  followPlayback: () => void;
-}) {
+export function ReviewFocus({ bundle, plan }: { bundle: Bundle; plan: ScorePlan }) {
   const ws = useWorkspace();
   const [error, setError] = useState('');
   const [expanded, setExpanded] = useState(false);
   const menu = useRef<HTMLDetailsElement>(null);
-  const generation = useRef(0);
-  const frame = useRef(0);
-  useEffect(
-    () => () => {
-      generation.current++;
-      cancelAnimationFrame(frame.current);
-    },
-    [plan],
-  );
-  const signals = bundle.map.review_signals?.filter((signal) => signal.verdict === 'concern') ?? [];
+  const signals = bundle.map.review_signals ?? [];
+  const sourcePlan = playbackPlan(bundle.score, ws.mode, 0, true) ?? plan;
   if (!signals.length) return null;
   function dismiss() {
     setExpanded(false);
     menu.current?.querySelector<HTMLElement>('summary')?.focus();
   }
-  async function listen(note: ScheduledNote) {
+  async function listen(signal: ReviewSignal) {
     dismiss();
-    const request = ++generation.current;
-    cancelAnimationFrame(frame.current);
-    engine.pause();
-    ws.set({ focusEvidence: true, instrumentMutes: [], muted: [], solo: [], following: true, loop: false });
-    select(note, false);
-    followPlayback();
-    engine.seek(note.tick);
+    ws.set(signalSelection(bundle, signal));
+    const excerpt = focusedExcerpt(sourcePlan, signal.event_ids);
     try {
-      await engine.play(() => generation.current === request);
-      if (generation.current !== request) return;
       setError('');
-      const end = Math.min(plan.total_bars * 1920, note.tick + 4 * 1920);
-      const deadline = performance.now() + 10000;
-      const session = engine.playbackSession;
-      const finish = () => {
-        if (engine.playbackSession !== session || generation.current !== request) return;
-        if (engine.tick >= end || performance.now() >= deadline) engine.pause();
-        else frame.current = requestAnimationFrame(finish);
-      };
-      frame.current = requestAnimationFrame(finish);
+      await engine.playAudition(excerpt.plan, (note) => {
+        if (useWorkspace.getState().following)
+          ws.set({
+            eventId: note.event_id ?? '',
+            unitId: note.unit_id ?? '',
+            codeSpan: null,
+            signalId: signal.signal_id,
+          });
+      });
     } catch {
       setError('音源を読み込めません。根拠行は音なしでも選べます。');
       setExpanded(true);
@@ -74,13 +53,12 @@ export function ReviewFocus({
         確認候補 <span className="candidate-count">{signals.length}</span>
       </summary>
       <div className="review-focus-list" data-tour-content>
-        <p className="candidate-intro">保存された懸念候補です。根拠と反証の確認状態を確かめてください。</p>
+        <p className="candidate-intro">保存された解釈です。理由のある違いや判断保留も含みます。</p>
         {signals.map((signal) => {
-          const event = bundle.map.events.find(
-            (event) => signal.event_ids.includes(event.event_id) && event.state === 'grounded',
-          );
-          const note = plan.notes.find((note) => note.kind === 'data' && note.event_id === event?.event_id);
-          const checked = signal.counter_status === 'rejected' && !!signal.comparison;
+          const selection = signalSelection(bundle, signal);
+          const event = bundle.map.events.find((item) => item.event_id === selection.eventId);
+          const span = selection.codeSpan ?? event?.span;
+          const excerpt = focusedExcerpt(sourcePlan, signal.event_ids);
           return (
             <div
               className={`review-focus-item ${ws.signalId === signal.signal_id ? 'selected' : ''}`}
@@ -89,32 +67,31 @@ export function ReviewFocus({
               <span>
                 <b>{signal.label}</b>
                 <small>
-                  {event
-                    ? `${event.span.path}:${event.span.start_line}–${event.span.end_line}`
-                    : '根拠は右の説明へ'}{' '}
-                  · {checked ? '比較・反証の確認あり' : '懸念候補 · 反証未確認／保留'}
+                  {span ? `${span.path}:${span.start_line}–${span.end_line}` : '根拠は右の説明へ'} ·{' '}
+                  {verdictText[signal.verdict]} · {counterStatusText[signal.counter_status ?? 'not_checked']}
                 </small>
               </span>
               <button
-                disabled={!note}
                 onClick={() => {
                   engine.pause();
-                  select(note!);
-                  ws.set({ signalId: signal.signal_id, agentVisible: true });
+                  ws.set({ ...selection, following: false });
                   dismiss();
                 }}
               >
                 根拠行 <ArrowUpRight size={12} />
               </button>
-              <button disabled={!note} onClick={() => void listen(note!)}>
+              <button disabled={!excerpt.plan.notes.length} onClick={() => void listen(signal)}>
                 <Play size={12} />
                 伴奏なしで聴く
               </button>
+              {excerpt.omittedBars > 0 && (
+                <small>試聴は先頭4小節 · 残り{excerpt.omittedBars}小節は根拠で確認</small>
+              )}
             </div>
           );
         })}
         <small className="focus-explanation">
-          伴奏を外し、保存された判断の打点を最大10秒聴きます。懸念の音は、比較と反証の確認がある場合だけ付きます。
+          対象イベントの旋律だけを最大10秒聴きます。小節内の間隔を保ち、対象外の小節は省略します。終了・取消・失敗後は元の位置と再生設定に戻り、一時停止します。
         </small>
         {error && <p role="alert">{error}</p>}
       </div>

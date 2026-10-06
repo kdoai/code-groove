@@ -184,6 +184,188 @@ def index_python(snapshot_id: str, sources: dict[str, str]) -> dict:
     return {"files": files, "units": units, "relations": relations}
 
 
+def python_relationships(snapshot_id: str, sources: dict[str, str], unit_span: dict) -> dict:
+    index = index_python(snapshot_id, sources)
+    matches = [u for u in index["units"] if u["primary_span"] == unit_span]
+    if len(matches) != 1:
+        raise ValueError("INVALID_SELECTION")
+    unit = matches[0]
+    definitions = {}
+    parents = {}
+    module_rebindings: dict[str, set[str]] = {}
+    for path, source in sources.items():
+        if not path.endswith(".py"):
+            continue
+        tree = ast.parse(source)
+        names: dict[str, int] = {}
+        module_assigned_names: set[str] = set()
+        pending: list[ast.AST] = list(tree.body)
+        while pending:
+            item = pending.pop()
+            if isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+                names[item.name] = names.get(item.name, 0) + 1
+                continue
+            if isinstance(item, (ast.Import, ast.ImportFrom)):
+                for alias in item.names:
+                    name = alias.asname or alias.name
+                    names[name] = names.get(name, 0) + 1
+            if isinstance(item, ast.Name) and isinstance(item.ctx, ast.Store):
+                module_assigned_names.add(item.id)
+            pending.extend(ast.iter_child_nodes(item))
+        module_rebindings[path] = module_assigned_names | {name for name, count in names.items() if count > 1}
+        for node in ast.walk(tree):
+            for child in ast.iter_child_nodes(node):
+                parents[child] = node
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda)):
+                start = min([node.lineno, *[d.lineno for d in getattr(node, "decorator_list", [])]])
+                definitions[(path, start, node.end_lineno)] = node
+
+    def definition(span):
+        return definitions.get((span["path"], span["start_line"], span["end_line"]))
+
+    def scope(node):
+        pending = [node.body] if isinstance(node, ast.Lambda) else list(node.body)
+        result: list[ast.AST] = []
+        while pending:
+            child = pending.pop()
+            if isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda, ast.ClassDef)):
+                result.append(child)
+                continue
+            result.append(child)
+            pending.extend(ast.iter_child_nodes(child))
+        return sorted(
+            result, key=lambda child: (getattr(child, "lineno", 0), getattr(child, "col_offset", 0))
+        )
+
+    def span(node, path):
+        return {
+            "file_id": f"file_{digest(path)}",
+            "path": path,
+            "start_line": node.lineno,
+            "end_line": node.end_lineno,
+        }
+
+    selected = definition(unit_span)
+    if selected is None:
+        raise ValueError("INVALID_SELECTION")
+    nodes = scope(selected)
+    calls = [node for node in nodes if isinstance(node, ast.Call)]
+    links = []
+    path = unit_span["path"]
+    parameters = {arg.arg for arg in ast.walk(selected.args) if isinstance(arg, ast.arg)}
+    assigned = {node.id for node in nodes if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Store)}
+    for call in calls[:24]:
+        name = ast.unparse(call.func)[:160]
+        relations = [r for r in index["relations"] if r["caller"] == unit["unit_id"] and r["name"] == name]
+        targets = {r["callee"] for r in relations if r["resolved"]}
+        callee = (
+            next((u for u in index["units"] if u["unit_id"] in targets), None) if len(targets) == 1 else None
+        )
+        # Object dispatch and locally rebound names do not establish a unique definition.
+        if (
+            not isinstance(call.func, ast.Name)
+            or call.func.id in parameters | assigned | module_rebindings[path]
+        ):
+            callee = None
+        if callee and callee["label"] in module_rebindings[callee["primary_span"]["path"]]:
+            callee = None
+        if (
+            callee
+            and sum(
+                u["label"] == callee["label"] and u["primary_span"]["path"] == callee["primary_span"]["path"]
+                for u in index["units"]
+            )
+            != 1
+        ):
+            callee = None
+        target = definition(callee["primary_span"]) if callee else None
+        return_spans = []
+        if callee and isinstance(target, ast.Lambda):
+            return_spans = [span(target.body, callee["primary_span"]["path"])]
+        elif callee and target:
+            return_spans = [
+                span(node, callee["primary_span"]["path"])
+                for node in scope(target)
+                if isinstance(node, ast.Return)
+            ]
+        expression: ast.AST = call
+        while isinstance(parents.get(expression), ast.Await):
+            expression = parents[expression]
+        parent = parents.get(expression)
+        binding, use_status, uses = None, "unresolved", []
+        limitations = ["returnはすべて候補です。選ばれる経路・返却値・呼出回数は未確認です。"]
+        assignment_target = None
+        if isinstance(parent, ast.Assign) and len(parent.targets) == 1 and parent.value is expression:
+            assignment_target = parent.targets[0]
+        elif isinstance(parent, ast.AnnAssign) and parent.value is expression:
+            assignment_target = parent.target
+        if isinstance(assignment_target, ast.Name):
+            binding = assignment_target.id
+            stores = [
+                node
+                for node in nodes
+                if isinstance(node, ast.Name) and node.id == binding and isinstance(node.ctx, ast.Store)
+            ]
+            rebound = any(
+                isinstance(node, (ast.Global, ast.Nonlocal))
+                or isinstance(node, ast.ExceptHandler)
+                and node.name == binding
+                or isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef))
+                and node.name == binding
+                or isinstance(node, (ast.Import, ast.ImportFrom))
+                and any((alias.asname or alias.name) == binding for alias in node.names)
+                for node in nodes
+            )
+            if len(stores) == 1 and not rebound:
+                uses = [
+                    span(node, path)
+                    for node in nodes
+                    if isinstance(node, ast.Name)
+                    and isinstance(node.ctx, ast.Load)
+                    and node.id == binding
+                    and node.lineno >= (getattr(expression, "end_lineno", None) or call.lineno)
+                ]
+                use_status = "named_references"
+            limitations.append(
+                "同じ変数への静的参照です。再代入・入れ子関数・実行順・値の変更は追跡しません。"
+            )
+        elif isinstance(parent, (ast.expr, ast.Return, ast.If)):
+            uses, use_status = [span(parent, path)], "immediate_expression"
+            limitations.append("呼出結果を含む式です。実行されたことや値の伝播は保証しません。")
+        if use_status == "unresolved":
+            limitations.append("結果の利用は未確認です。再代入や分割代入を含む場合は結び付けません。")
+        if not callee:
+            limitations.append("呼出先の定義は未解決です。動的な呼出先を推測しません。")
+        unique_uses = list({(s["path"], s["start_line"], s["end_line"]): s for s in uses}.values())
+        links.append(
+            {
+                "link_id": f"link_{digest(f'{snapshot_id}:{unit["unit_id"]}:{call.lineno}:{call.col_offset}')}",
+                "name": name,
+                "call_span": span(call, path),
+                "callee_span": callee["primary_span"] if callee else None,
+                "resolution": "static_definition" if callee else "unresolved",
+                "return_spans": return_spans[:16],
+                "result_binding": binding,
+                "use_spans": unique_uses[:16],
+                "use_status": use_status,
+                "truncated": len(return_spans) > 16 or len(unique_uses) > 16,
+                "limitations": limitations,
+            }
+        )
+    return {
+        "extraction_version": "static-call-links-v1",
+        "snapshot_id": snapshot_id,
+        "unit_span": unit_span,
+        "status": "ready",
+        "links": links,
+        "truncated": len(calls) > 24,
+        "limitations": [
+            "Pythonの静的定義と再代入のないローカル変数参照を表示します。メソッド・動的参照は未解決です。",
+            "実行時の流れではありません。Agent未調査の範囲には旋律を追加しません。",
+        ],
+    }
+
+
 def main():
     cast(TextIOWrapper, sys.stdin).reconfigure(encoding="utf-8")
     cast(TextIOWrapper, sys.stdout).reconfigure(encoding="utf-8")
@@ -193,7 +375,12 @@ def main():
         resource.setrlimit(resource.RLIMIT_AS, (256 * 1024 * 1024, 256 * 1024 * 1024))
         resource.setrlimit(resource.RLIMIT_CPU, (3, 3))
     payload = json.loads(sys.stdin.read(8 * 1024 * 1024))
-    print(json.dumps(index_python(payload["snapshot_id"], payload["sources"]), ensure_ascii=False))
+    result = (
+        python_relationships(payload["snapshot_id"], payload["sources"], payload["unit_span"])
+        if payload.get("operation") == "relationships"
+        else index_python(payload["snapshot_id"], payload["sources"])
+    )
+    print(json.dumps(result, ensure_ascii=False))
 
 
 if __name__ == "__main__":

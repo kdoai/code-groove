@@ -191,7 +191,7 @@ test('playback resumes source following after reference selection and highlights
   const state = await page.evaluate(
     () => JSON.parse(localStorage.getItem('code-groove-workspace-v1')!).state,
   );
-  expect(state.focusEvidence).toBe(true);
+  expect(state.focusEvidence).toBe(false);
   expect(state.following).toBe(true);
   await page.screenshot({
     path: process.env.E2E_BASE_URL ? 'artifacts/deployed-follow-r17.png' : 'artifacts/demo-follow-r17.png',

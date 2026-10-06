@@ -4,6 +4,8 @@ import type { InvestigationResult, SemanticMap } from '../../../../packages/cont
 import type { Bundle } from '../api';
 import { useWorkspace } from '../state';
 import { DesignReview, reviewAxes } from './DesignReview';
+import { CandidateDetails } from './CandidateDetails';
+import { CallRelationshipsPanel } from './CallRelationshipsPanel';
 export type TraceEvent = { seq: number; type: string; timestamp: string; payload: Record<string, any> };
 
 function EvidenceTrail({ bundle, evidenceIds }: { bundle: Bundle; evidenceIds: string[] }) {
@@ -168,6 +170,7 @@ export function AgentPanel({
         <div className="selected-file">
           {ws.codeSpan?.path ?? event?.span.path ?? unit?.primary_span.path}
         </div>
+        {selectedSignal && ws.signalId && <CandidateDetails bundle={bundle} signal={selectedSignal} />}
         {(!selectedSignal || overview) && (
           <>
             <h3>{supportingFile ? '関連資料・型定義' : overview ? 'この音が表す役割' : 'この箇所の判断'}</h3>
@@ -182,6 +185,7 @@ export function AgentPanel({
           <EvidenceTrail bundle={bundle} evidenceIds={event?.evidence_ids ?? unit.evidence_ids} />
         )}
         <DesignReview bundle={bundle} signal={selectedSignal} />
+        <CallRelationshipsPanel bundle={bundle} />
         {overview && role && (
           <div className="motif-map" data-tour="investigate">
             <div className="section-label">
@@ -275,7 +279,7 @@ export function AgentPanel({
                       ? '理由のある境界'
                       : '判断は保留'}
             </div>
-            <p>{selectedSignal.explanation}</p>
+            {!ws.signalId && <p>{selectedSignal.explanation}</p>}
             {selectedSignal.change_scenario && (
               <div className="change-scenario">
                 <b>
@@ -290,39 +294,41 @@ export function AgentPanel({
               <summary>設計上の検討案（反証とは別）</summary>
               <p>{selectedSignal.alternative}</p>
             </details>
-            <details className="counter-evidence">
-              <summary>
-                反証：
-                {
-                  (
-                    {
-                      not_checked: '確認記録なし',
-                      supported: '別の説明を支持',
-                      rejected: '別の説明を棄却',
-                      undetermined: '判断保留',
-                    } as const
-                  )[selectedSignal.counter_status ?? 'not_checked']
-                }
-              </summary>
-              <p>
-                {selectedSignal.counter_explanation ||
-                  'この保存結果には、別の説明を検証した記録がありません。懸念は確定した欠陥を意味しません。'}
-              </p>
-              {selectedSignal.alternative_evidence_ids?.map((id) => {
-                const proof = bundle.map.evidence.find((e) => e.evidence_id === id);
-                return (
-                  proof && (
-                    <button
-                      key={id}
-                      className="evidence-link"
-                      onClick={() => ws.set({ codeSpan: proof.span, screen: 'inspect' })}
-                    >
-                      {proof.span.path}:{proof.span.start_line}–{proof.span.end_line}
-                    </button>
-                  )
-                );
-              })}
-            </details>
+            {!ws.signalId && (
+              <details className="counter-evidence">
+                <summary>
+                  反証：
+                  {
+                    (
+                      {
+                        not_checked: '確認記録なし',
+                        supported: '別の説明を支持',
+                        rejected: '別の説明を棄却',
+                        undetermined: '判断保留',
+                      } as const
+                    )[selectedSignal.counter_status ?? 'not_checked']
+                  }
+                </summary>
+                <p>
+                  {selectedSignal.counter_explanation ||
+                    'この保存結果には、別の説明を検証した記録がありません。懸念は確定した欠陥を意味しません。'}
+                </p>
+                {selectedSignal.alternative_evidence_ids?.map((id) => {
+                  const proof = bundle.map.evidence.find((e) => e.evidence_id === id);
+                  return (
+                    proof && (
+                      <button
+                        key={id}
+                        className="evidence-link"
+                        onClick={() => ws.set({ codeSpan: proof.span, screen: 'inspect' })}
+                      >
+                        {proof.span.path}:{proof.span.start_line}–{proof.span.end_line}
+                      </button>
+                    )
+                  );
+                })}
+              </details>
+            )}
             {selectedSignal.evidence_ids.map((id) => {
               const proof = bundle.map.evidence.find((e) => e.evidence_id === id);
               return (
@@ -341,6 +347,8 @@ export function AgentPanel({
                         codeSpan: proof.span,
                         screen: 'inspect',
                         ...(target ? { unitId: target.unit_id } : {}),
+                        signalId: selectedSignal.signal_id,
+                        following: false,
                       });
                     }}
                   >

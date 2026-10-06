@@ -1,10 +1,13 @@
 import { compareStructure } from './structure';
 import { indexSnapshot } from './indexer';
 import { compileStructure } from '../../groove-core/src/structure';
+import { callRelationships } from './relationships';
 let data = '';
 for await (const chunk of process.stdin) data += chunk;
 const input = JSON.parse(data);
-if (!input.unit_a || !input.unit_b) {
+if (input.operation === 'relationships') {
+  console.log(JSON.stringify(callRelationships(input)));
+} else if (!input.unit_a || !input.unit_b) {
   const index = indexSnapshot(input);
   console.log(
     JSON.stringify({

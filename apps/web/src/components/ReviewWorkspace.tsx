@@ -180,7 +180,6 @@ export function ReviewWorkspace({
           plan={plan}
           following={following}
           select={select}
-          followPlayback={() => setFollowing(true)}
           compare={() => {
             engine.pause();
             ws.set({ agentVisible: true });

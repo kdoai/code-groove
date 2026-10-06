@@ -7,6 +7,7 @@ async function writeGenerated(path, content) {
 }
 let result = '';
 for (const name of [
+  'CallRelationships',
   'SemanticMap',
   'ScoreBundle',
   'InvestigationResult',

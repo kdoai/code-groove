@@ -10,6 +10,7 @@
 | デモの解析範囲 | [Tsugiaiデモ](TSUGIAI_DEMO.md) |
 | 分割解析と保存結果の再利用 | [増分解析](INCREMENTAL.md) |
 | 二つの関数の構造・コード・音の比較 | [構造比較](STRUCTURE_COMPARISON.md) |
+| 呼出・返却・利用の静的な根拠と試聴 | [静的な関係](CALL_RELATIONSHIPS.md) |
 | コードの送信、保存、削除 | [データの扱い](data-handling.md) |
 | 利用上限と費用 | [費用と上限](cost-plan.md) |
 | 依存関係の管理 | [依存関係](dependencies.md) |

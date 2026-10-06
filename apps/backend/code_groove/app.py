@@ -22,6 +22,7 @@ from code_groove.improvements import apply_edits, source_hash
 from code_groove.incremental import INDEX_VERSION
 from code_groove.jobs import DAILY_ANALYSIS_LIMIT, JobService
 from code_groove.reconciliation import reconciliation_scope
+from code_groove.relationships import relationship_data
 from code_groove.repository import plan_repository, repository_status, validate_local_sources
 from code_groove.schemas import (
     ComparisonInvestigationRequest,
@@ -328,6 +329,12 @@ def create_app(settings: Settings | None = None, verifier: Callable[[str], str] 
         bundle = sample_bundle(sample_id)["data"]
         snapshot = {"snapshot_id": bundle["map"]["snapshot_id"], "sources": bundle["sources"]}
         return {"data": structure_data(snapshot, unit_a, unit_b, markers)}
+
+    @app.get("/api/v1/samples/{sample_id}/relationships")
+    def sample_relationships(sample_id: str, unit_id: Id) -> dict:
+        bundle = sample_bundle(sample_id)["data"]
+        snapshot = {"snapshot_id": bundle["map"]["snapshot_id"], "sources": bundle["sources"]}
+        return {"data": relationship_data(snapshot, bundle["map"], unit_id)}
 
     def comparison_demo_snapshot():
         content = (ROOT / "fixtures/structure-comparison/examples.ts").read_text(encoding="utf-8")
@@ -775,6 +782,13 @@ def create_app(settings: Settings | None = None, verifier: Callable[[str], str] 
         meta = own("analyses", analysis_id, user)
         snapshot = artifacts.get(meta["snapshot_key"])
         return {"data": structure_data(snapshot, unit_a, unit_b, markers)}
+
+    @app.get("/api/v1/analyses/{analysis_id}/relationships")
+    def analysis_relationships(analysis_id: str, unit_id: Id, user: User) -> dict:
+        meta = own("analyses", analysis_id, user)
+        snapshot = artifacts.get(meta["snapshot_key"])
+        semantic = artifacts.get(meta["artifact_key"])["map"]
+        return {"data": relationship_data(snapshot, semantic, unit_id)}
 
     @app.post("/api/v1/analyses/{analysis_id}/comparison-investigations", status_code=202)
     def compare_investigation(
