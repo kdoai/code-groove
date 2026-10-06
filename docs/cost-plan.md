@@ -1,11 +1,26 @@
-# Cost envelope (infrastructure only)
+# 費用と利用上限
 
-Target ¥6,000/month, excluding AI. R11 raises the user daily analysis ceiling to10 at the user's explicit request. The original sizing example below assumes2 reviewer users,3 analyses +10 investigations each per day, ~90s/30s average; it is not a new estimate for full use of the ten-analysis cap. Global token reservations and infrastructure capacity remain unchanged. No minimum instances, no GPU, SQL instance, Redis, NAT or load balancer. Firestore/GCS are usage based. Artifacts expire after7 days (API) and14 days (physical cleanup).
+インフラの予算目標は月額6,000円です。AIの利用料金は別に管理します。保存済みのデモ再生ではモデルを呼び出しません。
 
-Cloud Run: web 1 vCPU / 512 MiB, max 2; worker 1 vCPU / 1 GiB, max 1. Cloud Tasks concurrent dispatch 1. This deliberately reduces the specification's CPU/instance settings to respect the user's cost requirement. Increase explicit limits after observing latency and billing; the architecture already supports scaling.
+## インフラ
 
-The [Cloud Run price sheet](https://cloud.google.com/run/pricing) lists a request-billing monthly allowance of 180,000 vCPU-s and 360,000 GiB-s (us-central1 price basis). Account-wide allowances can be consumed by other apps. At the example workload, worker use is ~34,200 vCPU-s/month. Registry/build/storage and egress remain separately billed. The intended traffic should fit the envelope; a monthly hard cap cannot be guaranteed by max instances or budget alerts.
+東京リージョンのCloud Runを使い、最小インスタンス数を0に設定します。
 
-Model cost: reserved per-run tokens, user daily limits, global input/output token limits, one active run per user, persistent kill switch. Replay never calls the model. Amount estimates remain disabled until verified pricing is configured.
+| サービス | CPU | メモリ | 最大インスタンス数 |
+|---|---|---|---|
+| Web・API | 1 vCPU | 512 MiB | 2 |
+| 解析worker | 1 vCPU | 1 GiB | 1 |
 
-A billing budget restricted to this project's nine non-AI services is configured at ¥6,000 with 50/80/100% notifications. See `artifacts/operations.json` for the actual budget ID and service filter. Budget notifications do not stop billing. AI is excluded from this infrastructure budget and controlled with persistent token reservations and run limits.
+Cloud Tasksの同時実行数は1です。Firestore、Cloud Storage、ビルド、コンテナの保存、通信にも利用量に応じた費用がかかります。
+
+予算の50%、80%、100%で通知する設定を使います。予算通知やインスタンス数の上限は、請求額の上限を保証しません。実際の利用量と請求を継続して確認します。
+
+## AI解析
+
+日次の解析上限は1ユーザー10回で、日本時間09:00に切り替わります。同じユーザーによる解析の同時実行は1件です。追加調査には別の回数枠があります。
+
+各要求でトークンを予約し、全体の入力・出力トークン上限も確認します。管理者は解析を停止できます。料金設定を確認できていない場合は、金額の見積もりを表示しません。
+
+## 保存期間
+
+私有プロジェクトは作成から7日後にアクセスできなくなります。保存物はライフサイクル設定に従って物理削除します。削除要求を受けた場合は閲覧を直ちに拒否し、削除処理を予約します。
