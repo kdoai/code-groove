@@ -10,8 +10,8 @@ from firebase_admin import auth
 
 from infra.gcp import PROJECT, cloud
 
-EMAIL = "reviewer@example.invalid"
-SECRET = "reviewer-password-placeholder"
+EMAIL = os.environ["CG_REVIEWER_EMAIL"]
+SECRET = os.environ["CG_REVIEWER_PASSWORD_SECRET"]
 
 
 def main():
@@ -49,7 +49,7 @@ def main():
     )
     print(
         json.dumps(
-            {"status": "created", "email": EMAIL, "password_secret": SECRET, "email_receipt_required": False}
+            {"status": "created"}
         )
     )
 

@@ -1,83 +1,50 @@
 # Code Groove
 
-AIで増えたコードを、全体から聴く健康診断のワークスペースです。TypeScript / TSX / Python の公開リポジトリを固定 SHA で取得し、Gemini がコード・関係・テスト・設計理由を調べます。正常に動いていても将来の変更や読解を難しくしそうな構造を、根拠と別の説明を含めて検討します。初回に分かった問題も隠しません。Lint・バグ修正・通常のコードレビューと併用します。
+コードの設計を聴き、音から根拠をたどる開発支援ツールです。
 
-中央はDTMのArrangementを参考にした演奏画面です。ディレクトリ階層、関数クリップ、実際に鳴るノート、共通伴奏、大きいコード表示、開閉できるAgent質問欄を１画面に収めます。ドラムなしの旋律・和音・歩くベース・2:1のスウィングを固定規則で編曲します。同じ役割は同じ旋律・色。まず配置を聴き、「この区間を選ぶ」から精密検査へ進みます。新しく確認した懸念は人の選択で演奏に反映し、正当な境界や経過観察も残します。
+Geminiがコードを読み、責務や処理の関係を整理します。その結果を音とタイムラインで表し、気になった箇所からコードと説明を確認できます。既存のコードやAI生成コードを引き継ぐときの理解を支援します。
 
-**Theme** は責務ごと、**Repo** は実装の場所ごと。同じ意味イベント・音源・強さを保持し、配置だけを変えます。伴奏はコードの判断から区別して表示します。未確認のコードに意味を作ったり、音の違いだけで設計を悪いと判定したりしません。
+[アプリを開く](https://code-groove-web-a5ygiois2a-an.a.run.app) · [開発手順](docs/DEVELOPMENT.md) · [ドキュメント](docs/README.md)
 
-新しいAgentは範囲外の関数・呼出関係も探索し、実際に読んだ別実装から設計パターンと比較根拠を保存できます。多数派を良い設計とは判断せず、Correctness / Quality / Coherenceと人への確認事項を区別します。比較コードを並べて根拠行へ戻り、確認したCoherenceの差を固定リズムの差として表します。旧サンプルに新しい意味判定を付け足すことはしません。費用・採用範囲・未検証事項は [R13の改善](docs/DESIGN_REVIEW_R13.md) を参照。
+![Code Grooveの演奏画面と根拠コード](docs/images/workspace.png)
 
 ## 試す
 
-主サンプルは、実在するTsugiaiの確定版 `35a9514` をGeminiが調べた記録です。Agent・共有型の11ファイルを取り込み、Checkout Agentの9実装（1/3範囲）を確認しました。残り2範囲、全51実装ファイルの意味解析、実行時動作は未検証です。実ノートから根拠行と読取記録へ戻り、元コードの版・MITライセンス・検査範囲を画面で確認できます。公開再生はログイン不要・新規モデル呼出し0件です。元コードは実行・変更せず、改善後も用意していません。ログイン後に記録を保存すると、同じ検査範囲を精密検査したり、未検査範囲の続きを明示的に依頼できます。日次解析上限は1ユーザー10回、日本時間09:00切替です。詳細と実測は [Tsugiai demo](docs/TSUGIAI_DEMO.md) に記録します。
+1. アプリで「実画面のデモを見る」を開きます。
+2. 演奏を開始し、気になる音を選びます。対応するコードとAgentの説明を確認できます。
+3. 根拠一覧や確認候補から、関連するコードと判断理由を読みます。
 
-初回ガイドは実画面の試聴・区間選択・質問・人の判断を案内します。「今後このメッセージを表示しない」は端末内に保存されます。Checkout Labは、小さな教材サンプルとして引き続き利用できます。
+デモにはTsugiaiのCheckout Agentを調べた保存済みの解析を使っています。再生と閲覧はログイン不要で、新しいAI解析は発生しません。調査済みなのは9実装です。コード全体や実行時の動作を検証した結果ではありません。
 
-[アプリを開く](https://code-groove-web-a5ygiois2a-an.a.run.app)。配備イメージは [artifacts/deployment.json](artifacts/deployment.json) に記録します。審査用メールは `reviewer@example.invalid`。パスワードは `reviewer-password-placeholder` という Secret Manager の secret に保存し、リポジトリには置きません。
+ログインすると解析結果を保存し、気になった箇所の追加調査を依頼できます。改善案は差分を確認して採用します。変更はアプリ内のコピーへ反映され、元のリポジトリは変更されません。
 
-管理者が PowerShell でパスワードをクリップボードへ取得する手順：
+## 機能
+
+- TypeScript、TSX、Pythonの静的なコード調査
+- 責務と処理の配置を表すタイムライン・音の再生
+- 音、根拠コード、Agentの説明の相互参照
+- 選択した範囲の追加調査と、人が確認する改善案
+- 解析結果の保存と再生
+
+音はコードを理解するための補助です。設計の良し悪しやバグの有無は、コードと根拠を読んで判断します。
+
+## ローカル開発
+
+Node.js 24、pnpm 10.27.0、Python 3.13、uvを使います。
 
 ```powershell
-[private administrative command removed]
-```
-
-実際に動くサンプルショップは [Checkout Lab](examples/checkout-lab/README.md)。ルートで `pnpm sample:checkout` を実行し、http://127.0.0.1:4174 を開きます。画面の「サンプル」メニューからZIPも取得できます。ZIP版は `npm ci` → `npm start` で単独起動します。録音の根拠と同じ決済コードがカート・クーポン・会員ポイント・注文保存を動かします。画面と起動用サーバーは保存済み解析の対象外です。
-
-## 開発
-
-Node 24 / pnpm 10.27.0 / Python 3.13 / uv。依存関係はロックファイルで固定しています。
-
-```powershell
-pnpm install --frozen-lockfile
-uv sync --frozen
 Copy-Item .env.example .env
+pnpm install --frozen-lockfile
+uv sync --locked
 pnpm build:tools
-$env:PYTHONPATH='apps/backend;.'
-uv run python scripts/dev.py
 ```
 
-別ターミナルで `pnpm dev:web` を実行し、`http://127.0.0.1:5173` を開きます。初期設定は模擬サンプルのみで、AI費用は発生しません。ライブ解析には Firebase 設定・サーバー allowlist・ADC と `MODEL_MODE=live` / `ENABLE_LIVE_ANALYSIS=true` が必要です。モデルは `gemini-3.8-flash`、global、MEDIUM。別モデルへの自動フォールバックはありません。
+既存の`.env`がある場合は上書きしないでください。APIとWebを別々の端末で起動する手順は[開発手順](docs/DEVELOPMENT.md)を参照してください。
 
-## 変更に応じた検証
+## 構成
 
-```powershell
-pnpm test:changed --base <比較するGitコミット>
-```
+React、TypeScript、Monaco Editor、Tone.jsによるWeb画面と、FastAPIによるAPIを使います。Cloud Runで動作し、Cloud Tasksで解析ジョブを処理します。認証はFirebase Auth、データ保存はFirestoreとCloud Storageです。
 
-文書のみの変更ではアプリのテストを実行しません。バックエンドは Python / 認可・寿命管理、楽譜は不変条件、UI・共有契約はブラウザ E2E を含めて検証します。初回・リリース時の全体確認は `pnpm test:changed --all`。有料モデルの評価は `uv run python scripts/live_agent_cases.py scattered justified` を明示した場合だけ実行します。通常の CI にはモデル認証情報を渡しません。
+[技術構成](docs/TECHNICAL_GUIDE.md) · [音の規則](docs/SONIFICATION.md) · [データの扱い](docs/data-handling.md) · [費用と利用上限](docs/cost-plan.md)
 
-`ruff` / `mypy` / ESLint / TypeScript を使用します。Python は snake_case、TS は camelCase、React コンポーネント・型は PascalCase、通信契約は snake_case。生成済み契約を手編集せず、`scripts/generate-contracts.py` と `scripts/generate-types.mjs` から更新してください。
-
-## GCP と配備
-
-`artful-bonsai-491601-p3` / `asia-northeast1`。同一コンテナを公開 web と非公開 worker に分けています。Firestore の transaction、Cloud Tasks の OIDC、90秒 lease / 15秒 heartbeat、最大２回の worker attempt を使用します。生コードや credential をログに出しません。
-
-```powershell
-$env:PYTHONPATH='apps/backend;.'
-$env:GOOGLE_CLOUD_QUOTA_PROJECT='artful-bonsai-491601-p3'
-uv run python infra/gcp.py bootstrap
-uv run python scripts/create_reviewer.py
-uv run python infra/operations.py
-uv run python scripts/release.py --revision <40桁のGitコミットSHA>
-```
-
-通常の配備は GitHub Actions の **Deploy verified revision** を手動実行します。main の検証済みコードだけを対象にし、Workload Identity Federation をリポジトリの数値ID・所有者ID・main・production 環境に限定します。サービスアカウント鍵は作りません。基盤の IAM と Firebase 設定を変更する権限は CI に付与しません。
-
-インフラは min instances 0、web 最大２・worker 最大１、キュー同時実行１。常時稼働の DB / VM / Redis は使いません。各利用者は１実行同時、UTC日次10解析・10追加調査・10更新。全体で日次入力300万 / 出力30万トークンの予約上限。保存結果の再生は AI を呼びません。更新では変更された関数と影響する呼び出し元を再調査し、変更がなく索引・モデル・プロンプトも一致する場合は解析結果を再利用します。詳細は [差分解析](docs/INCREMENTAL.md)、[費用設計](docs/cost-plan.md) と [運用手順](docs/runbook.md)。
-
-## 構成と成果物
-
-- `apps/web`: React / SVG Arrangement / 読み取り専用 Monaco / Tone.js
-- `apps/backend/code_groove`: FastAPI / Firebase Auth / Gemini SDK の制限付きツールループ
-- `packages/groove-core`: 決定的な Theme / Repo コンパイラ
-- `packages/repo-indexer`: TypeScript Compiler API の静的索引。Python は隔離したASTアダプター。対象コードを実行しない
-- `fixtures`: 模擬サンプル・実解析記録・サーバー側の固定ソース
-- `examples/checkout-lab`: 検査した決済ロジックを使う、実行可能なローカルショップ
-- `prompts` / `contracts`: プロンプト・Pydantic正本から生成したスキーマ
-- `EXECUTION_PLAN.md` / `BLOCKERS.md`: 進捗・外部入力だけの残作業
-- `artifacts`: 実測トレース、スクリーンショット、信号検証。fixture と実解析を明示して分ける
-
-保存期限は７日。APIは期限切れを410で拒否し、Firestore TTL と GCS 14日 lifecycle で物理削除します。削除要求後は直ちに閲覧不能になり、worker が保存物を消します。現在の音源はCC BY 3.0の録音ピアノ・ベースと自作PCMです。出典・変更内容はアプリ内NOTICEと assets/audio-source に記載しています。
-
-仕様の詳細と採用した差分は [統合仕様](docs/SPEC.md) / [設計判断](docs/implementation-decisions.md)。[音楽と根拠の対応](docs/SONIFICATION.md)、[技術スタック・構成図・シーケンス・DFD](docs/TECHNICAL_GUIDE.md)、[検証記録](docs/acceptance.md)、[提出用説明・３分台本](docs/submission.md) も用意しています。技術検証と、人による聴きやすさの評価・YouTube公開は別々に記録します。
+サンプルコードと音源のライセンスは、それぞれの同梱ファイルに記載しています。

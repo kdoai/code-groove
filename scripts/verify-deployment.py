@@ -2,6 +2,7 @@
 
 import hashlib
 import json
+import os
 
 import httpx
 
@@ -38,11 +39,11 @@ def main():
         checks["private_artifacts"] = (
             client.get(f"https://storage.googleapis.com/{PROJECT}-cg-artifacts/").status_code == 403
         )
-        password = cloud("secrets", "versions", "access", "latest", "--secret=reviewer-password-placeholder")
+        password = cloud("secrets", "versions", "access", "latest", f"--secret={os.environ['CG_REVIEWER_PASSWORD_SECRET']}")
         sign_in = client.post(
             "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword",
             params={"key": state["firebase"]["apiKey"]},
-            json={"email": "reviewer@example.invalid", "password": password, "returnSecureToken": True},
+            json={"email": os.environ["CG_REVIEWER_EMAIL"], "password": password, "returnSecureToken": True},
         )
         if sign_in.is_error:
             raise RuntimeError(f"Reviewer sign-in failed ({sign_in.status_code})")

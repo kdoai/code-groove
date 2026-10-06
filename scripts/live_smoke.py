@@ -2,6 +2,7 @@
 
 import argparse
 import json
+import os
 import re
 import time
 import uuid
@@ -23,11 +24,11 @@ def main():
     if not re.fullmatch(r"[a-z0-9][a-z0-9-]{0,39}", prefix):
         parser.error("report-prefix must contain 1-40 lowercase letters, digits or hyphens")
     state = json.loads(STATE.read_text())
-    password = cloud("secrets", "versions", "access", "latest", "--secret=reviewer-password-placeholder")
+    password = cloud("secrets", "versions", "access", "latest", f"--secret={os.environ['CG_REVIEWER_PASSWORD_SECRET']}")
     sign_in = httpx.post(
         "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword",
         params={"key": state["firebase"]["apiKey"]},
-        json={"email": "reviewer@example.invalid", "password": password, "returnSecureToken": True},
+        json={"email": os.environ["CG_REVIEWER_EMAIL"], "password": password, "returnSecureToken": True},
         timeout=30,
     )
     if sign_in.is_error:

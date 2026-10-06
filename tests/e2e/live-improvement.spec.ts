@@ -7,6 +7,9 @@ test('paid deployed Gemini proposal, explicit approval, fresh analysis and prese
   page,
 }) => {
   test.skip(process.env.E2E_LIVE_IMPROVEMENT !== '1', 'Paid HITL workflow is explicitly opt-in.');
+  const reviewerEmail = process.env.CG_REVIEWER_EMAIL;
+  const reviewerSecret = process.env.CG_REVIEWER_PASSWORD_SECRET;
+  if (!reviewerEmail || !reviewerSecret) throw new Error('Private reviewer configuration is required.');
   test.setTimeout(720000);
   const started = Date.now();
   const time = () => (Date.now() - started) / 1000;
@@ -18,7 +21,7 @@ test('paid deployed Gemini proposal, explicit approval, fresh analysis and prese
       'versions',
       'access',
       'latest',
-      '--secret=reviewer-password-placeholder',
+      `--secret=${reviewerSecret}`,
       '--project=artful-bonsai-491601-p3',
     ],
     { encoding: 'utf8', shell: process.platform === 'win32' },
@@ -43,7 +46,7 @@ test('paid deployed Gemini proposal, explicit approval, fresh analysis and prese
   await page.goto('/projects/sample-recorded-returns-before/inspect?scene=1');
   await page.getByRole('button', { name: 'あとで見る', exact: true }).click();
   await page.getByRole('button', { name: 'Geminiに改善案を依頼', exact: true }).click();
-  await page.getByLabel('メールアドレス', { exact: true }).fill('reviewer@example.invalid');
+  await page.getByLabel('メールアドレス', { exact: true }).fill(reviewerEmail);
   await page.getByLabel('パスワード', { exact: true }).fill(password);
   await page.getByRole('dialog').getByRole('button', { name: 'ログイン', exact: true }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);

@@ -1,9 +1,7 @@
-# 依存関係と監査
+# 依存関係
 
-Node 24 / Python 3.13、pnpm 10.27.0 / uv 0.6.11 を使用します。`pnpm-lock.yaml` と `uv.lock` をコミットし、CIとコンテナでは frozen install を必須にしています。TypeScriptは索引APIとlintの互換性を確認した6.0.2に固定しました。
+Web依存は`pnpm-lock.yaml`、Python依存は`uv.lock`で固定します。依存変更を意図しない作業ではlockを更新しません。
 
-2026-10-02の本番依存監査では、npm 114依存に既知の問題0件、Python本番依存に既知の問題0件でした。データベースにない問題まで保証するものではありません。結果は `artifacts/npm-audit.json` / `artifacts/python-audit.json`。
+更新するときはlockの差分と公式release noteを確認し、型・lint・関連テスト・production buildを実行します。モデルSDKの変更では関数ID、思考署名、読取記録、予算、停止、再試行を確認します。
 
-Firebaseの間接依存gRPCを修正版1.14.5、MonacoのDOMPurifyを3.4.16にoverrideしました。根拠は [gRPC advisory](https://github.com/advisories/GHSA-m9gg-hp2v-232j) と [DOMPurify advisory](https://github.com/advisories/GHSA-p98j-92pf-mc4p)。ブラウザではFirebase Authのみを使用し、Firestore/Storageへの直接アクセスは拒否しています。
-
-有料モデル検証・全体テスト・監査をすべて毎回起動しません。通常CIは変更パスで選択し、ツール・配備コードは軽い静的検査だけを追加します。全体検証はリリース時、監査は依存更新時に実施してください。配備ジョブの再試行は成功した検証ジョブと同じSHAを使用し、既存イメージがある場合はビルドを再利用します。
+脆弱性監査は固定した依存に対して実行し、結果は運用記録として管理します。既知の脆弱性が見つからないことは、未知の脆弱性や設定の安全性を保証するものではありません。

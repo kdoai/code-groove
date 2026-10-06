@@ -5,6 +5,9 @@ import { test, expect } from '@playwright/test';
 test.use({ trace: 'off' });
 test('reviewer sign-in, saved live source and real investigation', async ({ page }) => {
   test.skip(process.env.E2E_LIVE !== '1', 'Paid deployed flow is explicitly opt-in.');
+  const reviewerEmail = process.env.CG_REVIEWER_EMAIL;
+  const reviewerSecret = process.env.CG_REVIEWER_PASSWORD_SECRET;
+  if (!reviewerEmail || !reviewerSecret) throw new Error('Private reviewer configuration is required.');
   test.setTimeout(240000);
   const deployment = JSON.parse(readFileSync('artifacts/deployed-smoke.json', 'utf8'));
   const password = execFileSync(
@@ -14,7 +17,7 @@ test('reviewer sign-in, saved live source and real investigation', async ({ page
       'versions',
       'access',
       'latest',
-      '--secret=reviewer-password-placeholder',
+      `--secret=${reviewerSecret}`,
       '--project=artful-bonsai-491601-p3',
     ],
     { encoding: 'utf8', shell: process.platform === 'win32' },
@@ -25,7 +28,7 @@ test('reviewer sign-in, saved live source and real investigation', async ({ page
   await page.getByRole('checkbox', { name: '今後このメッセージを表示しない', exact: true }).check();
   await page.getByRole('button', { name: 'あとで見る', exact: true }).click();
   await page.getByRole('button', { name: 'ログイン', exact: true }).click();
-  await page.getByLabel('メールアドレス', { exact: true }).fill('reviewer@example.invalid');
+  await page.getByLabel('メールアドレス', { exact: true }).fill(reviewerEmail);
   await page.getByLabel('パスワード', { exact: true }).fill(password);
   await page.getByRole('dialog').getByRole('button', { name: 'ログイン', exact: true }).click();
   await expect(page.getByRole('button', { name: 'ログイン', exact: true })).not.toBeVisible();

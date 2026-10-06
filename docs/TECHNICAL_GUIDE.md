@@ -1,39 +1,24 @@
-# Code Groove — technical guide
+# 技術構成
 
-R10 adds authenticated committed-snapshot ingestion, Python method/TypeScript lexical ownership indexing, bounded semantic partitions, dependency-aware result caching and explicit continuation/retry. Whole-repository coverage remains visibly partial; cross-partition interpretation is not implemented. See [Repository Agent R10](REPOSITORY_AGENT_R10.md) for limits, cost controls and official SDK/ADK references.
+![システム構成](architecture.svg)
 
-| Layer | Implementation | Purpose |
-|---|---|---|
-| Arrangement workspace | React 19 / TypeScript 6 / Vite / Zustand / TanStack Query | Directory tree, file/function MIDI clips, optional backing lanes, exact code dock, full/file transport, themes, spotlight tour, persistent questions |
-| Code inspection | Monaco, self-hosted workers | Read-only TypeScript/Python evidence, exact line highlighting |
-| Sonification | Pure TS compiler + Tone.js + self-hosted recorded/authored PCM | Six reproducible motifs, jazz accompaniment, evidence-linked rhythmic responses; no generative music |
-| Agent | FastAPI / Python 3.13 / Google Gen AI SDK / Gemini 3.8 Flash on Google Cloud | Adaptive read/search/relations/hypothesis tools; grounded structural/readability interpretation and validated draft proposals |
-| Index | Virtual TS Compiler API / isolated Python AST | Bounded code structure without executing submitted code |
-| Jobs | Cloud Tasks + private Cloud Run worker | OIDC, cancellation, attempts, lease, durable quotas and traces |
-| Web | Public Cloud Run | Authenticated owner API and static app, scale to zero |
-| Identity | Firebase Authentication + server allowlist | Reviewer password login without email receipt; no social login requirement |
-| Persistence | Firestore + private Cloud Storage | Metadata, immutable snapshots/results, TTL, differential reuse |
-| Secrets / release | Secret Manager / GitHub Actions WIF / Cloud Build / Artifact Registry | No service-account keys; scoped verified releases |
+Web画面はReact、TypeScript、Monaco Editor、Tone.jsで構成します。FastAPIのAPIが認証と解析要求を受け付け、Cloud Tasksを通して非公開workerへ処理を渡します。
 
-![Architecture](../artifacts/architecture.png)
-![Agent and playback sequence](../artifacts/sequence.png)
-![Data flow and trust boundaries](../artifacts/data-flow.png)
-![Musical explanation pipeline](../artifacts/sonification.png)
-![Human-approved improvement sequence](../artifacts/approval-sequence.png)
-![Whole-health listening and focused examination](../artifacts/health-sequence.png)
+| 領域 | 役割 |
+|---|---|
+| Web | コードの閲覧、演奏、根拠選択、Agentへの質問、差分の確認 |
+| API | 認証、所有権、入力の検証、ジョブの作成と状態取得 |
+| worker | 信頼済みパーサーによる静的索引、Geminiによる調査、根拠の検証 |
+| Firestore | プロジェクト、ジョブ、実行状態、利用枠 |
+| Cloud Storage | ソースのスナップショット、解析結果、譜面 |
+| Firebase Auth | 利用者の認証 |
 
-Initial Gemini examination uses the complete eligible index and full model capability.
-Detected future-debt candidates remain accessible alongside unknowns. The overview
-music describes responsibility placement; it never treats repetition alone as a defect.
-Human selection directs fresh examination of future change friction, readability and
-legitimate boundaries. Reflecting that result creates an immutable focused map before
-any optional source proposal. Investigation progress/results survive reload through
-owned metadata, without a new model call. Independent accepted re-analysis can retain
-a concern; hearing comfort is not proof of correctness or health.
+Agentはコード読取や関連探索のツールを使って調査し、根拠付きの解析結果を提出します。アプリが読取記録、出力形式、時間・トークン予算を検証します。解析対象のコードを実行するツールは提供しません。
 
-Detailed grammars and boundaries are in SONIFICATION.md, INCREMENTAL.md and
-SECURITY_REVIEW_R1.md. Infrastructure remains scale-to-zero Cloud Run, not GKE or
-an always-on database VM. The ¥6,000 infrastructure budget excludes AI and raises
-alerts; it is not a hard billing cap. Runtime instance caps, short retention,
-bounded jobs and reusable analyses reduce cost; a large traffic increase still
-requires budget review before scaling further.
+音は解析結果を固定規則で変換して生成します。Geminiが音楽そのものを作るわけではありません。同じ解析結果・規則・音源からは同じ譜面を生成します。
+
+ソースは固定commitのスナップショットとして保存します。改善案を採用すると別のスナップショットを作り、元のコードと解析結果は保持します。元リポジトリへの書き込みは行いません。
+
+通信契約は`apps/backend/code_groove/schemas.py`で定義します。JSON SchemaとTypeScript型の生成方法は[開発手順](DEVELOPMENT.md)に記載しています。
+
+[データの流れ](data-flow.svg) · [処理シーケンス](sequence.svg) · [データの扱い](data-handling.md)
