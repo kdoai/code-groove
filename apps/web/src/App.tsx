@@ -514,7 +514,13 @@ export default function App() {
   }
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if ((e.target as HTMLElement).closest('input,textarea,button,.monaco-editor,[role="dialog"]')) return;
+      if (
+        e.defaultPrevented ||
+        (e.target as HTMLElement).closest(
+          'input,textarea,select,summary,button,.monaco-editor,[role="dialog"]',
+        )
+      )
+        return;
       const events = bundle.data?.map.events ?? [];
       if (e.key === 'Escape') ws.set({ unitId: '', eventId: '', codeSpan: null });
       if (e.key === 'Enter' && (ws.unitId || ws.eventId)) ws.set({ screen: 'inspect' });

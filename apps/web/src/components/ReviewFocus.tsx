@@ -18,17 +18,10 @@ export function ReviewFocus({
 }) {
   const ws = useWorkspace();
   const [error, setError] = useState('');
-  const [expanded, setExpanded] = useState(() => window.innerHeight > 850);
+  const [expanded, setExpanded] = useState(false);
+  const menu = useRef<HTMLDetailsElement>(null);
   const generation = useRef(0);
   const frame = useRef(0);
-  useEffect(() => {
-    const query = window.matchMedia('(max-height: 850px)');
-    const resize = () => {
-      if (query.matches) setExpanded(false);
-    };
-    query.addEventListener('change', resize);
-    return () => query.removeEventListener('change', resize);
-  }, []);
   useEffect(
     () => () => {
       generation.current++;
@@ -38,7 +31,12 @@ export function ReviewFocus({
   );
   const signals = bundle.map.review_signals?.filter((signal) => signal.verdict === 'concern') ?? [];
   if (!signals.length) return null;
+  function dismiss() {
+    setExpanded(false);
+    menu.current?.querySelector<HTMLElement>('summary')?.focus();
+  }
   async function listen(note: ScheduledNote) {
+    dismiss();
     const request = ++generation.current;
     cancelAnimationFrame(frame.current);
     engine.pause();
@@ -61,19 +59,22 @@ export function ReviewFocus({
       frame.current = requestAnimationFrame(finish);
     } catch {
       setError('音源を読み込めません。根拠行は音なしでも選べます。');
+      setExpanded(true);
     }
   }
   return (
     <details
-      className="review-focus"
+      className="review-focus workspace-menu"
+      ref={menu}
       data-tour="review-focus"
       open={expanded}
       onToggle={(event) => setExpanded(event.currentTarget.open)}
     >
       <summary>
-        確認する箇所 · {signals.length} 件 <small>音の心地よさで良否は判定しません</small>
+        確認候補 <span className="candidate-count">{signals.length}</span>
       </summary>
       <div className="review-focus-list" data-tour-content>
+        <p className="candidate-intro">保存された懸念候補です。根拠と反証の確認状態を確かめてください。</p>
         {signals.map((signal) => {
           const event = bundle.map.events.find(
             (event) => signal.event_ids.includes(event.event_id) && event.state === 'grounded',
@@ -100,6 +101,7 @@ export function ReviewFocus({
                   engine.pause();
                   select(note!);
                   ws.set({ signalId: signal.signal_id, agentVisible: true });
+                  dismiss();
                 }}
               >
                 根拠行 <ArrowUpRight size={12} />
@@ -111,11 +113,11 @@ export function ReviewFocus({
             </div>
           );
         })}
+        <small className="focus-explanation">
+          伴奏を外し、保存された判断の打点を最大10秒聴きます。懸念の音は、比較と反証の確認がある場合だけ付きます。
+        </small>
+        {error && <p role="alert">{error}</p>}
       </div>
-      <small className="focus-explanation">
-        伴奏を外し、保存された判断の打点を最大10秒聴きます。懸念の音は、比較と反証の確認がある場合だけ付きます。
-      </small>
-      {error && <p role="alert">{error}</p>}
     </details>
   );
 }

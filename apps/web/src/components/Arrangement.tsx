@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Headphones, Play } from 'lucide-react';
+import { Headphones, Play, GitCompareArrows } from 'lucide-react';
 import type { ScorePlan, ScheduledNote } from '../../../../packages/contracts/ScoreBundle';
 import type { Bundle } from '../api';
 import { engine } from '../audio/engine';
@@ -13,20 +13,21 @@ export function Arrangement({
   following,
   select,
   followPlayback,
+  compare,
 }: {
   bundle: Bundle;
   plan: ScorePlan;
   following: boolean;
   select: (note: ScheduledNote, seek?: boolean) => void;
   followPlayback: () => void;
+  compare: () => void;
 }) {
   const ws = useWorkspace();
   const [active, setActive] = useState<ScheduledNote[]>([]),
     [audioError, setAudioError] = useState('');
   const trackHeads = useRef(new Map<string, HTMLDivElement>()),
     trackRows = useRef(new Map<string, HTMLDivElement>()),
-    trackContainer = useRef<HTMLDivElement>(null),
-    overviewHead = useRef<HTMLDivElement>(null);
+    trackContainer = useRef<HTMLDivElement>(null);
   const total = plan.total_bars * 1920;
   const musical = plan.notes.filter((n) => n.kind !== 'pulse' || !ws.pulseMuted);
   function noteColor(note: ScheduledNote) {
@@ -44,9 +45,10 @@ export function Arrangement({
     const reveal = () => {
       const row = trackRows.current.get(selectedPath);
       if (!row) return;
-      if (row.offsetTop < container.scrollTop) container.scrollTop = row.offsetTop;
-      else if (row.offsetTop + row.offsetHeight > container.scrollTop + container.clientHeight)
-        container.scrollTop = row.offsetTop + row.offsetHeight - container.clientHeight;
+      const bounds = row.getBoundingClientRect();
+      const viewport = container.getBoundingClientRect();
+      if (bounds.top < viewport.top) container.scrollTop += bounds.top - viewport.top;
+      else if (bounds.bottom > viewport.bottom) container.scrollTop += bounds.bottom - viewport.bottom;
     };
     reveal();
     const observer = new ResizeObserver(reveal);
@@ -62,7 +64,6 @@ export function Arrangement({
     const animate = (now: number) => {
       const left = `${Math.min(100, (engine.tick / total) * 100)}%`;
       trackHeads.current.forEach((head) => (head.style.left = left));
-      if (overviewHead.current) overviewHead.current.style.left = left;
       if (now - last > 90) {
         const sounding = engine.playing
           ? musical.filter(
@@ -115,13 +116,6 @@ export function Arrangement({
       setAudioError('音源の読込に失敗しました。');
     }
   }
-  function markPassage() {
-    const note = current?.event_id ? current : musical.find((n) => n.event_id && n.unit_id === ws.unitId);
-    if (!note) return;
-    engine.pause();
-    setActive([]);
-    select(note);
-  }
   const current =
     active.find((n) => n.kind === 'cue') ??
     active.find((n) => n.kind === 'data') ??
@@ -138,14 +132,18 @@ export function Arrangement({
   ];
   const barLabels = Array.from({ length: Math.ceil(plan.total_bars / 4) }, (_, i) => i * 4);
   return (
-    <section className="arrangement" aria-label="ファイルごとのリズム">
+    <section
+      className={`arrangement ${bundle.sample_id === 'recorded-returns-before' ? 'has-comparison-lesson' : ''}`}
+      aria-label="ファイルごとのリズム"
+    >
       <div className="arrangement-title">
         <span>
           <Headphones size={16} />
-          <b>Arrangement</b>
+          <b>演奏</b>
         </span>
-        <details className="motif-legend">
-          <summary>旋律と色の凡例</summary>
+        <ReviewFocus bundle={bundle} plan={plan} select={select} followPlayback={followPlayback} />
+        <details className="motif-legend workspace-menu">
+          <summary>凡例</summary>
           <div>
             <p>
               同じ役割は同じ色・リズム。健康の点数ではありません。精密検査の応答は、根拠のある将来の負担候補です。
@@ -184,24 +182,17 @@ export function Arrangement({
             意味で揃える
           </button>
         </div>
-      </div>
-      <div className="score-overview" aria-label="実スコアの全発音">
-        <svg viewBox="0 0 1000 30" preserveAspectRatio="none">
-          {musical.map((note) => (
-            <rect
-              key={note.note_id}
-              x={(note.tick / total) * 1000}
-              y={note.kind === 'cue' ? 3 : note.event_id ? 8 : 19}
-              width={Math.max(0.8, ((note.duration_ms * 0.768) / total) * 1000)}
-              height={note.kind === 'cue' ? 22 : note.event_id ? 13 : 6}
-              fill={noteColor(note)}
-            />
-          ))}
-        </svg>
-        <div ref={overviewHead} />
+        <button
+          className="structure-entry"
+          aria-label="Agentの説明を二関数で問い直す · 構造を比較して聴く"
+          onClick={compare}
+        >
+          <GitCompareArrows size={14} />
+          二関数を比較
+        </button>
       </div>
       <div className="arrangement-ruler">
-        <span>TRACK / FILE</span>
+        <span>ファイル</span>
         <div>
           {barLabels.map((bar) => (
             <span key={bar} style={{ left: `${(bar / plan.total_bars) * 100}%` }}>
@@ -218,7 +209,6 @@ export function Arrangement({
           select(note);
         }}
       />
-      <ReviewFocus bundle={bundle} plan={plan} select={select} followPlayback={followPlayback} />
       <div className="arrangement-tracks" ref={trackContainer} data-tour="signal">
         {files.map((file, index) => {
           const phrases = plan.phrases.filter((p) =>
@@ -295,7 +285,7 @@ export function Arrangement({
                       }}
                     >
                       <span className="clip-title">
-                        {unit.label}
+                        <span className="clip-name">{unit.label}</span>
                         <small>
                           {notes.some((n) => n.kind === 'cue')
                             ? bundle.map.review_signals?.find(
@@ -304,7 +294,7 @@ export function Arrangement({
                               ? '途切れる応答'
                               : '比較した違い'
                             : candidate
-                              ? '要確認 · 反証未確認／保留'
+                              ? '要確認'
                               : ''}
                         </small>
                       </span>
@@ -422,14 +412,19 @@ export function Arrangement({
           })}
         </div>
       )}
-      <div className="composer-now">
+      <div
+        className="composer-now"
+        data-sounding-span={
+          event ? `${event.span.path}:${event.span.start_line}–${event.span.end_line}` : undefined
+        }
+      >
         <span className={current?.kind === 'cue' ? 'warning' : ''}>
           {audioError ||
             (event
-              ? `発音中 ${event.span.path}:${event.span.start_line}–${event.span.end_line} · ${current?.kind === 'cue' ? '懸念の応答リズム' : current?.kind === 'data' ? '判断の音' : '意味の旋律を反復'}`
+              ? `演奏中 · ${event.label}`
               : active.length
                 ? '発音中：共通伴奏（コード根拠なし）'
-                : 'ノートを選ぶと、その音の根拠へ移動')}
+                : '音を選ぶと、下のコードに根拠を表示')}
         </span>
         {ws.unitId && (
           <button className="audition" data-tour="audition" onClick={() => void audition()}>
@@ -437,38 +432,7 @@ export function Arrangement({
             この区間を聴く
           </button>
         )}
-        {ws.unitId && (
-          <button data-tour="mark" onClick={markPassage}>
-            この区間を選ぶ
-          </button>
-        )}
       </div>
-      <details className="event-navigation">
-        <summary>
-          音なしで根拠を選ぶ / {bundle.map.events.filter((e) => e.state === 'grounded').length}判断
-        </summary>
-        <div>
-          {bundle.map.events
-            .filter((e) => e.state === 'grounded')
-            .map((event) => {
-              const note = plan.notes.find((n) => n.kind === 'data' && n.event_id === event.event_id);
-              return (
-                note && (
-                  <button
-                    key={event.event_id}
-                    aria-pressed={ws.eventId === event.event_id}
-                    onClick={() => {
-                      engine.pause();
-                      select(note);
-                    }}
-                  >
-                    {event.label} · {event.span.path}:{event.span.start_line}–{event.span.end_line}
-                  </button>
-                )
-              );
-            })}
-        </div>
-      </details>
     </section>
   );
 }

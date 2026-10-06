@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { ScanLine } from 'lucide-react';
 import type { ScorePlan, ScheduledNote } from '../../../../packages/contracts/ScoreBundle';
@@ -26,6 +26,26 @@ export function ReviewWorkspace({
   const following = ws.following;
   const setFollowing = (value: boolean) => ws.set({ following: value });
   const [comparing, setComparing] = useState(false);
+  const center = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const dismiss = (event: PointerEvent | KeyboardEvent) => {
+      if (event instanceof KeyboardEvent && event.key !== 'Escape') return;
+      const menus = center.current?.querySelectorAll<HTMLDetailsElement>('.workspace-menu[open]');
+      if (event instanceof KeyboardEvent && menus?.length) event.preventDefault();
+      menus?.forEach((menu) => {
+        if (event instanceof PointerEvent && menu.contains(event.target as Node)) return;
+        if (event instanceof KeyboardEvent && menu.contains(document.activeElement))
+          menu.querySelector<HTMLElement>('summary')?.focus();
+        menu.open = false;
+      });
+    };
+    document.addEventListener('pointerdown', dismiss);
+    document.addEventListener('keydown', dismiss);
+    return () => {
+      document.removeEventListener('pointerdown', dismiss);
+      document.removeEventListener('keydown', dismiss);
+    };
+  }, []);
   const reference = useQuery({
     queryKey: ['repository-reference', bundle.case_study?.revision],
     queryFn: () => api<RepositoryReference>('/samples/recorded-tsugiai-agents/repository-reference'),
@@ -149,17 +169,7 @@ export function ReviewWorkspace({
           </div>
         </details>
       </aside>
-      <main className="review-center">
-        <button
-          className="structure-entry"
-          onClick={() => {
-            engine.pause();
-            ws.set({ agentVisible: true });
-            setComparing(true);
-          }}
-        >
-          Agentの説明を二関数で問い直す · 構造を比較して聴く
-        </button>
+      <main className="review-center" ref={center}>
         {comparing && (
           <Suspense fallback={<p>比較画面を読み込み中…</p>}>
             <StructureComparisonPanel bundle={bundle} close={() => setComparing(false)} />
@@ -171,6 +181,11 @@ export function ReviewWorkspace({
           following={following}
           select={select}
           followPlayback={() => setFollowing(true)}
+          compare={() => {
+            engine.pause();
+            ws.set({ agentVisible: true });
+            setComparing(true);
+          }}
         />
         <div className="review-code">
           <Suspense fallback={<div className="code-loading">コードを読み込み中…</div>}>
@@ -179,6 +194,8 @@ export function ReviewWorkspace({
               following={following}
               toggleFollowing={() => setFollowing(!following)}
               referenceSources={referenceSources}
+              plan={plan}
+              select={select}
             />
           </Suspense>
         </div>

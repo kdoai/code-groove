@@ -1,4 +1,4 @@
-# Code Groove - current contract (R16, 2026-10-06)
+# Code Groove - current contract (R17, 2026-10-06)
 
 This file is the current specification. Earlier design alternatives and stage records are in [SPEC_HISTORY.md](SPEC_HISTORY.md); they are historical, not current requirements.
 
@@ -32,7 +32,7 @@ One workspace with repository tree, music, read-only code and Agent panel. First
 
 The icon beside Gemini Agent collapses the window; the collapsed icon or top toolbar restores it. The question input is present before login. Sending while signed out opens authentication and retains the draft; logging in does not silently submit it. Explicit signed-in send adopts a recorded real sample before the bounded investigation. Reference-only files cannot silently select an unrelated implementation. Play resumes source following; the current audible evidence span is highlighted and revealed in the code editor. Users may turn following off during playback. Walkthrough outlines track the live DOM rectangle including text/scroll/layout/viewport changes.
 
-In shorter viewports, review candidates open as a popover so the current-playback locator and code remain visible. The walkthrough includes the open popover in its measured outline. Production never advertises local mock investigation actions; authenticated comparison requests on actual recordings first adopt an owned copy without changing the compared source or closing the independent record.
+The center prioritizes the file timeline and the selected sound's evidence code. The timeline fits its content up to a bounded viewport share; the code uses the remaining height. A compact candidate count opens a popover at every viewport size. Duplicate overview/selection controls are removed; function comparison stays in the timeline toolbar and the sound-free evidence list in the code header. Menus close on selection, outside click or Escape without resetting the selected source. The source header names the selected judgment and its exact span. Track scrolling measures the scroll container's viewport so selected rows remain visible. The walkthrough includes the open candidate popover in its measured outline. Production never advertises local mock investigation actions; authenticated comparison requests on actual recordings first adopt an owned copy without changing the compared source or closing the independent record.
 
 R15 extends this Agent-first workflow: saved/initial explanation → human-selected two static functions → code/structure comparison with optional sound → expectation, observation and question → explicit bounded Agent follow-up → human-controlled reason confirmation. Selection is independent of SemanticMap events and scenes; static syntax supports questioning the Agent's explanation. Sound expresses syntax placement and call identity, never defects, severity or quality. Unextracted information, scope omissions and repository-wide coverage are outside the first version.
 

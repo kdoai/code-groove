@@ -5,6 +5,8 @@ import 'monaco-editor/languages/definitions/typescript/register';
 import 'monaco-editor/languages/definitions/python/register';
 import EditorWorker from 'monaco-editor/editor/editor.worker?worker';
 import type { Bundle } from '../api';
+import type { ScorePlan, ScheduledNote } from '../../../../packages/contracts/ScoreBundle';
+import { engine } from '../audio/engine';
 import { useWorkspace } from '../state';
 
 self.MonacoEnvironment = { getWorker: () => new EditorWorker() };
@@ -14,11 +16,15 @@ export function CodePanel({
   following,
   toggleFollowing,
   referenceSources,
+  plan,
+  select,
 }: {
   bundle: Bundle;
   following?: boolean;
   toggleFollowing?: () => void;
   referenceSources?: Record<string, string>;
+  plan: ScorePlan;
+  select: (note: ScheduledNote, seek?: boolean) => void;
 }) {
   const ws = useWorkspace();
   const event = bundle.map.events.find((e) => e.event_id === ws.eventId);
@@ -72,16 +78,55 @@ export function CodePanel({
     highlight();
   };
   return (
-    <section className="code-panel">
+    <section className="code-panel" aria-label="選択した音の根拠コード">
       <div className="panel-heading">
-        <span data-testid="code-location">
-          {span.path}:{span.start_line}–{span.end_line}
-        </span>
-        {toggleFollowing && (
-          <button aria-pressed={following} onClick={toggleFollowing}>
-            演奏に追従
-          </button>
-        )}
+        <div className="code-heading-context">
+          <strong>
+            {referenceOnly || ws.codeSpan ? span.path.split('/').at(-1) : (event?.label ?? unit.label)}
+          </strong>
+          <span data-testid="code-location" title={`${span.path}:${span.start_line}–${span.end_line}`}>
+            {span.path}:{span.start_line}–{span.end_line}
+          </span>
+        </div>
+        <div className="code-heading-actions">
+          <details className="event-navigation workspace-menu">
+            <summary>根拠一覧</summary>
+            <div>
+              {bundle.map.events
+                .filter((e) => e.state === 'grounded')
+                .map((item) => {
+                  const note = plan.notes.find((n) => n.kind === 'data' && n.event_id === item.event_id);
+                  return (
+                    note && (
+                      <button
+                        key={item.event_id}
+                        aria-pressed={ws.eventId === item.event_id}
+                        onClick={(click) => {
+                          engine.pause();
+                          select(note);
+                          const menu = click.currentTarget.closest('details');
+                          if (menu) {
+                            menu.open = false;
+                            menu.querySelector<HTMLElement>('summary')?.focus();
+                          }
+                        }}
+                      >
+                        <b>{item.label}</b>
+                        <small>
+                          {item.span.path}:{item.span.start_line}–{item.span.end_line}
+                        </small>
+                      </button>
+                    )
+                  );
+                })}
+            </div>
+          </details>
+          {toggleFollowing && (
+            <button aria-pressed={following} onClick={toggleFollowing}>
+              演奏に追従
+            </button>
+          )}
+        </div>
       </div>
       {referenceOnly && (
         <p className="reference-code-note">

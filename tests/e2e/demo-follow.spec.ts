@@ -138,7 +138,9 @@ test('real repository browsing, Agent icon and logged-out chat preserve honest s
   await expect(page.getByTestId('code-location')).toContainText('agents/main.py');
   await expect(page.locator('.reference-code-note')).toContainText('保存済み検査の対象外');
   await expect(page.locator('.monaco-editor')).toContainText('FastAPI');
+  await page.locator('.review-focus summary').click();
   await expect(page.locator('.review-focus')).toContainText('反証未確認');
+  await page.locator('.review-focus summary').click();
   for (const viewport of [
     { width: 1440, height: 900 },
     { width: 1280, height: 720 },
@@ -150,7 +152,7 @@ test('real repository browsing, Agent icon and logged-out chat preserve honest s
     await expect(page.locator('.composer-now')).toBeInViewport();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     await page.screenshot({
-      path: `artifacts/${process.env.E2E_BASE_URL ? 'deployed' : 'demo'}-reference-r16-${viewport.width}.png`,
+      path: `artifacts/${process.env.E2E_BASE_URL ? 'deployed' : 'demo'}-reference-r17-${viewport.width}.png`,
     });
   }
   expect(writes).toBe(0);
@@ -172,18 +174,18 @@ test('playback resumes source following after reference selection and highlights
     'aria-pressed',
     'true',
   );
-  await expect(page.locator('.composer-now > span')).toContainText('発音中 agents/');
+  await expect(page.locator('.composer-now > span')).toContainText('演奏中');
   await expect
     .poll(async () => {
-      const sounding = await page.locator('.composer-now > span').innerText();
+      const sounding = await page.locator('.composer-now').getAttribute('data-sounding-span');
       const location = await page.getByTestId('code-location').innerText();
-      const span = sounding.match(/発音中 (.*?:\d+–\d+)/)?.[1];
-      return !!span && location === span;
+      return !!sounding && location === sounding;
     })
     .toBe(true);
   await expect(page.locator('.code-highlight')).not.toHaveCount(0);
   await expect(page.locator('.reference-code-note')).toHaveCount(0);
   await page.getByRole('button', { name: 'Pause', exact: true }).click();
+  await page.locator('.review-focus summary').click();
   await page.locator('.review-focus-item').last().getByRole('button', { name: '伴奏なしで聴く' }).click();
   await expect(page.getByRole('button', { name: 'Pause', exact: true })).toBeVisible();
   const state = await page.evaluate(
@@ -192,7 +194,7 @@ test('playback resumes source following after reference selection and highlights
   expect(state.focusEvidence).toBe(true);
   expect(state.following).toBe(true);
   await page.screenshot({
-    path: process.env.E2E_BASE_URL ? 'artifacts/deployed-follow-r16.png' : 'artifacts/demo-follow-r16.png',
+    path: process.env.E2E_BASE_URL ? 'artifacts/deployed-follow-r17.png' : 'artifacts/demo-follow-r17.png',
   });
   await expect(page.getByRole('button', { name: 'Play', exact: true })).toBeVisible({ timeout: 12000 });
 });
