@@ -28,6 +28,7 @@ test('focus completion and cancellation preserve all playback settings and permi
   page,
 }) => {
   await page.goto('/projects/sample-recorded-tsugiai-agents/inspect');
+  await page.getByRole('combobox', { name: '再生範囲', exact: true }).selectOption('file');
   await page.locator('.playback-settings summary').click();
   await page.getByRole('button', { name: 'Loop', exact: true }).click();
   await page.getByRole('button', { name: 'Melody', exact: true }).click();
@@ -101,4 +102,42 @@ test('audio failure restores configuration; justified, deferred and uninvestigat
   await page.locator('.review-focus-item').nth(1).getByRole('button', { name: '根拠行' }).click();
   await expect(page.getByTestId('candidate-details')).toContainText('判断保留');
   await expect(page.locator('.file-scope')).toContainText('解析済み');
+});
+
+test('two small implementations compare the recorded responsibility melody with equal range and no writes', async ({
+  page,
+}) => {
+  let writes = 0;
+  page.on('request', (request) => {
+    if (request.method() === 'POST' && request.url().includes('/api/v1/')) writes++;
+  });
+  await page.goto('/projects/sample-scattered/inspect');
+  await page.getByRole('button', { name: /Agentの説明を二関数で問い直す/ }).click();
+  const dialog = page.getByRole('dialog', { name: '構造を比較して聴く' });
+  const peer = dialog
+    .getByLabel('Bの関数', { exact: true })
+    .locator('option')
+    .filter({ hasText: /^refundOnline ·/ });
+  await dialog.getByLabel('Bの関数', { exact: true }).selectOption((await peer.getAttribute('value'))!);
+  const comparison = dialog.getByRole('region', { name: '責務の旋律で比較' });
+  await expect(comparison).toContainText('96 BPM');
+  await expect(comparison).toContainText('両側とも先頭');
+  await expect(comparison).toContainText('対応不明');
+  await comparison.getByRole('button', { name: '責務のA→Bを聴く', exact: true }).click();
+  await expect(comparison.getByRole('status')).toContainText('責務を試聴中');
+  await expect(dialog.locator('.structure-source mark')).not.toHaveCount(0);
+  await comparison.getByRole('button', { name: '責務の試聴を取消' }).click();
+  await expect(comparison.getByRole('status')).toHaveText('停止中');
+  await comparison.getByText('対応不明の箇所を見る', { exact: true }).click();
+  await comparison
+    .getByRole('button', { name: /行（対応不明）/ })
+    .first()
+    .click();
+  await expect(dialog.locator('.structure-source mark')).not.toHaveCount(0);
+  await dialog.getByRole('checkbox', { name: '音を使う', exact: true }).uncheck();
+  await expect(comparison.getByRole('button', { name: '責務のAを聴く', exact: true })).toBeDisabled();
+  await dialog.locator('.structure-rows button').first().click();
+  await expect(dialog.locator('.structure-source mark')).not.toHaveCount(0);
+  await page.screenshot({ path: 'artifacts/responsibility-comparison-small-fixture.png' });
+  expect(writes).toBe(0);
 });

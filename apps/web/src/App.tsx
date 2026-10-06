@@ -540,12 +540,10 @@ export default function App() {
     ws.codeSpan?.path ??
     data?.map.units.find((u) => u.unit_id === ws.unitId)?.primary_span.path ??
     data?.map.units[0]?.primary_span.path;
+  const playbackPath = ws.playbackFile || selectedFile;
   const fileUnits = useMemo(
-    () =>
-      data?.map.units
-        .filter((u) => u.primary_span.path === (ws.playbackFile || selectedFile))
-        .map((u) => u.unit_id),
-    [data?.map.units, selectedFile, ws.playbackFile],
+    () => data?.map.units.filter((u) => u.primary_span.path === playbackPath).map((u) => u.unit_id),
+    [data?.map.units, playbackPath],
   );
   const playbackUnits = ws.playbackFile ? fileUnits : undefined;
   const playbackScene = ws.wholeWork ? 0 : ws.scene;

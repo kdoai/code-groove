@@ -24,6 +24,7 @@ class GrooveEngine {
   private supportMuted = false;
   private samples: KitSample[] = [];
   private playbackSequence = 0;
+  private planSequence = 0;
   private audition?: {
     original: ScorePlan;
     tick: number;
@@ -106,6 +107,7 @@ class GrooveEngine {
     this.configurePlan(plan);
   }
   private configurePlan(plan: ScorePlan) {
+    const generation = ++this.planSequence;
     const transport = Tone.getTransport();
     this.scheduleIds.forEach((id) => transport.clear(id));
     this.scheduleIds = [];
@@ -117,7 +119,7 @@ class GrooveEngine {
     for (const note of plan.notes) {
       this.scheduleIds.push(
         transport.schedule((time) => {
-          if (this.plan !== plan) return;
+          if (this.planSequence !== generation) return;
           const responsibility = note.responsibility_id ?? '';
           if (!this.audition && this.supportMuted && note.kind === 'accompaniment') return;
           if (!this.audition && this.instruments.has(note.voice)) return;
@@ -160,7 +162,7 @@ class GrooveEngine {
         (time) => {
           if (this.audition || !this.loop)
             Tone.getDraw().schedule(() => {
-              if (this.plan !== plan) return;
+              if (this.planSequence !== generation) return;
               if (this.audition) this.pause();
               else this.stop();
             }, time);
@@ -242,6 +244,9 @@ class GrooveEngine {
   get tick() {
     if (this.audition) return this.audition.tick;
     return Math.max(0, (Tone.getTransport().seconds * 480 * 96) / 60);
+  }
+  get auditionDurationSeconds() {
+    return this.audition ? (this.plan?.total_bars ?? 0) * 2.5 : 0;
   }
   get playing() {
     return Tone.getTransport().state === 'started';

@@ -6,6 +6,7 @@ import type { Bundle } from '../api';
 import { useWorkspace } from '../state';
 import { engine } from '../audio/engine';
 import { focusedExcerpt } from '../audio/excerpts';
+import { playbackPlan } from '../audio/playback';
 import { counterStatusText, signalSelection, verdictText } from '../reviewNavigation';
 
 export function ReviewFocus({ bundle, plan }: { bundle: Bundle; plan: ScorePlan }) {
@@ -14,6 +15,7 @@ export function ReviewFocus({ bundle, plan }: { bundle: Bundle; plan: ScorePlan 
   const [expanded, setExpanded] = useState(false);
   const menu = useRef<HTMLDetailsElement>(null);
   const signals = bundle.map.review_signals ?? [];
+  const sourcePlan = playbackPlan(bundle.score, ws.mode, 0, true) ?? plan;
   if (!signals.length) return null;
   function dismiss() {
     setExpanded(false);
@@ -22,10 +24,18 @@ export function ReviewFocus({ bundle, plan }: { bundle: Bundle; plan: ScorePlan 
   async function listen(signal: ReviewSignal) {
     dismiss();
     ws.set(signalSelection(bundle, signal));
-    const excerpt = focusedExcerpt(plan, signal.event_ids);
+    const excerpt = focusedExcerpt(sourcePlan, signal.event_ids);
     try {
       setError('');
-      await engine.playAudition(excerpt.plan);
+      await engine.playAudition(excerpt.plan, (note) => {
+        if (useWorkspace.getState().following)
+          ws.set({
+            eventId: note.event_id ?? '',
+            unitId: note.unit_id ?? '',
+            codeSpan: null,
+            signalId: signal.signal_id,
+          });
+      });
     } catch {
       setError('音源を読み込めません。根拠行は音なしでも選べます。');
       setExpanded(true);
@@ -48,7 +58,7 @@ export function ReviewFocus({ bundle, plan }: { bundle: Bundle; plan: ScorePlan 
           const selection = signalSelection(bundle, signal);
           const event = bundle.map.events.find((item) => item.event_id === selection.eventId);
           const span = selection.codeSpan ?? event?.span;
-          const excerpt = focusedExcerpt(plan, signal.event_ids);
+          const excerpt = focusedExcerpt(sourcePlan, signal.event_ids);
           return (
             <div
               className={`review-focus-item ${ws.signalId === signal.signal_id ? 'selected' : ''}`}

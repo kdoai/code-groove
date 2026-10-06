@@ -7,6 +7,7 @@ import { useWorkspace } from '../state';
 import { DemoComparison } from './DemoComparison';
 import { ReviewFocus } from './ReviewFocus';
 import { focusedExcerpt } from '../audio/excerpts';
+import { playbackPlan } from '../audio/playback';
 import { useAudition } from '../hooks/useAudition';
 import { signalSelection } from '../reviewNavigation';
 const motifColors = ['#c7cfff', '#a6ddce', '#aad4ef', '#e4bfde', '#b8debd', '#edc4ae'];
@@ -98,10 +99,13 @@ export function Arrangement({
     const eventIds = bundle.map.events
       .filter((item) => item.unit_id === ws.unitId && item.state === 'grounded')
       .map((item) => item.event_id);
-    const excerpt = focusedExcerpt(plan, eventIds);
+    const excerpt = focusedExcerpt(playbackPlan(bundle.score, ws.mode, 0, true) ?? plan, eventIds);
     try {
       setAudioError('');
-      await engine.playAudition(excerpt.plan);
+      await engine.playAudition(excerpt.plan, (note) => {
+        if (useWorkspace.getState().following)
+          ws.set({ eventId: note.event_id ?? '', codeSpan: null, signalId: ws.signalId });
+      });
     } catch {
       setAudioError('音源の読込に失敗しました。');
     }
@@ -437,7 +441,7 @@ export function Arrangement({
             (auditionState !== 'idle'
               ? auditionState === 'loading'
                 ? '対象の音を準備中 · 再生設定は保持'
-                : '対象の旋律だけ試聴中 · 最大10秒'
+                : `対象の旋律だけ試聴中 · ${engine.auditionDurationSeconds}秒の範囲`
               : event
                 ? `演奏中 · ${event.label}`
                 : active.length

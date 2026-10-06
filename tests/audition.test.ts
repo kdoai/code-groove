@@ -97,4 +97,13 @@ describe('temporary audition restoration', () => {
     expect(transport.loopEnd).toBe(next.total_bars * 2.5);
     expect(engine.getAuditionState()).toBe('idle');
   });
+  it('does not let a stale completion stop a second audition using the same excerpt', async () => {
+    const engine = await setup();
+    await engine.playAudition(excerpt);
+    const staleEnd = transport.schedule.mock.calls.at(-1)![0];
+    await engine.playAudition(excerpt);
+    staleEnd(0);
+    expect(engine.getAuditionState()).toBe('playing');
+    engine.pause();
+  });
 });

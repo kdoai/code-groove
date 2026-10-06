@@ -138,7 +138,10 @@ export function Transport({
       >
         <option value="all">{partitioned ? '表示中の検査範囲' : 'リポジトリ全体'}</option>
         <option value="file" disabled={!fileUnits?.length}>
-          選択ファイル{selectedFile ? ` · ${selectedFile.split('/').at(-1)}` : ''}
+          選択ファイル
+          {ws.playbackFile || selectedFile
+            ? ` · ${(ws.playbackFile || selectedFile)!.split('/').at(-1)}`
+            : ''}
         </option>
       </select>
       <details className="playback-settings">

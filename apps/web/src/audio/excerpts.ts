@@ -21,7 +21,7 @@ export function focusedExcerpt(plan: ScorePlan, eventIds: string[], maxBars = 4)
         {
           ...note,
           tick,
-          duration_ms: Math.min(note.duration_ms, ((kept.length * 1920 - tick) * 1000) / 768),
+          duration_ms: Math.min(note.duration_ms, Math.floor(((kept.length * 1920 - tick) * 1000) / 768)),
         },
       ];
     }),
