@@ -2,6 +2,7 @@
 
 import argparse
 import json
+import os
 import time
 import uuid
 from datetime import UTC, datetime
@@ -19,11 +20,11 @@ def main() -> None:
     parser.add_argument("--execute", action="store_true")
     args = parser.parse_args()
     state = json.loads(STATE.read_text(encoding="utf-8"))
-    password = cloud("secrets", "versions", "access", "latest", "--secret=reviewer-password-placeholder")
+    password = cloud("secrets", "versions", "access", "latest", f"--secret={os.environ['CG_REVIEWER_PASSWORD_SECRET']}")
     sign_in = httpx.post(
         "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword",
         params={"key": state["firebase"]["apiKey"]},
-        json={"email": "reviewer@example.invalid", "password": password, "returnSecureToken": True},
+        json={"email": os.environ["CG_REVIEWER_EMAIL"], "password": password, "returnSecureToken": True},
         timeout=30,
     )
     sign_in.raise_for_status()

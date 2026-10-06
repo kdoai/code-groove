@@ -14,6 +14,9 @@ function wholeNotes(bundle: any) {
 test.use({ trace: 'off', video: { mode: 'on', size: { width: 1440, height: 900 } } });
 test('paid whole-health passage investigation and optional human-approved refactoring', async ({ page }) => {
   test.skip(process.env.E2E_LIVE_HEALTH !== '1', 'Paid health workflow is explicitly opt-in.');
+  const reviewerEmail = process.env.CG_REVIEWER_EMAIL;
+  const reviewerSecret = process.env.CG_REVIEWER_PASSWORD_SECRET;
+  if (!reviewerEmail || !reviewerSecret) throw new Error('Private reviewer configuration is required.');
   test.setTimeout(900000);
   const started = Date.now(),
     time = () => (Date.now() - started) / 1000;
@@ -29,7 +32,7 @@ test('paid whole-health passage investigation and optional human-approved refact
       'versions',
       'access',
       'latest',
-      '--secret=reviewer-password-placeholder',
+      `--secret=${reviewerSecret}`,
       '--project=artful-bonsai-491601-p3',
     ],
     { encoding: 'utf8', shell: process.platform === 'win32' },
@@ -71,7 +74,7 @@ test('paid whole-health passage investigation and optional human-approved refact
   await page.getByRole('checkbox', { name: '今後このメッセージを表示しない', exact: true }).check();
   await page.getByRole('button', { name: 'あとで見る', exact: true }).click();
   await page.getByRole('button', { name: 'ログイン', exact: true }).click();
-  await page.getByLabel('メールアドレス', { exact: true }).fill('reviewer@example.invalid');
+  await page.getByLabel('メールアドレス', { exact: true }).fill(reviewerEmail);
   await page.getByLabel('パスワード', { exact: true }).fill(password);
   await page.getByRole('dialog').getByRole('button', { name: 'ログイン', exact: true }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);

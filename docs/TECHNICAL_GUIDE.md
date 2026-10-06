@@ -1,35 +1,24 @@
-# Code Groove — current architecture (R15)
+# 技術構成
 
-![Architecture](architecture.svg)
+![システム構成](architecture.svg)
 
-Browser（React / TypeScript / Monaco / Tone.js）→ Cloud Run web API → Cloud Tasks → private worker。メタデータはFirestore、不変ソース・map・譜面は非公開Cloud Storage、認証はFirebase Authです。東京・scale to zeroを維持します。
+Web画面はReact、TypeScript、Monaco Editor、Tone.jsで構成します。FastAPIのAPIが認証と解析要求を受け付け、Cloud Tasksを通して非公開workerへ処理を渡します。
 
-workerはADK 2.11.0の単一custom BaseAgent／InMemoryRunnerを使います。Gemini adapterはGoogle Gen AI SDK clientを受け取り、1要求1応答で呼びます。ADK標準の自動ツールループを重ねず、Code Grooveの制御ループが予算、停止、読取receipt、提出schemaを検証します。既存の耐久ジョブ、90秒lease、heartbeat、CAS公開、再試行、予約・清算を保持します。
-
-主な責務の境界：
-
-| 領域 | 実装 |
+| 領域 | 役割 |
 |---|---|
-| Agentの提出・探索・予算 | `agent.py` |
-| read-onlyツール・context・receipt | `agent_tools.py` |
-| ADK実行／モデル境界 | `agent_runtime.py` / `adk_adapter.py` |
-| 所有権付きAPI／耐久ジョブ | `app.py` / `jobs.py` |
-| 範囲・依存fingerprint | `repository.py` |
-| 選択範囲の意味統合境界 | `reconciliation.py` |
-| Python静的構文と所有関係 | `python_indexer.py` |
-| Pydantic・根拠検証 | `schemas.py` / `validation.py` |
-| 音の規則 | `packages/groove-core/src/compiler.ts` / `arrangement.ts` |
-| ツリー／演奏／主デモ | `RepositoryTree.tsx` / `Arrangement.tsx` / `DemoComparison.tsx` |
-| UIの合成 | `ReviewWorkspace.tsx` / `App.tsx` |
-| 独立構文投影・順序対応 | `packages/repo-indexer/src/structure.ts` |
-| 構造譜面・中立音源 | `packages/groove-core/src/structure.ts` / `structure-sound.ts` |
-| 比較選択・今回の根拠検証 | `structure.py` / `comparison-system-v1.txt` |
-| 構造比較UI・端末内記録 | `StructureComparisonPanel.tsx` / `comparisonState.ts` / `audio/structurePlayer.ts` |
+| Web | コードの閲覧、演奏、根拠選択、Agentへの質問、差分の確認 |
+| API | 認証、所有権、入力の検証、ジョブの作成と状態取得 |
+| worker | 信頼済みパーサーによる静的索引、Geminiによる調査、根拠の検証 |
+| Firestore | プロジェクト、ジョブ、実行状態、利用枠 |
+| Cloud Storage | ソースのスナップショット、解析結果、譜面 |
+| Firebase Auth | 利用者の認証 |
 
-CSSはbase・studio・workspace・review・demoに分割し、既存cascade順を保持しています。大きいAPIとJobServiceを無理に同時全面改稿せず、意味統合とモデル実行を独立境界へ切り出しました。
+Agentはコード読取や関連探索のツールを使って調査し、根拠付きの解析結果を提出します。アプリが読取記録、出力形式、時間・トークン予算を検証します。解析対象のコードを実行するツールは提供しません。
 
-`prompts/conductor-system-v1.txt`というパスは互換性のため保持し、論理版はv14です。名前による版の推測を避け、mapとcacheにprompt_versionを保存します。旧解析のorigin・prompt・scopeは更新しません。音だけ現行文法へcompileし直します。
+音は解析結果を固定規則で変換して生成します。Geminiが音楽そのものを作るわけではありません。同じ解析結果・規則・音源からは同じ譜面を生成します。
 
-[現行仕様](SPEC.md) / [意味と音](SONIFICATION.md) / [検証](acceptance.md)。旧説明は[履歴](history/R13/TECHNICAL_GUIDE.md)です。
+ソースは固定commitのスナップショットとして保存します。改善案を採用すると別のスナップショットを作り、元のコードと解析結果は保持します。元リポジトリへの書き込みは行いません。
 
-R15の構造投影・譜面は意味解析map／ScoreSceneとは別の生成経路です。サーバーが不変ソースを信頼されたNodeパーサーへ渡し、独立契約で検証します。比較用調査入口はscene_idを使わず、既存investigationジョブとして同じ予算・取消・read tool・CASを通ります。結果は別の比較記録に結び付け、従来の意味再分類には採用できません。端末メモ・JSONはクラウドDBへ送らず、人が追加調査を押したときの期待／観察／疑問だけを調査要求に含めます。[詳細](STRUCTURE_COMPARISON.md)。
+通信契約は`apps/backend/code_groove/schemas.py`で定義します。JSON SchemaとTypeScript型の生成方法は[開発手順](DEVELOPMENT.md)に記載しています。
+
+[データの流れ](data-flow.svg) · [処理シーケンス](sequence.svg) · [データの扱い](data-handling.md)
