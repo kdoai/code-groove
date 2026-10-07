@@ -348,6 +348,95 @@ html[data-theme='dark'] .midi-clip.has-review-candidate .clip-title small {
 .candidate-details ul {
   padding-left: 16px;
 }
+.review-listening {
+  padding: 12px;
+  border-top: 1px solid var(--line);
+  font-size: 11px;
+  line-height: 1.6;
+}
+.review-listening p {
+  margin: 6px 0;
+}
+.review-listening > small {
+  display: block;
+  color: var(--muted);
+}
+.listening-sides {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.listening-side {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 8px;
+  min-width: 0;
+}
+.listening-side.sounding {
+  border-color: var(--accent);
+}
+.listening-side:only-child {
+  grid-column: 1 / -1;
+}
+.listening-side label,
+.listening-side small {
+  display: block;
+  overflow-wrap: anywhere;
+}
+.listening-side select {
+  width: 100%;
+  min-width: 0;
+  margin: 4px 0;
+}
+.listening-side svg {
+  display: block;
+  width: 100%;
+  margin: 6px 0;
+}
+.listening-side svg text {
+  font-size: 10px;
+  fill: var(--muted);
+}
+.listening-bar {
+  stroke: var(--line);
+}
+.listening-point {
+  fill: var(--text);
+  stroke: var(--text);
+}
+.listening-melody {
+  fill: var(--accent);
+  opacity: 0.55;
+}
+.listening-events {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  max-height: 100px;
+  overflow: auto;
+}
+.listening-events button {
+  padding: 3px 5px;
+  font-size: 10px;
+  text-align: left;
+  white-space: normal;
+}
+.listening-events button.sounding {
+  background: var(--bg);
+  border-color: var(--accent);
+}
+.listening-controls {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin: 8px 0;
+}
+@media (max-width: 700px) {
+  .listening-sides {
+    grid-template-columns: 1fr;
+  }
+}
 .candidate-details p {
   margin: 5px 0;
 }

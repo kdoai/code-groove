@@ -2,6 +2,7 @@ import type { ReviewSignal } from '../../../../packages/contracts/SemanticMap';
 import type { Bundle } from '../api';
 import { counterStatusText, verdictText } from '../reviewNavigation';
 import { useWorkspace } from '../state';
+import { ReviewListening } from './ReviewListening';
 
 export function CandidateDetails({ bundle, signal }: { bundle: Bundle; signal: ReviewSignal }) {
   const ws = useWorkspace();
@@ -23,6 +24,11 @@ export function CandidateDetails({ bundle, signal }: { bundle: Bundle; signal: R
       <h3>{signal.label}</h3>
       <b>観察した違い</b>
       <p>{signal.comparison?.observed_difference || '別実装との対応を確認した観察は保存されていません。'}</p>
+      <ReviewListening
+        key={`${bundle.map.analysis_id}:${signal.signal_id}`}
+        bundle={bundle}
+        signal={signal}
+      />
       <b>Agentの解釈</b>
       <p>{signal.explanation}</p>
       <b>別の説明と確認状態</b>

@@ -529,6 +529,7 @@ export function StructureComparisonPanel({ bundle, close }: { bundle: Bundle; cl
                 <p>
                   96 BPM · 共通の音量設定 · 両側とも先頭{melodies.a.total_bars}
                   小節。配置・小節内の間隔と休符を保ちます。構文の対応行とは別の演奏範囲です。
+                  共通のベース・和音を外し、責務を識別する旋律と処理の打点を残します。旋律の反復回数は実行回数ではありません。
                 </p>
                 <div className="structure-controls">
                   {(['A', 'B', 'A→B'] as const).map((mode) => (
@@ -546,6 +547,8 @@ export function StructureComparisonPanel({ bundle, close }: { bundle: Bundle; cl
                   </span>
                 </div>
                 <small>
+                  {!!(melodies.paddingBars[0] + melodies.paddingBars[1]) &&
+                    `Aの末尾${melodies.paddingBars[0]}小節 / Bの末尾${melodies.paddingBars[1]}小節は長さを揃える休符で、コードの間隔ではありません。`}
                   Aの残り{melodies.omittedBars[0]}小節 / Bの残り{melodies.omittedBars[1]}
                   小節。保存された責務・意味キーが一対一で対応しない項目:{melodies.uncertainKeys.length}
                   件（対応不明）。音に反映できない値・条件の違いは両側のコードで確認します。

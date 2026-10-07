@@ -36,6 +36,8 @@ export function CallRelationshipsPanel({ bundle }: { bundle: Bundle }) {
     ? focusedExcerpt(
         original,
         events.map((event) => event.event_id),
+        4,
+        bundle.map.events.filter((event) => event.state === 'grounded').map((event) => event.event_id),
       )
     : undefined;
   function source(title: string, span: Span) {
@@ -141,9 +143,15 @@ export function CallRelationshipsPanel({ bundle }: { bundle: Bundle }) {
               </button>
               {auditionState !== 'idle' && <button onClick={() => engine.pause()}>関係の試聴を取消</button>}
               <small>
-                音は根拠と重なる保存済み意味イベントだけです。譜面上の順序で最大10秒、小節内の間隔を保ち対象外の小節を省略します。実行順ではありません。未調査箇所には音を追加しません。
+                根拠に関連する周辺実装の責務の旋律と処理の打点を、最大10秒聴きます。小節内の間隔を保ち、対象外の小節を省略します。実行順や実行されたreturn経路ではありません。未調査箇所には音を追加しません。
               </small>
               {!!excerpt?.omittedBars && <small>残り{excerpt.omittedBars}小節は省略しています。</small>}
+              {!!excerpt?.omittedEventIds.length && (
+                <small>
+                  関係に重なる打点のうち{excerpt.omittedEventIds.length}
+                  件は範囲外です。根拠コードで確認してください。
+                </small>
+              )}
               {error && <p role="alert">{error}</p>}
             </article>
           )}
