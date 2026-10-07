@@ -15,6 +15,7 @@
 | コードの送信、保存、削除 | [データの扱い](data-handling.md) |
 | 利用上限と費用 | [費用と上限](cost-plan.md) |
 | 依存関係の管理 | [依存関係](dependencies.md) |
+| 第三者コード・音源・配布物の利用条件 | [ライセンス](LICENSES.md) |
 | 技術検証の範囲 | [検証](acceptance.md) |
 | 保存済み解析の説明・根拠・反証の評価 | [解釈評価](INTERPRETATION_EVALUATION.md) |
 | 運用 | [運用手順](runbook.md) |
