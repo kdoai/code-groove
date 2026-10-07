@@ -184,10 +184,24 @@ test('playback resumes source following after reference selection and highlights
     .toBe(true);
   await expect(page.locator('.code-highlight')).not.toHaveCount(0);
   await expect(page.locator('.reference-code-note')).toHaveCount(0);
-  await page.getByRole('button', { name: 'Pause', exact: true }).click();
+  await expect(page.getByTestId('position-context')).toContainText('演奏中');
+  await expect(page.getByTestId('position-context')).not.toContainText('責務の対応なし');
+  await page.locator('.tree-file[title^="agents/main.py"]').click();
+  await expect(page.getByTestId('code-location')).toContainText('agents/main.py');
+  await expect(page.locator('.composer-now')).toContainText('コード表示は手動選択を保持');
+  await page.getByRole('button', { name: '演奏位置の根拠へ', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Play', exact: true })).toBeVisible();
+  await expect(page.getByTestId('code-location')).not.toContainText('agents/main.py');
+  await expect(page.getByTestId('position-context')).toContainText('閲覧中');
+  await expect(page.getByRole('button', { name: '演奏に追従', exact: true })).toHaveAttribute(
+    'aria-pressed',
+    'false',
+  );
+  await page.getByRole('button', { name: '演奏に追従', exact: true }).click();
   await page.locator('.review-focus summary').click();
   await page.locator('.review-focus-item').last().getByRole('button', { name: '伴奏なしで聴く' }).click();
   await expect(page.getByRole('button', { name: 'Pause', exact: true })).toBeVisible();
+  await expect(page.getByTestId('position-context')).toContainText('試聴');
   const state = await page.evaluate(
     () => JSON.parse(localStorage.getItem('code-groove-workspace-v1')!).state,
   );

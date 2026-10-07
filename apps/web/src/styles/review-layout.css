@@ -1,7 +1,7 @@
 .review-center .arrangement {
   position: relative;
   flex: 0 1 auto;
-  max-height: 44%;
+  max-height: max(44%, 280px);
   overflow: visible;
   background: var(--surface);
   color: var(--text);
@@ -413,7 +413,7 @@ html[data-theme='dark'] .midi-clip.has-review-candidate .clip-title small {
 }
 @media (max-height: 650px) {
   .review-center .arrangement {
-    max-height: 46%;
+    max-height: max(46%, 248px);
   }
   .review-center .arrangement .arrangement-title {
     height: 40px;
