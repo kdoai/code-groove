@@ -111,14 +111,18 @@ def main():
             assert max(abs(pcm[:44])) < 0.012 and max(abs(pcm[-44:])) < 0.001
         report.append({"file": entry["file"], "peak": round(float(max(abs(pcm))), 6)})
     target = KIT / "manifest.json"
+    notice = (
+        "Recorded bass and piano: tonejs-instruments, edited by Nicholaus P. Brosowsky.\nBass original: Karoryfer; piano original: VSO2.\nhttps://github.com/nbrosowsky/tonejs-instruments\nLicensed CC BY 3.0: https://creativecommons.org/licenses/by/3.0/\nCode Groove edits: mono PCM conversion, filtering, normalization, smooth attack/release, bounded duration.\nVibes and unused percussion: authored by Code Groove (MIT). No percussion is scheduled.\nPinned sources and hashes: assets/audio-source/sources.json in the repository.\n"
+        "\nThe following MIT terms apply only to the Code Groove-authored Vibes and\n"
+        "percussion listed above. Recorded bass and piano retain CC BY 3.0 terms.\n\n"
+        + (ROOT / "LICENSE").read_text(encoding="utf-8")
+    )
     if args.verify:
         assert json.loads(target.read_text(encoding="utf-8")) == manifest
+        assert (KIT / "NOTICE.txt").read_text(encoding="utf-8") == notice
     else:
         target.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
-        (KIT / "NOTICE.txt").write_text(
-            "Recorded bass and piano: tonejs-instruments, edited by Nicholaus P. Brosowsky.\nBass original: Karoryfer; piano original: VSO2.\nhttps://github.com/nbrosowsky/tonejs-instruments\nLicensed CC BY 3.0: https://creativecommons.org/licenses/by/3.0/\nCode Groove edits: mono PCM conversion, filtering, normalization, smooth attack/release, bounded duration.\nVibes and unused percussion: authored by Code Groove (MIT). No percussion is scheduled.\nPinned sources and hashes: assets/audio-source/sources.json in the repository.\n",
-            encoding="utf-8",
-        )
+        (KIT / "NOTICE.txt").write_text(notice, encoding="utf-8")
     print(
         json.dumps(
             {

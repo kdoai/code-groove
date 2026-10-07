@@ -15,6 +15,7 @@ COPY --from=uvbin /uv /usr/local/bin/uv
 COPY --from=webbuild /usr/local/bin/node /usr/local/bin/node
 WORKDIR /app
 COPY pyproject.toml uv.lock ./
+COPY LICENSE ./
 RUN uv sync --frozen --no-dev && useradd --uid 10001 --create-home groove
 COPY apps/backend apps/backend
 COPY prompts prompts
