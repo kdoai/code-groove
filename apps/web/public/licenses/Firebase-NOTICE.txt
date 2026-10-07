@@ -1,0 +1,23 @@
+Firebase JavaScript SDK and bundled @firebase modules
+
+firebase 12.19.0
+@firebase/app 0.16.2
+@firebase/auth 1.13.6
+@firebase/component 0.7.5
+@firebase/logger 0.5.2
+@firebase/util 1.15.3
+
+Copyright 2017 Google LLC
+Copyright 2019 Google LLC
+Copyright 2020 Google LLC
+Copyright 2020 Google LLC.
+Copyright 2021 Google LLC
+Copyright 2022 Google LLC
+Copyright 2023 Google LLC
+Copyright 2025 Google LLC
+
+Upstream LICENSE: https://raw.githubusercontent.com/firebase/firebase-js-sdk/9045b759b70e9d19b8cf007d69d988893d845a1e/LICENSE
+Upstream LICENSE SHA-256: 065e45b5674f9bf76670496e5472611b3fbd87fbeaf99336725430a9909cb687
+License: Apache-2.0; upstream LICENSE also retains bundled-library exceptions.
+See Firebase-LICENSE.txt for the full terms.
+Code Groove bundles these modules; no source edits.
