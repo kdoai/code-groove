@@ -41,6 +41,7 @@ export type RepositoryReference = {
   sources: Record<string, string>;
   source_sha256: Record<string, string>;
 };
+export type { PullRequestNavigation } from '../../../packages/contracts';
 export type RepositoryStatus = {
   snapshot_id: string;
   eligible_source_files: number;

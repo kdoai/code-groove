@@ -1,0 +1,230 @@
+{
+  "$defs": {
+    "PullRequestChange": {
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Path",
+          "type": "string"
+        },
+        "previous_path": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Previous Path"
+        },
+        "status": {
+          "maxLength": 40,
+          "title": "Status",
+          "type": "string"
+        },
+        "additions": {
+          "minimum": 0,
+          "title": "Additions",
+          "type": "integer"
+        },
+        "deletions": {
+          "minimum": 0,
+          "title": "Deletions",
+          "type": "integer"
+        },
+        "patch_missing": {
+          "title": "Patch Missing",
+          "type": "boolean"
+        },
+        "patch_incomplete": {
+          "title": "Patch Incomplete",
+          "type": "boolean"
+        },
+        "ranges_truncated": {
+          "title": "Ranges Truncated",
+          "type": "boolean"
+        },
+        "source_available": {
+          "title": "Source Available",
+          "type": "boolean"
+        },
+        "changed_spans": {
+          "items": {
+            "$ref": "#/$defs/Span"
+          },
+          "maxItems": 64,
+          "title": "Changed Spans",
+          "type": "array"
+        },
+        "unit_ids": {
+          "items": {
+            "pattern": "^[a-zA-Z0-9_-]{1,80}$",
+            "type": "string"
+          },
+          "maxItems": 96,
+          "title": "Unit Ids",
+          "type": "array"
+        },
+        "direct_unit_ids": {
+          "items": {
+            "pattern": "^[a-zA-Z0-9_-]{1,80}$",
+            "type": "string"
+          },
+          "maxItems": 96,
+          "title": "Direct Unit Ids",
+          "type": "array"
+        },
+        "signal_ids": {
+          "items": {
+            "pattern": "^[a-zA-Z0-9_-]{1,80}$",
+            "type": "string"
+          },
+          "maxItems": 96,
+          "title": "Signal Ids",
+          "type": "array"
+        },
+        "evidence_ids": {
+          "items": {
+            "pattern": "^[a-zA-Z0-9_-]{1,80}$",
+            "type": "string"
+          },
+          "maxItems": 96,
+          "title": "Evidence Ids",
+          "type": "array"
+        },
+        "evidence_truncated": {
+          "title": "Evidence Truncated",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "path",
+        "previous_path",
+        "status",
+        "additions",
+        "deletions",
+        "patch_missing",
+        "patch_incomplete",
+        "ranges_truncated",
+        "source_available",
+        "changed_spans",
+        "unit_ids",
+        "direct_unit_ids",
+        "signal_ids",
+        "evidence_ids",
+        "evidence_truncated"
+      ],
+      "title": "PullRequestChange",
+      "type": "object"
+    },
+    "Span": {
+      "additionalProperties": false,
+      "properties": {
+        "file_id": {
+          "pattern": "^[a-zA-Z0-9_-]{1,80}$",
+          "title": "File Id",
+          "type": "string"
+        },
+        "path": {
+          "maxLength": 240,
+          "minLength": 1,
+          "title": "Path",
+          "type": "string"
+        },
+        "start_line": {
+          "minimum": 1,
+          "title": "Start Line",
+          "type": "integer"
+        },
+        "end_line": {
+          "minimum": 1,
+          "title": "End Line",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "file_id",
+        "path",
+        "start_line",
+        "end_line"
+      ],
+      "title": "Span",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "url": {
+      "maxLength": 300,
+      "title": "Url",
+      "type": "string"
+    },
+    "head_sha": {
+      "pattern": "^[0-9a-f]{40}$",
+      "title": "Head Sha",
+      "type": "string"
+    },
+    "base_sha": {
+      "pattern": "^[0-9a-f]{40}$",
+      "title": "Base Sha",
+      "type": "string"
+    },
+    "snapshot_revision": {
+      "pattern": "^[0-9a-f]{40}$",
+      "title": "Snapshot Revision",
+      "type": "string"
+    },
+    "head_repository_url": {
+      "maxLength": 300,
+      "title": "Head Repository Url",
+      "type": "string"
+    },
+    "snapshot_id": {
+      "pattern": "^[a-zA-Z0-9_-]{1,80}$",
+      "title": "Snapshot Id",
+      "type": "string"
+    },
+    "matches_snapshot": {
+      "title": "Matches Snapshot",
+      "type": "boolean"
+    },
+    "truncated": {
+      "title": "Truncated",
+      "type": "boolean"
+    },
+    "files": {
+      "items": {
+        "$ref": "#/$defs/PullRequestChange"
+      },
+      "maxItems": 300,
+      "title": "Files",
+      "type": "array"
+    },
+    "limitations": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 8,
+      "title": "Limitations",
+      "type": "array"
+    }
+  },
+  "required": [
+    "url",
+    "head_sha",
+    "base_sha",
+    "snapshot_revision",
+    "head_repository_url",
+    "snapshot_id",
+    "matches_snapshot",
+    "truncated",
+    "files",
+    "limitations"
+  ],
+  "title": "PullRequestNavigation",
+  "type": "object"
+}

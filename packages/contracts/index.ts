@@ -1,4 +1,5 @@
 export type { CallRelationships } from './CallRelationships';
+export type { PullRequestNavigation } from './PullRequestNavigation';
 export type { SemanticMap } from './SemanticMap';
 export type { ScoreBundle } from './ScoreBundle';
 export type { InvestigationResult } from './InvestigationResult';

@@ -21,6 +21,7 @@ from code_groove.http_limits import BodyLimitMiddleware
 from code_groove.improvements import apply_edits, source_hash
 from code_groove.incremental import INDEX_VERSION
 from code_groove.jobs import DAILY_ANALYSIS_LIMIT, JobService
+from code_groove.pull_requests import pull_request_data
 from code_groove.reconciliation import reconciliation_scope
 from code_groove.relationships import relationship_data
 from code_groove.repository import plan_repository, repository_status, validate_local_sources
@@ -789,6 +790,55 @@ def create_app(settings: Settings | None = None, verifier: Callable[[str], str] 
         snapshot = artifacts.get(meta["snapshot_key"])
         semantic = artifacts.get(meta["artifact_key"])["map"]
         return {"data": relationship_data(snapshot, semantic, unit_id)}
+
+    @app.get("/api/v1/analyses/{analysis_id}/pull-request")
+    async def analysis_pull_request(analysis_id: str, user: User, url: str = Query(max_length=300)) -> dict:
+        meta = own("analyses", analysis_id, user)
+        project = own("projects", meta["project_id"], user)
+        snapshot = artifacts.get(meta["snapshot_key"])
+        bundle = artifacts.get(meta["artifact_key"])
+        case = bundle.get("case_study")
+        source = project["source"]
+        if source["kind"] == "github_public":
+            repository_url, revision = source["url"], snapshot["sha"]
+        elif case:
+            original = sample_bundle("recorded-tsugiai-agents")["data"]
+            if (
+                case["revision"] != original["case_study"]["revision"]
+                or snapshot["sources"] != original["sources"]
+            ):
+                raise GrooveError(
+                    "PR_CONTEXT_UNAVAILABLE",
+                    "変更後の提供スナップショットはGitHub版との同一性を確認できません。",
+                )
+            repository_url = "/".join(case["repository_url"].split("/")[:5])
+            revision = case["revision"]
+        else:
+            raise GrooveError("PR_CONTEXT_UNAVAILABLE", "GitHubの固定版を持つ解析でPRを開いてください。")
+        return {"data": await pull_request_data(url, repository_url, revision, snapshot, bundle["map"])}
+
+    @app.get("/api/v1/samples/{sample_id}/pull-request")
+    async def sample_pull_request(sample_id: str, url: str = Query(max_length=300)) -> dict:
+        bundle = sample_bundle(sample_id)["data"]
+        case = bundle.get("case_study")
+        if not case:
+            raise GrooveError(
+                "PR_CONTEXT_UNAVAILABLE", "GitHubの固定版を持つ公開サンプルでPRを開いてください。"
+            )
+        snapshot = {
+            "snapshot_id": bundle["map"]["snapshot_id"],
+            "sources": bundle["sources"],
+            "index": {
+                "files": [
+                    {"file_id": span["file_id"], "path": span["path"]}
+                    for span in [unit["primary_span"] for unit in bundle["map"]["units"]]
+                ]
+            },
+        }
+        repository_url = "/".join(case["repository_url"].split("/")[:5])
+        return {
+            "data": await pull_request_data(url, repository_url, case["revision"], snapshot, bundle["map"])
+        }
 
     @app.post("/api/v1/analyses/{analysis_id}/comparison-investigations", status_code=202)
     def compare_investigation(

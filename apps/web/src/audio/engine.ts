@@ -251,6 +251,22 @@ class GrooveEngine {
   get playing() {
     return Tone.getTransport().state === 'started';
   }
+  get soundingNotes() {
+    if (!this.playing) return [];
+    const tick = Math.max(0, (Tone.getTransport().seconds * 480 * 96) / 60);
+    return (this.plan?.notes ?? []).filter((note) => {
+      if (note.tick > tick || tick >= note.tick + note.duration_ms * 0.768) return false;
+      if (this.audition) return true;
+      if (this.supportMuted && note.kind === 'accompaniment') return false;
+      if (this.instruments.has(note.voice)) return false;
+      if (note.kind === 'pulse') return !this.pulseMuted;
+      const responsibility = note.responsibility_id;
+      return (
+        !responsibility ||
+        (!this.muted.has(responsibility) && (!this.solo.size || this.solo.has(responsibility)))
+      );
+    });
+  }
   get playbackSession() {
     return this.playbackSequence;
   }

@@ -35,6 +35,7 @@ describe('temporary audition restoration', () => {
     vi.useFakeTimers();
     vi.stubGlobal('document', { addEventListener: vi.fn() });
     transport.seconds = 0;
+    transport.state = 'paused';
     transport.schedule.mockClear();
     transport.start.mockClear();
   });
@@ -105,5 +106,21 @@ describe('temporary audition restoration', () => {
     staleEnd(0);
     expect(engine.getAuditionState()).toBe('playing');
     engine.pause();
+  });
+  it('reports the temporary sounding note while preserving the original playhead and mute settings', async () => {
+    const engine = await setup();
+    const note = { ...excerpt.notes[0], tick: 0, duration_ms: 500 };
+    engine.setFilters([note.responsibility_id!], [], true);
+    engine.setInstrumentMutes([note.voice]);
+    await engine.playAudition({ ...excerpt, notes: [note] });
+    transport.state = 'started';
+    transport.seconds = 0.1;
+    expect(engine.soundingNotes).toEqual([note]);
+    expect(engine.tick).toBe(1920);
+    transport.seconds = 0.6;
+    expect(engine.soundingNotes).toEqual([]);
+    engine.pause();
+    expect(engine.tick).toBe(1920);
+    expect(engine.soundingNotes.some((n) => n.voice === note.voice)).toBe(false);
   });
 });

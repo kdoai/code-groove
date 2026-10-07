@@ -8,6 +8,7 @@ async function writeGenerated(path, content) {
 let result = '';
 for (const name of [
   'CallRelationships',
+  'PullRequestNavigation',
   'SemanticMap',
   'ScoreBundle',
   'InvestigationResult',

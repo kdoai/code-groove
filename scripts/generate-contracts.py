@@ -12,6 +12,7 @@ from code_groove.schemas import (  # noqa: E402
     ComparisonInvestigationResult,
     ImprovementProposal,
     InvestigationResult,
+    PullRequestNavigation,
     ScoreBundle,
     SemanticMap,
     StructureComparison,
@@ -23,6 +24,7 @@ parser.add_argument("--check", action="store_true")
 args = parser.parse_args()
 for model in (
     CallRelationships,
+    PullRequestNavigation,
     SemanticMap,
     ScoreBundle,
     InvestigationResult,

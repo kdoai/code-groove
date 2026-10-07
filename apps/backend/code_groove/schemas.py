@@ -486,3 +486,34 @@ class ImprovementProposal(ImprovementCandidate):
     evidence: list[Evidence]
     diff: str = Field(max_length=64000)
     status: Literal["draft", "accepted", "rejected"] = "draft"
+
+
+class PullRequestChange(Contract):
+    path: str = Field(min_length=1, max_length=500)
+    previous_path: str | None = Field(max_length=500)
+    status: str = Field(max_length=40)
+    additions: int = Field(ge=0)
+    deletions: int = Field(ge=0)
+    patch_missing: bool
+    patch_incomplete: bool
+    ranges_truncated: bool
+    source_available: bool
+    changed_spans: list[Span] = Field(max_length=64)
+    unit_ids: Ids
+    direct_unit_ids: Ids
+    signal_ids: Ids
+    evidence_ids: Ids
+    evidence_truncated: bool
+
+
+class PullRequestNavigation(Contract):
+    url: str = Field(max_length=300)
+    head_sha: str = Field(pattern=r"^[0-9a-f]{40}$")
+    base_sha: str = Field(pattern=r"^[0-9a-f]{40}$")
+    snapshot_revision: str = Field(pattern=r"^[0-9a-f]{40}$")
+    head_repository_url: str = Field(max_length=300)
+    snapshot_id: Id
+    matches_snapshot: bool
+    truncated: bool
+    files: list[PullRequestChange] = Field(max_length=300)
+    limitations: list[str] = Field(max_length=8)

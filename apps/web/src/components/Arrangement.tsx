@@ -64,28 +64,19 @@ export function Arrangement({
       const left = `${Math.min(100, (engine.tick / total) * 100)}%`;
       trackHeads.current.forEach((head) => (head.style.left = left));
       if (now - last > 90) {
-        const sounding =
-          engine.playing && engine.getAuditionState() === 'idle'
-            ? musical.filter(
-                (n) =>
-                  !ws.instrumentMutes.includes(n.voice) &&
-                  !(ws.focusEvidence && n.kind === 'accompaniment') &&
-                  !(
-                    n.responsibility_id &&
-                    (ws.muted.includes(n.responsibility_id) ||
-                      (ws.solo.length > 0 && !ws.solo.includes(n.responsibility_id)))
-                  ) &&
-                  n.tick <= engine.tick &&
-                  engine.tick < n.tick + n.duration_ms * 0.768,
-              )
-            : [];
+        const sounding = engine.soundingNotes;
         setActive(sounding);
         const linked =
           sounding.find((n) => n.kind === 'cue') ??
           sounding.find((n) => n.kind === 'data') ??
           sounding.find((n) => n.event_id);
         const selection = useWorkspace.getState();
-        if (following && linked && (selection.eventId !== linked.event_id || selection.codeSpan)) {
+        if (
+          following &&
+          engine.getAuditionState() === 'idle' &&
+          linked &&
+          (selection.eventId !== linked.event_id || selection.codeSpan)
+        ) {
           select(linked, false);
         }
         last = now;
@@ -115,6 +106,26 @@ export function Arrangement({
     active.find((n) => n.kind === 'data') ??
     active.find((n) => n.event_id);
   const event = bundle.map.events.find((e) => e.event_id === current?.event_id);
+  const displayedEvent =
+    event ?? (!ws.codeSpan ? bundle.map.events.find((e) => e.event_id === ws.eventId) : undefined);
+  const displayedUnit = bundle.map.units.find(
+    (u) =>
+      u.unit_id === displayedEvent?.unit_id ||
+      (!displayedEvent &&
+        (ws.codeSpan
+          ? u.primary_span.path === ws.codeSpan.path &&
+            u.primary_span.start_line <= ws.codeSpan.start_line &&
+            u.primary_span.end_line >= ws.codeSpan.end_line
+          : u.unit_id === ws.unitId)),
+  );
+  const responsibility = bundle.map.responsibilities.find(
+    (r) => r.responsibility_id === displayedEvent?.responsibility_id,
+  );
+  const readingSpan =
+    ws.codeSpan ??
+    bundle.map.events.find((e) => e.event_id === ws.eventId)?.span ??
+    displayedUnit?.primary_span;
+  const positionSpan = event?.span ?? readingSpan;
   const supports = [
     { name: 'Bass', voices: ['bass'], detail: '低音の土台' },
     { name: 'Piano', voices: ['piano'], detail: '和音の伴奏' },
@@ -436,18 +447,44 @@ export function Arrangement({
           event ? `${event.span.path}:${event.span.start_line}–${event.span.end_line}` : undefined
         }
       >
-        <span role="status" data-testid="audition-status">
-          {audioError ||
-            (auditionState !== 'idle'
-              ? auditionState === 'loading'
-                ? '対象の音を準備中 · 再生設定は保持'
-                : `対象の旋律だけ試聴中 · ${engine.auditionDurationSeconds}秒の範囲`
-              : event
-                ? `演奏中 · ${event.label}`
-                : active.length
-                  ? '発音中：共通伴奏（コード根拠なし）'
-                  : '音を選ぶと、下のコードに根拠を表示')}
+        <span data-testid="audition-status">
+          <strong data-testid="position-context">
+            {auditionState !== 'idle' ? '試聴' : event ? '演奏中' : '閲覧中'}
+            {' · '}
+            {responsibility?.label ?? '責務の対応なし'}
+            {displayedUnit && ` / ${displayedUnit.label}`}
+          </strong>
+          {positionSpan && (
+            <small data-testid="position-location">
+              {positionSpan.path}:{positionSpan.start_line}–{positionSpan.end_line}
+            </small>
+          )}
+          <small className="position-detail">
+            {audioError ||
+              (auditionState !== 'idle'
+                ? auditionState === 'loading'
+                  ? '対象の音を準備中 · 再生設定は保持'
+                  : `対象の旋律だけ試聴中 · ${engine.auditionDurationSeconds}秒の範囲`
+                : event
+                  ? `演奏中 · ${event.label}`
+                  : active.length
+                    ? '発音中：共通伴奏（コード根拠なし）'
+                    : '音を選ぶと、下のコードに根拠を表示')}
+            {event && !following && auditionState === 'idle' && ' · コード表示は手動選択を保持'}
+          </small>
         </span>
+        {event && current && (
+          <button
+            className="position-return"
+            onClick={() => {
+              engine.pause();
+              select(current, false);
+              ws.set({ following: false });
+            }}
+          >
+            演奏位置の根拠へ
+          </button>
+        )}
         {auditionState !== 'idle' ? (
           <button className="audition" onClick={() => engine.pause()}>
             試聴を取消

@@ -320,7 +320,7 @@ export default function App() {
       setStarting(false);
     }
   }
-  async function openRepo(url?: string, scopePath?: string, snapshot?: ImportSnapshot) {
+  async function openRepo(url?: string, scopePath?: string, snapshot?: ImportSnapshot, ref?: string) {
     if (!currentUser) {
       setModal('auth');
       return;
@@ -336,7 +336,7 @@ export default function App() {
         snapshot ? '/projects/import' : '/projects',
         snapshot ?? {
           source: url
-            ? { kind: 'github_public', url, scope_path: scopePath || null }
+            ? { kind: 'github_public', url, scope_path: scopePath || null, ...(ref ? { ref } : {}) }
             : { kind: 'sample', sample_id: ws.sampleId.replace(/^recorded-/, '') || 'mixed' },
         },
       );
@@ -753,7 +753,12 @@ export default function App() {
           <button onClick={() => setModal('repository')}>検査範囲を確認</button>
         </main>
       ) : data && plan ? (
-        <ReviewWorkspace bundle={data} plan={plan}>
+        <ReviewWorkspace
+          bundle={data}
+          plan={plan}
+          analyzeHead={(url, sha) => void openRepo(url, undefined, undefined, sha)}
+          pending={starting}
+        >
           <AgentPanel
             question={agentQuestion}
             setQuestion={setAgentQuestion}
