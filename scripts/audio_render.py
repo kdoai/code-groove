@@ -14,7 +14,7 @@ def render_plan(plan: dict, focus_evidence: bool = False) -> np.ndarray:
     buffers = {}
     pcm = np.zeros((round((plan["total_bars"] * 2.5 + 1) * RATE), 2))
     for note in plan["notes"]:
-        if focus_evidence and note["kind"] == "accompaniment":
+        if focus_evidence and note["kind"] == "accompaniment" and not note.get("event_id"):
             continue
         bank = [s for s in samples if s["voice"] == note["voice"]]
         sample = (

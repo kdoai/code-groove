@@ -121,7 +121,7 @@ class GrooveEngine {
         transport.schedule((time) => {
           if (this.planSequence !== generation) return;
           const responsibility = note.responsibility_id ?? '';
-          if (!this.audition && this.supportMuted && note.kind === 'accompaniment') return;
+          if (!this.audition && this.supportMuted && note.kind === 'accompaniment' && !note.event_id) return;
           if (!this.audition && this.instruments.has(note.voice)) return;
           if (
             !this.audition &&
@@ -248,6 +248,9 @@ class GrooveEngine {
   get auditionDurationSeconds() {
     return this.audition ? (this.plan?.total_bars ?? 0) * 2.5 : 0;
   }
+  get auditionSceneId() {
+    return this.audition ? this.plan?.scene_id : undefined;
+  }
   get playing() {
     return Tone.getTransport().state === 'started';
   }
@@ -257,7 +260,7 @@ class GrooveEngine {
     return (this.plan?.notes ?? []).filter((note) => {
       if (note.tick > tick || tick >= note.tick + note.duration_ms * 0.768) return false;
       if (this.audition) return true;
-      if (this.supportMuted && note.kind === 'accompaniment') return false;
+      if (this.supportMuted && note.kind === 'accompaniment' && !note.event_id) return false;
       if (this.instruments.has(note.voice)) return false;
       if (note.kind === 'pulse') return !this.pulseMuted;
       const responsibility = note.responsibility_id;
