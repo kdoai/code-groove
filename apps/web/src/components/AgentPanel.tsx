@@ -84,7 +84,7 @@ export function AgentPanel({
   const event = bundle.map.events.find((e) => e.event_id === ws.eventId);
   const unit = bundle.map.units.find((u) => u.unit_id === ws.unitId) ?? bundle.map.units[0];
   const supportingFile =
-    !!ws.codeSpan && !bundle.map.units.some((u) => u.primary_span.path === ws.codeSpan?.path);
+    !!ws.codeSpan && (!ws.unitId || !bundle.map.units.some((u) => u.primary_span.path === ws.codeSpan?.path));
   const selectedSignal =
     bundle.map.review_signals?.find((s) => s.signal_id === ws.signalId) ??
     (supportingFile
@@ -173,10 +173,20 @@ export function AgentPanel({
         {selectedSignal && ws.signalId && <CandidateDetails bundle={bundle} signal={selectedSignal} />}
         {(!selectedSignal || overview) && (
           <>
-            <h3>{supportingFile ? '関連資料・型定義' : overview ? 'この音が表す役割' : 'この箇所の判断'}</h3>
+            <h3>
+              {supportingFile
+                ? !ws.unitId
+                  ? '選択行の解釈は未対応'
+                  : '関連資料・型定義'
+                : overview
+                  ? 'この音が表す役割'
+                  : 'この箇所の判断'}
+            </h3>
             <p>
               {supportingFile
-                ? 'このファイルに直接の発音イベントはありません。Agentが実装の意味を判断する際の関連資料として確認できます。'
+                ? !ws.unitId
+                  ? 'この行範囲に対応する実装を選んでいません。対応が不明な範囲へ別の実装の説明を割り当てません。'
+                  : 'このファイルに直接の発音イベントはありません。Agentが実装の意味を判断する際の関連資料として確認できます。'
                 : (event?.meaning ?? unit?.boundary_reason)}
             </p>
           </>

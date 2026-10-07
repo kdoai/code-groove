@@ -7,6 +7,7 @@ import { engine } from '../audio/engine';
 import { useWorkspace } from '../state';
 import { DirectoryTree, sourceTree } from './RepositoryTree';
 import { Arrangement } from './Arrangement';
+import { PullRequestEvidence } from './PullRequestEvidence';
 export { SampleSwitch } from './SampleSwitch';
 const CodePanel = lazy(() => import('./CodePanel').then((module) => ({ default: module.CodePanel })));
 const StructureComparisonPanel = lazy(() =>
@@ -17,10 +18,14 @@ export function ReviewWorkspace({
   bundle,
   plan,
   children,
+  analyzeHead,
+  pending,
 }: {
   bundle: Bundle;
   plan: ScorePlan;
   children: React.ReactNode;
+  analyzeHead: (url: string, sha: string) => void;
+  pending: boolean;
 }) {
   const ws = useWorkspace();
   const following = ws.following;
@@ -126,6 +131,12 @@ export function ReviewWorkspace({
             ファイルを表示しています。
           </p>
         )}
+        <PullRequestEvidence
+          key={`${bundle.map.analysis_id}:${bundle.map.snapshot_id}`}
+          bundle={bundle}
+          analyzeHead={analyzeHead}
+          pending={pending}
+        />
         <div className="file-list" data-testid="repository-tree">
           <DirectoryTree
             nodes={sourceTree(sourcePaths)}
