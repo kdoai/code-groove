@@ -76,22 +76,17 @@ Code Grooveでは、Agentがコードの役割である「責務」と処理の�
 ## アーキテクチャ・技術スタック
 
 ```mermaid
-flowchart LR
-  Input[固定commit / 提供スナップショット] --> Read[入力検証・静的索引]
-  Web[React Web画面] --> API[FastAPI / Cloud Run web]
-  API --> Read
-  API -->|利用者の明示的な解析要求| Tasks[Cloud Tasks]
-  Tasks --> Worker[非公開 Cloud Run worker]
-  Read -->|解析要求時のみ| Agent[Gemini Agentの読取・関連探索]
-  Worker --> Agent
-  Agent --> Evidence[根拠と限界を検証した解析結果]
-  Evidence --> Score[固定規則による譜面生成]
-  Evidence --> Store[Cloud Storage: ソース・解析結果・譜面]
-  Score --> Store
+flowchart TB
+  Code[固定版コード] --> Read[入力検証・静的読取]
+  Web[React Web / Firebase Auth] --> API[FastAPI / Cloud Run]
+  API -->|明示的な解析要求| Job[Cloud Tasks / 非公開worker]
+  Job --> Agent[Gemini Agent: 関連探索]
+  Read --> Agent
+  Agent --> Result[根拠付き解析 / 固定規則の譜面生成]
+  Result --> Store[Cloud Storage: ソース・解析・譜面]
   Store --> API
-  API -->|保存済み結果を取得| Web
-  Web --> Play[Tone.js: 音・タイムライン・根拠コード]
-  Auth[Firebase Auth] --> API
+  API -->|保存済み結果| Web
+  Web --> Play[再生: Tone.js / 根拠表示: Monaco]
   API --> Meta[Firestore: 所有権・ジョブ・利用枠]
 ```
 
@@ -138,12 +133,10 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-  Demo[公開デモを開く] --> Listen[責務の関係を聴く]
-  Listen --> Select[音・確認候補を選ぶ]
-  Demo -->|音なしでも| Select
-  Select --> Read[コード・別解・未確認事項を読む]
-  Read --> Compare[必要なら短く試聴・比較]
-  Compare --> Decide[人が判断・メモする]
+  Demo[公開デモ] --> Select[聴く・選ぶ]
+  Select --> Read[根拠・別解を読む]
+  Demo -->|音なしでも| Read
+  Read --> Decide[比べて判断・メモ]
 ```
 
 1. [アプリ](https://code-groove-web-a5ygiois2a-an.a.run.app)で「実画面のデモを見る」を開きます。
