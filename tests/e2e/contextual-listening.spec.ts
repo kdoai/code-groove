@@ -51,7 +51,15 @@ test('related implementations can be chosen at equal range and reread without cl
   await guide.getByRole('button', { name: 'A→Bのフレーズを聴く' }).click();
   await expect(guide.getByRole('status')).toHaveText('試聴中');
   await expect(guide.locator('.listening-side.sounding')).toHaveCount(1);
-  await guide.getByRole('button', { name: 'フレーズの試聴を取消' }).click();
+  await page.getByRole('button', { name: '演奏位置の根拠へ', exact: true }).click();
+  await expect(guide.getByLabel('試聴Bの実装')).toHaveValue(
+    (await guide
+      .getByLabel('試聴Bの実装')
+      .locator('option')
+      .filter({ hasText: /^save_check_response$/ })
+      .getAttribute('value')) as string,
+  );
+  await expect(guide.getByRole('status')).toHaveText('停止中');
   await guide.getByLabel('試聴Bの実装').selectOption({ label: 'set_services' });
   await expect(guide).toContainText('異なる二実装');
   await expect(guide.getByRole('button', { name: 'A→Bのフレーズを聴く' })).toBeDisabled();

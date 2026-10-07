@@ -482,10 +482,10 @@ export function Arrangement({
           <button
             className="position-return"
             onClick={() => {
-              const auditionSignal = auditionState !== 'idle' ? ws.signalId : '';
+              const auditionSignal = engine.auditionSceneId === `review_${ws.signalId}` ? ws.signalId : '';
               engine.pause();
-              select(current, false);
-              ws.set({ following: false, ...(auditionSignal ? { signalId: auditionSignal } : {}) });
+              select({ ...current, signal_id: auditionSignal || current.signal_id }, false);
+              ws.set({ following: false });
             }}
           >
             演奏位置の根拠へ
