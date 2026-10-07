@@ -10,7 +10,7 @@ import { focusedExcerpt } from '../audio/excerpts';
 import { playbackPlan } from '../audio/playback';
 import { useAudition } from '../hooks/useAudition';
 import { signalSelection } from '../reviewNavigation';
-const motifColors = ['#c7cfff', '#a6ddce', '#aad4ef', '#e4bfde', '#b8debd', '#edc4ae'];
+import { motifColors } from '../responsibilityColors';
 export function Arrangement({
   bundle,
   plan,
@@ -90,7 +90,12 @@ export function Arrangement({
     const eventIds = bundle.map.events
       .filter((item) => item.unit_id === ws.unitId && item.state === 'grounded')
       .map((item) => item.event_id);
-    const excerpt = focusedExcerpt(playbackPlan(bundle.score, ws.mode, 0, true) ?? plan, eventIds);
+    const excerpt = focusedExcerpt(
+      playbackPlan(bundle.score, 'repo', 0, true) ?? plan,
+      eventIds,
+      4,
+      bundle.map.events.filter((item) => item.state === 'grounded').map((item) => item.event_id),
+    );
     try {
       setAudioError('');
       await engine.playAudition(excerpt.plan, (note) => {
@@ -464,7 +469,7 @@ export function Arrangement({
               (auditionState !== 'idle'
                 ? auditionState === 'loading'
                   ? '対象の音を準備中 · 再生設定は保持'
-                  : `対象の旋律だけ試聴中 · ${engine.auditionDurationSeconds}秒の範囲`
+                  : `フレーズを試聴中 · ${engine.auditionDurationSeconds}秒の範囲`
                 : event
                   ? `演奏中 · ${event.label}`
                   : active.length
@@ -477,8 +482,9 @@ export function Arrangement({
           <button
             className="position-return"
             onClick={() => {
+              const auditionSignal = engine.auditionSceneId === `review_${ws.signalId}` ? ws.signalId : '';
               engine.pause();
-              select(current, false);
+              select({ ...current, signal_id: auditionSignal || current.signal_id }, false);
               ws.set({ following: false });
             }}
           >

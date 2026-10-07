@@ -123,4 +123,22 @@ describe('temporary audition restoration', () => {
     expect(engine.tick).toBe(1920);
     expect(engine.soundingNotes.some((n) => n.voice === note.voice)).toBe(false);
   });
+  it('muting common backing preserves the code-linked responsibility melody in full playback', async () => {
+    const engine = await setup();
+    const melody = original.notes.find((note) => note.kind === 'accompaniment' && note.event_id)!;
+    const backing = original.notes.find((note) => note.kind === 'accompaniment' && !note.event_id)!;
+    engine.configure({
+      ...original,
+      notes: [
+        { ...melody, tick: 0 },
+        { ...backing, tick: 0 },
+      ],
+    });
+    engine.setSupportMuted(true);
+    transport.state = 'started';
+    transport.seconds = 0.01;
+    expect(engine.soundingNotes.map((note) => note.note_id)).toEqual([melody.note_id]);
+    engine.setSupportMuted(false);
+    expect(engine.soundingNotes).toHaveLength(2);
+  });
 });
