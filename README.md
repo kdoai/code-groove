@@ -245,13 +245,13 @@ Workload Identity FederationでGCPへ認証し、Cloud Buildでcommit SHAをタ�
 
 ## ライセンス / License
 
-アプリ本体の再利用ライセンスは未指定です（ルートの`LICENSE`なし）。公開リポジトリの閲覧と、コードを再利用・再配布できることは区別してください。第三者コード・音源には、以下の条件が適用されます。
+Code Groove本体は[MIT License](LICENSE)です。著作権表示と許諾本文を保持することで、商用を含む利用・改変・再配布ができます。第三者コード・音源には、それぞれの条件が適用されます。
 
 | 対象 | ライセンス・出典 |
 |---|---|
 | Tsugiaiの保存済みサンプル・参考ソース | MIT · [同梱ライセンス](fixtures/licenses/tsugiai-LICENSE.txt)・[参考ソースのライセンス](fixtures/repository-reference/TSUGIAI_LICENSE.txt) |
 | 録音Bass・Piano | CC BY 3.0。Karoryfer／VSO2、編集Nicholaus P. Brosowsky。出典・著作者・ライセンスURL・加工内容を[クレジット](apps/web/public/audio/midnight-jazz-v4/NOTICE.txt)に保持 · [取得元の条件](assets/audio-source/LICENSE.txt) |
-| Code Grooveで作成したVibes等 | [音源クレジット](apps/web/public/audio/midnight-jazz-v4/NOTICE.txt)でMITと記載。アプリ全体のライセンス指定ではない |
+| Code Grooveで作成したVibes等 | MIT · 著作権表示と許諾全文を[音源クレジット](apps/web/public/audio/midnight-jazz-v4/NOTICE.txt)に同梱 |
 | Webの依存ライブラリ | ビルドで本文一覧を生成し、Firebase・Monacoの補足文書も同梱 · [配布物の一覧](https://code-groove-web-a5ygiois2a-an.a.run.app/THIRD_PARTY_LICENSES.md)・[補足条件](docs/LICENSES.md) |
 
 呼出・返却・利用をまとめる発想は[SoundCoding2026の固定版](https://github.com/kouduki1101/SoundCoding2026/tree/3261ef988c57c5be1c42e5d0ee42182542759c84)、現在位置とPRからの導線は[Codelodyの固定版](https://github.com/yuki-kobayashi-git/codelody/tree/a06d888dba2906994283afeb13b191b28b76ca00)を参考にしました。両者のコード・音源は流用していません。
