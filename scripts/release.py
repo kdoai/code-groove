@@ -71,7 +71,10 @@ def verify_health(image):
     expected = json.loads((ROOT / "fixtures/recorded-live/tsugiai-agents.json").read_text(encoding="utf-8"))
     if public_sample.json().get("data") != expected:
         raise RuntimeError("Deployed sample does not match the release fixture")
-    print("Release image, traffic, health, access controls and public replay verified", flush=True)
+    inspection = httpx.get(f"{saved['web_url']}/inspections/tsugiai-session", timeout=30)
+    if inspection.status_code != 200 or "text/html" not in inspection.headers.get("content-type", ""):
+        raise RuntimeError("Public TSUGIAI inspection deep link is unavailable")
+    print("Release image, traffic, health, access controls, public replay and inspection route verified", flush=True)
 
 
 if __name__ == "__main__":

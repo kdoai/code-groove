@@ -32,10 +32,18 @@ def release_environment(tmp_path, monkeypatch):
             200,
             {"data": {"recording": "expected"}},
         ),
+        state["web_url"] + "/inspections/tsugiai-session": (200, '<!doctype html><div id="root"></div>'),
     }
 
     def get(url, **kwargs):
         status, body = responses[url]
+        if isinstance(body, str):
+            return httpx.Response(
+                status,
+                text=body,
+                headers={"content-type": "text/html"},
+                request=httpx.Request("GET", url),
+            )
         return httpx.Response(status, json=body, request=httpx.Request("GET", url))
 
     monkeypatch.setattr(release, "ROOT", tmp_path)
@@ -49,7 +57,10 @@ def test_release_verifies_both_services_and_public_replay(release_environment):
     release.verify_health(image)
 
 
-@pytest.mark.parametrize("failure", ["image", "not_ready", "traffic", "web_auth", "worker_auth", "sample"])
+@pytest.mark.parametrize(
+    "failure",
+    ["image", "not_ready", "traffic", "web_auth", "worker_auth", "sample", "inspection_missing", "inspection_not_html"],
+)
 def test_release_rejects_incomplete_or_unsafe_rollout(release_environment, failure):
     image, service, responses, state = release_environment
     if failure == "image":
@@ -62,8 +73,13 @@ def test_release_rejects_incomplete_or_unsafe_rollout(release_environment, failu
         responses[state["web_url"] + "/api/v1/projects"] = (200, {})
     elif failure == "worker_auth":
         responses[state["worker_url"] + "/health"] = (200, {})
-    else:
+    elif failure == "sample":
         responses[state["web_url"] + "/api/v1/samples/recorded-tsugiai-agents/bundle"] = (200, {"data": {}})
+    else:
+        responses[state["web_url"] + "/inspections/tsugiai-session"] = (
+            404 if failure == "inspection_missing" else 200,
+            {},
+        )
     with pytest.raises(RuntimeError):
         release.verify_health(image)
 

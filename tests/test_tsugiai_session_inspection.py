@@ -63,6 +63,22 @@ def test_public_inspection_is_read_only_and_preserves_original_recording(tmp_pat
     assert not app.state.store.list("analyses")
 
 
+def test_production_server_serves_inspection_deep_link_without_vite(tmp_path, monkeypatch):
+    web = tmp_path / "dist/web"
+    web.mkdir(parents=True)
+    html = '<!doctype html><div id="root"></div>'
+    (web / "index.html").write_text(html, encoding="utf-8")
+    monkeypatch.setattr("code_groove.app.ROOT", tmp_path)
+    client = TestClient(create_app(Settings(local_data_dir=tmp_path / "data")))
+    for path in ("/", "/inspections/tsugiai-session", "/projects/sample-recorded-tsugiai-agents/inspect"):
+        response = client.get(path)
+        assert response.status_code == 200
+        assert "text/html" in response.headers["content-type"]
+        assert response.text == html
+    for path in ("/inspections/unknown", "/api/v1/unknown", "/internal/unknown", "/assets/missing.js"):
+        assert client.get(path).status_code == 404
+
+
 @pytest.mark.parametrize("damage", ["source", "interpretation"])
 def test_recording_rejects_unpinned_sources_and_unsubmitted_interpretations(tmp_path, monkeypatch, damage):
     value = copy.deepcopy(recorded_session_inspection())
