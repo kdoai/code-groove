@@ -4,7 +4,9 @@
 
 AIで実装されたコードの責務・共有ルール・変更の影響を調べ、短い音と根拠コードを比較して設計上の変更負担を検査するツールです。
 
-[公開サンプルを開く](https://code-groove-web-a5ygiois2a-an.a.run.app) · [音の規則](docs/SONIFICATION.md) · [ドキュメント](docs/README.md)
+[TSUGIAIの公開サンプルを開く](https://code-groove-web-a5ygiois2a-an.a.run.app/projects/sample-recorded-tsugiai-agents/inspect) · [音の規則](docs/SONIFICATION.md) · [ドキュメント](docs/README.md)
+
+公開サンプルリポジトリは、TSUGIAIの固定版です。新機能の確認とデモの案内も同じリポジトリを使います。
 
 ## エグゼクティブサマリー / Executive Summary
 

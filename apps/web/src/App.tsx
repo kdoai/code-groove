@@ -24,6 +24,7 @@ import { ImprovementDialog } from './components/ImprovementDialog';
 import { ReviewWorkspace, SampleSwitch } from './components/ReviewWorkspace';
 import { playbackPlan } from './audio/playback';
 import { engine } from './audio/engine';
+import { primarySample } from './samples';
 import { SpotlightTour } from './components/SpotlightTour';
 
 type Run = {
@@ -38,6 +39,7 @@ const active = ['enqueue_pending', 'queued', 'fetching', 'indexing', 'investigat
 export default function App() {
   const ws = useWorkspace(),
     cache = useQueryClient();
+  const restorePrimarySample = location.pathname === '/' && !!ws.sampleId && ws.sampleId !== primarySample.id;
   const [modal, setModal] = useState<'open' | 'auth' | 'guide' | 'repository' | ''>(() =>
     localStorage.getItem('code-groove-hide-guide') === 'true' ? '' : 'guide',
   );
@@ -92,15 +94,25 @@ export default function App() {
         scene: Math.max(0, Math.min(7, Number(new URLSearchParams(location.search).get('scene') ?? 1) - 1)),
         codeSpan: null,
       });
+    else if (restorePrimarySample) openSample(primarySample.id);
   }, []);
   useEffect(() => {
-    if (ws.projectId)
+    if (ws.projectId && !restorePrimarySample)
       history.replaceState(
         null,
         '',
         `/projects/${ws.projectId}/${ws.screen}?scene=${ws.scene + 1}${ws.analysisId ? `&analysis=${ws.analysisId}` : ''}${ws.unitId ? `&unit=${ws.unitId}` : ''}${ws.eventId ? `&event=${ws.eventId}` : ''}${ws.signalId ? `&signal=${ws.signalId}` : ''}`,
       );
-  }, [ws.projectId, ws.screen, ws.scene, ws.analysisId, ws.unitId, ws.eventId, ws.signalId]);
+  }, [
+    ws.projectId,
+    ws.screen,
+    ws.scene,
+    ws.analysisId,
+    ws.unitId,
+    ws.eventId,
+    ws.signalId,
+    restorePrimarySample,
+  ]);
   const project = useQuery({
     queryKey: ['project', ws.projectId],
     queryFn: () =>
@@ -177,7 +189,7 @@ export default function App() {
           ? `/samples/${ws.sampleId}/bundle`
           : `/projects/${ws.projectId}/bundle${ws.analysisId ? `?analysis=${ws.analysisId}` : ''}`,
       ),
-    enabled: !!ws.projectId && (ws.sampleId !== '' || !!user) && !runId,
+    enabled: !!ws.projectId && (ws.sampleId !== '' || !!user) && !runId && !restorePrimarySample,
     retry: false,
     staleTime: Infinity,
   });
@@ -535,7 +547,7 @@ export default function App() {
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
   }, [bundle.data, ws.unitId, ws.eventId]);
-  const data = bundle.data;
+  const data = restorePrimarySample ? undefined : bundle.data;
   const selectedFile =
     ws.codeSpan?.path ??
     data?.map.units.find((u) => u.unit_id === ws.unitId)?.primary_span.path ??
@@ -566,13 +578,7 @@ export default function App() {
   return (
     <div className="app-shell">
       <header className="topbar">
-        <a
-          className="brand"
-          href="/"
-          onClick={(e) => {
-            e.preventDefault();
-          }}
-        >
+        <a className="brand" href="/">
           <span className="brand-mark">
             <i />
             <i />
@@ -806,8 +812,8 @@ export default function App() {
             <br />
             音から実装を選び、Geminiの根拠行と設計理由を確かめます。
           </p>
-          <button className="primary" onClick={() => openSample('recorded-tsugiai-agents')}>
-            Tsugiaiの実コードを聴く
+          <button className="primary" onClick={() => openSample(primarySample.id)}>
+            TSUGIAIの実コードを聴く
             <ArrowRight size={15} />
           </button>
           <small>実在する51ファイルを参照 · 9実装の保存済み実解析 · ログイン不要・追加AI費用なし</small>
@@ -858,7 +864,7 @@ export default function App() {
           close={() => setModal('')}
           loadSample={() => {
             ws.set({ mode: 'repo', wholeWork: true, loop: false, pulseMuted: true, agentVisible: true });
-            openSample('recorded-tsugiai-agents');
+            openSample(primarySample.id);
             setTour(true);
           }}
         />

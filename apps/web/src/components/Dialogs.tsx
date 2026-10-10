@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { X, ArrowRight, Music2 } from 'lucide-react';
 import { api, currentUser, login, type ImportSnapshot, type PublicConfig } from '../api';
+import { primarySample } from '../samples';
 import { useQuery } from '@tanstack/react-query';
 
 export function Dialog({
@@ -116,38 +117,7 @@ export function AuthDialog({ close, done }: { close: () => void; done: () => voi
     </Dialog>
   );
 }
-export const sampleLabels = [
-  {
-    id: 'recorded-returns-before',
-    label: '音の比較教材 / 店舗とWebの返品ルール',
-    detail: '教材の保存済みGemini実解析 · 5実装 · 同じ判断の音と根拠を比較',
-  },
-  {
-    id: 'recorded-tsugiai-agents',
-    label: '主デモ / Tsugiaiの実在コード',
-    detail: '51ファイル・19,541行を参照 · Checkout Agentの9実装に保存済みGemini実解析',
-  },
-  {
-    id: 'recorded-checkout-flow',
-    label: 'Checkout Lab / 小さな教材',
-    detail: 'TypeScript · 購入ロジックの保存済み実解析',
-  },
-  {
-    id: 'recorded-scattered',
-    label: '実解析を再生 · 分散',
-    detail: 'Geminiの解釈と実ツール記録 · AI費用なし',
-  },
-  {
-    id: 'recorded-justified',
-    label: '実解析を再生 · 例外',
-    detail: '関連テストを読んだ保存結果 · AI費用なし',
-  },
-  { id: 'cohesive', label: 'まとまり', detail: '責務ごとに独立した実装' },
-  { id: 'scattered', label: '分散', detail: '同じ判断が別の場所にある' },
-  { id: 'mixed', label: '混在', detail: '一つの実装に複数の判断' },
-  { id: 'justified', label: '理由のある違い', detail: '法人契約の例外をたどる' },
-  { id: 'orchestrator', label: '委譲', detail: '専門処理をつなぐ調整役' },
-];
+const sampleLabels = [primarySample];
 export function OpenDialog({
   close,
   openSample,
@@ -276,7 +246,7 @@ export function OpenDialog({
         </>
       )}
       <div className="section-label">
-        BUILT-IN SAMPLES <span>保存済み実解析 / 模擬サンプル · AI費用なし</span>
+        SAMPLE REPOSITORY <span>TSUGIAIの保存済み実解析 · AI費用なし</span>
       </div>
       <div className="sample-list">
         {sampleLabels.map((sample, i) => (
@@ -306,7 +276,8 @@ export function Onboarding({ close, loadSample }: { close: () => void; loadSampl
         <span className="eyebrow">LISTEN. LOCATE. ASK.</span>
         <h2>引き継いだコードの、設計を聴こう。</h2>
         <p>
-          実在するTsugiaiの51ファイルを表示します。Checkout Agentの保存済み解析を聴き、発音中の根拠行へ戻ります。確認する箇所を伴奏なしで聴き、Agentの説明と反証の記録を確かめてください。
+          実在するTsugiaiの51ファイルを表示します。Checkout
+          Agentの保存済み解析を聴き、発音中の根拠行へ戻ります。確認する箇所を伴奏なしで聴き、Agentの説明と反証の記録を確かめてください。
         </p>
         <small>保存済みの譜面を使用 · 案内で新しいAI費用は発生しません</small>
       </div>
