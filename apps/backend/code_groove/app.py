@@ -1141,7 +1141,9 @@ def create_app(settings: Settings | None = None, verifier: Callable[[str], str] 
         if candidate.is_file():
             return FileResponse(candidate)
         if (root / "index.html").is_file() and (
-            not path or re.fullmatch(r"projects/[a-zA-Z0-9_-]{1,80}/(arrange|inspect)", path)
+            not path
+            or path == "inspections/tsugiai-session"
+            or re.fullmatch(r"projects/[a-zA-Z0-9_-]{1,80}/(arrange|inspect)", path)
         ):
             return FileResponse(root / "index.html")
         raise GrooveError("NOT_FOUND", "対象が見つかりません。", 404)
