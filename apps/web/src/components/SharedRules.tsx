@@ -11,9 +11,11 @@ import { useWorkspace } from '../state';
 export function SharedRules({
   bundle,
   setQuestion,
+  soundEnabled = true,
 }: {
   bundle: Bundle;
   setQuestion: (question: string) => void;
+  soundEnabled?: boolean;
 }) {
   const ws = useWorkspace();
   const groups = useMemo(() => sharedRuleGroups(bundle.map), [bundle.map]);
@@ -36,7 +38,7 @@ export function SharedRules({
       !bundle.map.events.some((e) => e.unit_id === u.unit_id && e.state === 'grounded'),
   ).length;
   async function play(plan?: ScorePlan) {
-    if (!plan?.notes.length) return;
+    if (!soundEnabled || !plan?.notes.length) return;
     if (group) setKey(group.key);
     setError('');
     try {
@@ -143,6 +145,7 @@ export function SharedRules({
                     </small>
                     <p>{selected.meaning}</p>
                     <button
+                      disabled={!soundEnabled}
                       onClick={() =>
                         void play(source && ruleIdentifier(source, bundle.map, selected.event_id))
                       }
@@ -150,6 +153,7 @@ export function SharedRules({
                       {side}の識別フレーズを聴く
                     </button>
                     <button
+                      disabled={!soundEnabled}
                       onClick={() => void play(source && focusedExcerpt(source, [selected.event_id]).plan)}
                     >
                       {side}の周囲の処理を聴く
@@ -160,7 +164,7 @@ export function SharedRules({
             ))}
           </div>
           <button
-            disabled={!a || !b || a.unit_id === b.unit_id}
+            disabled={!soundEnabled || !a || !b || a.unit_id === b.unit_id}
             onClick={() => {
               if (!source || !a || !b) return;
               const first = ruleIdentifier(source, bundle.map, a.event_id);

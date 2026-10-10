@@ -1,3 +1,4 @@
+import hashlib
 import json
 from types import SimpleNamespace
 
@@ -177,6 +178,33 @@ def test_repository_cannot_request_shell_or_read_an_unknown_path():
         )
 
 
+def test_repository_file_inventory_retains_identity_without_import_detail():
+    ctx, _value, _saved = context()
+    ctx.index["files"][0]["imports"] = [{"path": "dependency.py", "resolved": True}] * 100
+    inventory = execute_tool(
+        ctx, "list_repository_files", {"purpose": "Locate a contract", "limit": 1}, "list"
+    )
+    file = inventory["files"][0]
+    assert file["file_id"] == ctx.index["files"][0]["file_id"]
+    assert file["import_count"] == 100 and "imports" not in file
+    assert len(ctx.index["files"][0]["imports"]) == 100
+    assert inventory["next_cursor"] == 1
+
+
+def test_read_numbers_match_original_lines_without_changing_projection_hash():
+    ctx, _value, _saved = context()
+    file = ctx.index["files"][0]
+    result = execute_tool(
+        ctx,
+        "read_code",
+        {"file_id": file["file_id"], "start_line": 2, "end_line": 4, "purpose": "Check exact change span"},
+        "read",
+    )
+    raw = ctx.sources[file["path"]].splitlines()[1:4]
+    assert result["source"] == "\n".join(f"{n}: {line}" for n, line in enumerate(raw, 2))
+    assert ctx.evidence[0].projection_sha256 == hashlib.sha256("\n".join(raw).encode()).hexdigest()
+
+
 @pytest.mark.asyncio
 async def test_unknown_retry_usage_is_kept_and_retry_fits_remaining_budget(monkeypatch):
     ctx, _value, saved = context()
@@ -217,10 +245,41 @@ async def test_long_exploration_only_allows_grounded_submission(monkeypatch):
         await run_agent(ctx)
     policy = client.calls[0]["config"].tool_config.function_calling_config
     assert policy.mode == types.FunctionCallingConfigMode.AUTO
+    assert client.calls[0]["config"].thinking_config.thinking_level == types.ThinkingLevel.LOW
     assert [d.name for t in client.calls[0]["config"].tools for d in t.function_declarations] == [
         "submit_analysis"
     ]
     assert client.closed
+
+
+@pytest.mark.asyncio
+async def test_investigation_reserves_only_the_active_submission_schema(monkeypatch):
+    ctx, value, _saved = context()
+    ctx.base = value
+    ctx.model_count = 6
+    ctx.input_tokens = 117000
+
+    class NearBoundaryClient(Client):
+        async def count_tokens(self, **_kwargs):
+            # Full read-tool declarations would falsely exhaust the 160,000 total.
+            return types.CountTokensResponse(total_tokens=30000)
+
+    client = NearBoundaryClient(
+        lambda _number: types.Content(role="model", parts=[types.Part(text="No submission")])
+    )
+    monkeypatch.setattr("code_groove.agent.create_model_client", lambda _settings: client)
+    with pytest.raises(GrooveError, match="AGENT_DID_NOT_SUBMIT"):
+        await run_agent(ctx)
+    payload = json.loads(client.calls[0]["contents"][0].parts[0].text)
+    assert "coverage" not in payload["base"]
+    assert ctx.base == value
+    assert len(client.calls) == 2 and ctx.input_tokens <= 160000
+    assert client.calls[0]["config"].max_output_tokens == 12288
+    assert all(
+        d.name == "submit_investigation"
+        for t in client.calls[0]["config"].tools
+        for d in t.function_declarations
+    )
 
 
 def test_provider_error_diagnostics_never_include_raw_source_or_credentials():

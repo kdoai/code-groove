@@ -19,6 +19,7 @@
 | 第三者コード・音源・配布物の利用条件 | [ライセンス](LICENSES.md) |
 | 技術検証の範囲 | [検証](acceptance.md) |
 | 保存済み解析の説明・根拠・反証の評価 | [解釈評価](INTERPRETATION_EVALUATION.md) |
+| TSUGIAIで変更課題から音の比較・人の判断へ進む | [セッション指定の検査と評価表](TSUGIAI_SESSION_INSPECTION.md) |
 | 運用 | [運用手順](runbook.md) |
 | GitHubからの自動検査と配備 | [CI/CD](CI_CD.md) |
 

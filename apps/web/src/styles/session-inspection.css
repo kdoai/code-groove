@@ -1,0 +1,110 @@
+.session-inspection {
+  height: 100dvh;
+  overflow: auto;
+  padding: 36px max(20px, calc((100vw - 1020px) / 2));
+  line-height: 1.75;
+}
+.session-inspection > a {
+  display: block;
+  margin-bottom: 28px;
+  color: var(--accent);
+}
+.session-inspection h1 {
+  font-size: clamp(24px, 3vw, 34px);
+  line-height: 1.5;
+  max-width: 800px;
+}
+.session-inspection section {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: clamp(16px, 3vw, 28px);
+  margin: 24px 0;
+}
+.session-inspection h2 {
+  font-size: 19px;
+  margin: 0 0 16px;
+}
+.session-inspection h3 {
+  font-size: 15px;
+}
+.session-inspection small {
+  display: block;
+  color: var(--muted);
+  margin: 12px 0;
+  overflow-wrap: anywhere;
+}
+.session-inspection label {
+  display: block;
+  margin: 18px 0;
+}
+.session-inspection textarea {
+  display: block;
+  width: 100%;
+  min-height: 96px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+  margin-top: 8px;
+  background: var(--bg);
+  color: var(--text);
+  resize: vertical;
+}
+.session-inspection select {
+  max-width: 100%;
+}
+.session-inspection button {
+  margin: 4px 8px 4px 0;
+}
+.session-inspection details {
+  margin: 18px 0;
+}
+.session-inspection summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.inspection-table-scroll {
+  overflow-x: auto;
+}
+.session-inspection table {
+  width: 100%;
+  min-width: 640px;
+  border-collapse: collapse;
+  text-align: left;
+}
+.session-inspection th,
+.session-inspection td {
+  padding: 10px;
+  border-bottom: 1px solid var(--line);
+}
+.session-inspection th {
+  color: var(--muted);
+  font-size: 12px;
+}
+.inspection-review {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font: inherit;
+}
+.inspection-source {
+  margin-top: 20px;
+  padding: 16px;
+  border-radius: 8px;
+  background: var(--bg);
+}
+.inspection-source strong {
+  overflow-wrap: anywhere;
+}
+.inspection-source pre {
+  max-height: 420px;
+  overflow: auto;
+  line-height: 1.6;
+  font-size: 12px;
+}
+@media (min-width: 800px) {
+  .session-inspection .shared-rule-pair {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+  }
+}

@@ -29,8 +29,11 @@ if args.include_fixtures:
     paths += sorted((ROOT / "fixtures").glob("*.json"))
 for path in paths:
     bundle = json.loads(path.read_text(encoding="utf-8"))
-    bundle["score"] = preserve_order(
-        run_node("groove-core", {"map": bundle["map"], "kit_hash": kit["kit_hash"]}), bundle["score"]
-    )
+    performances = [bundle] if "map" in bundle else [bundle[k] for k in ("initial_bundle", "draft_bundle")]
+    for performance in performances:
+        performance["score"] = preserve_order(
+            run_node("groove-core", {"map": performance["map"], "kit_hash": kit["kit_hash"]}),
+            performance["score"],
+        )
     path.write_text(json.dumps(bundle, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(f"{path.stem}: musical score upgraded; Agent interpretation and trace preserved")

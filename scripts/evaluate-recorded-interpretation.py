@@ -35,7 +35,10 @@ def validate_span(span: dict, sources: dict[str, str], name: str) -> str:
 def evaluate(assessment: dict, root: Path = ROOT) -> dict:
     require(assessment["protocol"]["version"] == "recorded-source-review-v1", "Unknown review version")
     expected_paths = {
-        p.relative_to(root).as_posix() for p in (root / "fixtures/recorded-live").glob("*.json")
+        p.relative_to(root).as_posix()
+        for p in (root / "fixtures/recorded-live").glob("*.json")
+        # This development protocol has its own reference/results, outside the frozen six-case review.
+        if p.name != "tsugiai-session-inspection.json"
     }
     corpus = assessment["corpus"]
     require(len(corpus) == len({c["case"] for c in corpus}), "Duplicate corpus case")

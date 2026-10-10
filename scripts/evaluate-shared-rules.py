@@ -15,7 +15,9 @@ def digest(text: str) -> str:
 def inspect_representation(case: dict, bundle: dict) -> dict:
     if case["protocol"] != "shared-rule-development-v1":
         raise ValueError("Unknown case protocol")
-    for path, expected in case["source_sha256"].items():
+    projections = case["source_sha256"]
+    hashes = projections if isinstance(projections, dict) else {p["path"]: p["sha256"] for p in projections}
+    for path, expected in hashes.items():
         if path not in bundle["sources"] or digest(bundle["sources"][path]) != expected:
             raise ValueError(f"Stale source: {path}")
     semantic = bundle["map"]
@@ -57,6 +59,17 @@ def inspect_representation(case: dict, bundle: dict) -> dict:
             per_occurrence.append(matched)
         keys = [set((e["responsibility_id"], e["concept_key"]) for e in found) for found in per_occurrence]
         common = set.intersection(*keys) if keys else set()
+        covering_keys = [
+            {
+                (e["responsibility_id"], e["concept_key"])
+                for e in found
+                if e["unit_id"] == expected.get("unit_id", e["unit_id"])
+                and e["span"]["start_line"] <= expected["start_line"]
+                and expected["end_line"] <= e["span"]["end_line"]
+            }
+            for expected, found in zip(rule["occurrences"], per_occurrence, strict=True)
+        ]
+        covering_common = set.intersection(*covering_keys) if covering_keys else set()
         checks.append(
             {
                 "rule_id": rule["rule_id"],
@@ -64,6 +77,9 @@ def inspect_representation(case: dict, bundle: dict) -> dict:
                 "occurrences_with_overlapping_events": sum(bool(k) for k in keys),
                 "common_saved_keys": [list(k) for k in sorted(common)],
                 "comparable_by_saved_key": bool(common),
+                "occurrences_with_covering_events": sum(bool(k) for k in covering_keys),
+                "common_saved_keys_covering_expected_spans": [list(k) for k in sorted(covering_common)],
+                "comparable_by_covering_saved_key": bool(covering_common),
                 "semantic_equivalence": "requires_human_review",
             }
         )
