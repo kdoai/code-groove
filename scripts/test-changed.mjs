@@ -59,12 +59,13 @@ const backend =
   contracts ||
   files.some(
     (path) =>
-      path !== 'tests/test_repository_preflight.py' &&
-      /^(apps\/backend\/|tests\/test_|prompts\/)/.test(path),
+      path !== 'tests/test_repository_preflight.py' && /^(apps\/backend\/|tests\/test_|prompts\/)/.test(path),
   );
 const preflight =
   all ||
-  files.some((path) => /^(scripts\/repository-preflight\.py|tests\/test_repository_preflight\.py)$/.test(path));
+  files.some((path) =>
+    /^(scripts\/repository-preflight\.py|tests\/test_repository_preflight\.py)$/.test(path),
+  );
 const music =
   contracts ||
   files.some((path) =>
@@ -94,7 +95,10 @@ console.log(JSON.stringify({ backend, music, web, sample, preflight, interpretat
 if (process.argv.includes('--list')) process.exit(0);
 if (tooling && !backend) run('uv', ['run', 'ruff', 'check', 'infra', 'scripts']);
 if (tooling && !web) run('pnpm', ['exec', 'eslint', 'scripts/*.mjs']);
-if (interpretation) run('uv', ['run', 'python', 'scripts/evaluate-recorded-interpretation.py']);
+if (interpretation) {
+  run('uv', ['run', 'python', 'scripts/evaluate-recorded-interpretation.py']);
+  run('uv', ['run', 'python', 'scripts/evaluate-shared-rules.py']);
+}
 if (backend || music || web || preflight) run('pnpm', ['build:tools']);
 if (backend) {
   run('uv', ['run', 'ruff', 'check', 'apps/backend', 'scripts', 'tests', 'infra']);

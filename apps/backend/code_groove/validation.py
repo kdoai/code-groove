@@ -1,3 +1,5 @@
+import copy
+
 from code_groove.errors import GrooveError
 from code_groove.schemas import (
     AnalysisCandidate,
@@ -254,12 +256,109 @@ def validate_candidate(
         raise GrooveError("INVALID_ANALYSIS", "; ".join(errors[:10]))
 
 
+def project_event_updates(base: dict, candidate: InvestigationCandidate, evidence: list[Evidence]) -> dict:
+    """Project an interpretation draft without changing its source or saved base."""
+    projected = copy.deepcopy(base)
+    projected["responsibilities"].extend(r.model_dump(mode="json") for r in candidate.new_responsibilities)
+    removed = set(candidate.replaced_event_ids)
+    projected["events"] = [e for e in projected["events"] if e["event_id"] not in removed]
+    projected["events"].extend(e.model_dump(mode="json") for e in candidate.new_events)
+    projected["evidence"].extend(e.model_dump(mode="json") for e in evidence)
+    by_id = {e["event_id"]: e for e in projected["events"]}
+    for change in candidate.suggested_reclassification:
+        event = by_id.get(change.event_id)
+        if event:
+            event["responsibility_id"] = change.to_responsibility_id
+            event["evidence_ids"] = list(dict.fromkeys(event["evidence_ids"] + change.evidence_ids))
+    orders: dict[str, int] = {}
+    for event in sorted(projected["events"], key=lambda e: (e["semantic_order"], e["event_id"])):
+        rid = event["responsibility_id"]
+        event["semantic_order"] = orders.get(rid, 0)
+        orders[rid] = event["semantic_order"] + 1
+    return projected
+
+
+def validate_event_updates(candidate: InvestigationCandidate, evidence: list[Evidence], base: dict) -> dict:
+    fresh = {e.evidence_id: e for e in evidence}
+    originals = {e["event_id"]: e for e in base["events"]}
+    units = {u["unit_id"]: u for u in base["units"]}
+    removed = set(candidate.replaced_event_ids)
+    if len(removed) != len(candidate.replaced_event_ids) or removed - originals.keys():
+        raise GrooveError("INVALID_ANALYSIS", "置換元イベントIDが不正です。")
+    if removed.intersection(c.event_id for c in candidate.suggested_reclassification):
+        raise GrooveError("INVALID_ANALYSIS", "置換と再分類を同じイベントへ指定できません。")
+    new_ids = [e.event_id for e in candidate.new_events]
+    if len(set(new_ids)) != len(new_ids) or set(new_ids).intersection(originals):
+        raise GrooveError("INVALID_ANALYSIS", "追加イベントには重複しない新しいIDが必要です。")
+    cited = {eid for f in candidate.findings for eid in f.evidence_ids}
+    for event in candidate.new_events:
+        owner = units.get(event.unit_id)
+        proofs = [fresh[eid] for eid in event.evidence_ids if eid in fresh]
+        if (
+            not owner
+            or owner["review_state"] != "inspected"
+            or event.state != "grounded"
+            or not event.evidence_ids
+            or any(eid not in fresh for eid in event.evidence_ids)
+            or not contains(Span(**owner["primary_span"]), event.span)
+        ):
+            raise GrooveError(
+                "INVALID_ANALYSIS", "追加イベントには調査済み実装内の範囲と新しい根拠が必要です。"
+            )
+        if not covers(proofs, Span(**owner["primary_span"]), True) or not any(
+            p.source_kind == "code" and contains(p.span, event.span) for p in proofs
+        ):
+            raise GrooveError(
+                "INVALID_EVIDENCE", "追加イベントには実装全体と対象範囲の今回の読取が必要です。"
+            )
+    for event_id in removed:
+        unit = units[originals[event_id]["unit_id"]]
+        if not covers([e for e in evidence if e.evidence_id in cited], Span(**unit["primary_span"]), True):
+            raise GrooveError("INVALID_EVIDENCE", "置換には元実装の今回の読取を結論へ引用してください。")
+        if not any(e.unit_id == unit["unit_id"] for e in candidate.new_events):
+            raise GrooveError("INVALID_ANALYSIS", "置換には同じ実装の代替イベントが必要です。")
+    for responsibility in candidate.new_responsibilities:
+        if not responsibility.evidence_ids or any(eid not in fresh for eid in responsibility.evidence_ids):
+            raise GrooveError("INVALID_EVIDENCE", "追加責務には今回の読取根拠が必要です。")
+        if not any(fresh[eid].source_kind == "code" for eid in responsibility.evidence_ids):
+            raise GrooveError("INVALID_EVIDENCE", "追加責務にはコード根拠が必要です。")
+    projected = project_event_updates(base, candidate, evidence)
+    roles = projected["responsibilities"]
+    role_ids = {r["responsibility_id"] for r in roles}
+    if len(roles) > 6 or len(role_ids) != len(roles) or len({r["motif_id"] for r in roles}) != len(roles):
+        raise GrooveError("INVALID_ANALYSIS", "責務と旋律は重複せず6件以内です。")
+    events = projected["events"]
+    if any(
+        not any(e["responsibility_id"] == r.responsibility_id for e in events)
+        for r in candidate.new_responsibilities
+    ):
+        raise GrooveError("INVALID_ANALYSIS", "追加責務には対応する意味イベントが必要です。")
+    if len(events) > 96 or any(e["responsibility_id"] not in role_ids for e in events):
+        raise GrooveError("INVALID_ANALYSIS", "イベント数または責務参照が不正です。")
+    signatures = [
+        (e["span"]["file_id"], e["span"]["start_line"], e["span"]["end_line"], e["concept_key"])
+        for e in events
+    ]
+    if len(signatures) != len(set(signatures)) or any(
+        sum(e["unit_id"] == uid for e in events) > 24 for uid in units
+    ):
+        raise GrooveError("INVALID_ANALYSIS", "同じ判断の重複または実装のイベント上限超過です。")
+    updates = {s.signal_id for s in candidate.review_signals} | set(candidate.replaced_signal_ids)
+    if any(
+        removed.intersection(s["event_ids"]) and s["signal_id"] not in updates
+        for s in base.get("review_signals", [])
+    ):
+        raise GrooveError("INVALID_ANALYSIS", "置換元に依存する候補も更新または撤回してください。")
+    return projected
+
+
 def validate_investigation(
     candidate: InvestigationCandidate,
     evidence: list[Evidence],
     base: dict,
     repository_index: dict | None = None,
 ) -> None:
+    projected = validate_event_updates(candidate, evidence, base)
     patterns = {p["pattern_id"]: DesignPattern(**p) for p in base.get("design_patterns", [])}
     patterns.update({p.pattern_id: p for p in candidate.design_patterns})
     if len(patterns) > 8:
@@ -314,7 +413,7 @@ def validate_investigation(
             raise GrooveError("INVALID_ANALYSIS", "再分類対象または根拠が不正です。")
     if candidate.review_signals:
         units = {u["unit_id"]: u for u in base["units"]}
-        events = {e["event_id"]: e for e in base["events"]}
+        events = {e["event_id"]: e for e in projected["events"]}
         if len({s.signal_id for s in candidate.review_signals}) != len(candidate.review_signals):
             raise GrooveError("INVALID_ANALYSIS", "追加調査の解釈IDが重複しています。")
         for signal in candidate.review_signals:
@@ -332,7 +431,7 @@ def validate_investigation(
                 )
             ):
                 raise GrooveError(
-                    "INVALID_ANALYSIS", "追加解釈には既存の意味イベントと確認した代案が必要です。"
+                    "INVALID_ANALYSIS", "追加解釈には根拠付き意味イベントと確認した代案が必要です。"
                 )
             for uid in signal.unit_ids:
                 if not covers(

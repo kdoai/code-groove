@@ -5,6 +5,8 @@ import type { Bundle } from '../api';
 import { useWorkspace } from '../state';
 import { DesignReview, reviewAxes } from './DesignReview';
 import { CandidateDetails } from './CandidateDetails';
+import { SharedRules } from './SharedRules';
+import { InterpretationChanges } from './InterpretationChanges';
 import { CallRelationshipsPanel } from './CallRelationshipsPanel';
 export type TraceEvent = { seq: number; type: string; timestamp: string; payload: Record<string, any> };
 
@@ -195,6 +197,7 @@ export function AgentPanel({
           <EvidenceTrail bundle={bundle} evidenceIds={event?.evidence_ids ?? unit.evidence_ids} />
         )}
         <DesignReview bundle={bundle} signal={selectedSignal} />
+        <SharedRules key={bundle.map.analysis_id} bundle={bundle} setQuestion={setQuestion} />
         <CallRelationshipsPanel bundle={bundle} />
         {overview && role && (
           <div className="motif-map" data-tour="investigate">
@@ -457,9 +460,12 @@ export function AgentPanel({
                 選択した範囲と関連する実装を調べています…
               </p>
             )}
+            <InterpretationChanges result={result} map={bundle.map} />
             <FindingCards result={result} map={bundle.map} />
             {result &&
-            (result.suggested_reclassification?.length ||
+            (result.new_events?.length ||
+              result.replaced_event_ids?.length ||
+              result.suggested_reclassification?.length ||
               result.review_signals?.length ||
               result.replaced_signal_ids?.length ||
               result.design_patterns?.length) ? (

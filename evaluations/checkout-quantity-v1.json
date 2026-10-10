@@ -1,0 +1,144 @@
+{
+  "protocol": "shared-rule-development-v1",
+  "case_id": "checkout-quantity-v1",
+  "origin": "authored_development_case",
+  "reference_status": "ai_draft_awaiting_human_ratification",
+  "human_review": {
+    "status": "pending",
+    "reviewer": null
+  },
+  "task": "キャンペーン適用に、ギフトカードを除く商品明細のquantity合計が2以上という条件を追加する。送料・割引率・丸め・上限・100セントあたり1ポイントの率は維持する。オフラインの参考プレビューと提出時刻でのサーバ再判定を維持する。",
+  "source_sha256": {
+    "README.md": "3e59c2312766cadb9b2837385fab1ee10477935a440195757f43b1dc80aeea56",
+    "src/contracts.ts": "767fc3816ca15ab78c87ae69cfbf1c15a4ac822a22b2125599aea0201257ec70",
+    "src/checkout.ts": "3392eaf7c8c3b3583ce68f351d62dca88465107bd565fbc724c8d99f17d0d881",
+    "src/pricing.ts": "022632fea259a75893f755ea7965d9896940fdfac5cd4b386cd39b2f03388fd1",
+    "src/rewards.ts": "7620bcf07a4013fbde28e0b1fdb13a8af42c6094be22c6d45d054891a1849af6",
+    "src/preview.ts": "07aed9c607c8352d0ac6bb872bdae237ae936732436105fde6aa1702e0af74ce"
+  },
+  "rules": [
+    {
+      "rule_id": "eligible_merchandise",
+      "label": "ギフトカードを除く対象商品",
+      "occurrences": [
+        {
+          "path": "src/pricing.ts",
+          "start_line": 10,
+          "end_line": 12
+        },
+        {
+          "path": "src/rewards.ts",
+          "start_line": 9,
+          "end_line": 13
+        },
+        {
+          "path": "src/preview.ts",
+          "start_line": 6,
+          "end_line": 10
+        }
+      ]
+    },
+    {
+      "rule_id": "campaign_qualification",
+      "label": "期限と最低商品金額による適用判断",
+      "occurrences": [
+        {
+          "path": "src/pricing.ts",
+          "start_line": 13,
+          "end_line": 17
+        },
+        {
+          "path": "src/rewards.ts",
+          "start_line": 17,
+          "end_line": 21
+        },
+        {
+          "path": "src/preview.ts",
+          "start_line": 12,
+          "end_line": 13
+        }
+      ]
+    },
+    {
+      "rule_id": "capped_percentage_saving",
+      "label": "丸め・上限・商品金額で制限する割引",
+      "occurrences": [
+        {
+          "path": "src/pricing.ts",
+          "start_line": 18,
+          "end_line": 23
+        },
+        {
+          "path": "src/rewards.ts",
+          "start_line": 22,
+          "end_line": 25
+        },
+        {
+          "path": "src/preview.ts",
+          "start_line": 14,
+          "end_line": 16
+        }
+      ]
+    }
+  ],
+  "change_targets": [
+    "quoteInvoice",
+    "accrueReward",
+    "previewCart"
+  ],
+  "inspect_also": [
+    "submitCheckout",
+    "CartLine",
+    "Campaign",
+    "describePreview",
+    "invoiceSummary",
+    "describeReward",
+    "README.md",
+    "tests and consumers outside the stored src snapshot"
+  ],
+  "preserve_boundaries": [
+    "offline advisory preview",
+    "server submission-time authority",
+    "different invoice/reward/preview outputs",
+    "injected persistence and saveOnce"
+  ],
+  "expected_effects": [
+    "quantity is the sum of quantities, not row count or SKU count",
+    "gift cards do not satisfy quantity qualification",
+    "reward rate stays fixed but reward amount may change with paid merchandise",
+    "choose and document a quantity-failure preview message instead of silently calling it a monetary minimum failure",
+    "distinguish must change, must inspect, and no change needed"
+  ],
+  "valid_alternatives": [
+    "shared pure rule with separate runtime adapters",
+    "generated or versioned policy with independent runtime implementations",
+    "retain implementations with explicit ownership and coordinated contract checks"
+  ],
+  "abstain_when": [
+    "policy ownership undecided",
+    "preview messaging contract undecided",
+    "external consumers or tests unavailable"
+  ],
+  "study": {
+    "status": "not_run",
+    "diagnosis": "Human ratification before any accuracy scoring; checkout is development-only. Use held-out topics and all repeated runs.",
+    "sound": "Use the same visible diagnosis, evidence and operations in both conditions. Ask a new change question not answered verbatim in the diagnosis. Counterbalance different tasks; include training/playback time.",
+    "primary": [
+      "important implementation omissions",
+      "wrong change decisions",
+      "grounded reasons to preserve boundaries"
+    ],
+    "secondary": [
+      "time to evidence",
+      "total time",
+      "operations",
+      "subjective workload"
+    ],
+    "pre_registration_required": [
+      "minimum useful effect",
+      "maximum tolerated error increase",
+      "sample/run count",
+      "inconclusive decision rule"
+    ]
+  }
+}

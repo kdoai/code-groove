@@ -1,0 +1,43 @@
+.shared-rules,
+.interpretation-changes {
+  margin: 12px 0;
+  padding: 12px;
+  border: 1px solid var(--border, #d1d5db);
+  border-radius: 8px;
+}
+.shared-rules summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.shared-rules summary small {
+  margin-left: 8px;
+}
+.shared-rules label {
+  display: block;
+  min-width: 0;
+}
+.shared-rules select {
+  display: block;
+  width: 100%;
+  margin: 6px 0;
+}
+.shared-rules small {
+  display: block;
+  line-height: 1.5;
+}
+.shared-rules button {
+  margin: 4px 4px 4px 0;
+  max-width: 100%;
+}
+.shared-rules .evidence-link {
+  overflow-wrap: anywhere;
+  text-align: left;
+}
+.shared-rule-pair {
+  display: grid;
+  gap: 12px;
+  margin-top: 12px;
+}
+.interpretation-changes p {
+  overflow-wrap: anywhere;
+}

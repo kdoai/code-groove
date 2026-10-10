@@ -802,6 +802,9 @@ class JobService:
                 artifact_key = f"projects/{run['project_id']}/investigations/{result_id}/result.json.gz"
             elif base:
                 result = InvestigationResult(
+                    investigation_prompt_version="investigation-v2-grounded-event-updates"
+                    if self.settings.model_mode == "live"
+                    else "fixture",
                     **candidate.model_dump(),
                     investigation_id=result_id,
                     base_analysis_id=base["analysis_id"],

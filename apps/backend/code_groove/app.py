@@ -38,7 +38,7 @@ from code_groove.settings import ROOT, Settings
 from code_groove.source import build_index, parse_github_url, run_node, validate_scope
 from code_groove.storage import ArtifactStore, MetadataStore, Transaction
 from code_groove.structure import structure_data, validate_comparison_request
-from code_groove.validation import validate_candidate, validate_investigation
+from code_groove.validation import project_event_updates, validate_candidate, validate_investigation
 
 SAMPLES = (
     "cohesive",
@@ -965,7 +965,9 @@ def create_app(settings: Settings | None = None, verifier: Callable[[str], str] 
         if project.get("latest_analysis_id") != previous:
             raise GrooveError("STALE_BASE_ANALYSIS", "解釈が更新されています。", 409)
         if (
-            not result["suggested_reclassification"]
+            not result.get("new_events")
+            and not result.get("replaced_event_ids")
+            and not result["suggested_reclassification"]
             and not result.get("review_signals")
             and not result.get("replaced_signal_ids")
             and not result.get("design_patterns")
@@ -979,6 +981,7 @@ def create_app(settings: Settings | None = None, verifier: Callable[[str], str] 
         validate_investigation(
             candidate, [Evidence(**e) for e in result["evidence"]], semantic, repository_index
         )
+        semantic = project_event_updates(semantic, candidate, [Evidence(**e) for e in result["evidence"]])
         patterns = {p["pattern_id"]: p for p in semantic.get("design_patterns", [])}
         patterns.update({p["pattern_id"]: p for p in result.get("design_patterns", [])})
         semantic["design_patterns"] = list(patterns.values())
@@ -988,24 +991,11 @@ def create_app(settings: Settings | None = None, verifier: Callable[[str], str] 
             for s in semantic.get("review_signals", [])
             if s["signal_id"] not in updates and s["signal_id"] not in result.get("replaced_signal_ids", [])
         ] + list(updates.values())
-        semantic["responsibilities"].extend(result["new_responsibilities"])
-        semantic["evidence"].extend(result["evidence"])
-        by_id = {e["event_id"]: e for e in semantic["events"]}
-        for change in result["suggested_reclassification"]:
-            event = by_id.get(change["event_id"])
-            if not event or event["responsibility_id"] != change["from_responsibility_id"]:
-                raise GrooveError("INVALID_ANALYSIS", "再分類元が一致しません。")
-            event["responsibility_id"] = change["to_responsibility_id"]
-            event["evidence_ids"] = list(dict.fromkeys(event["evidence_ids"] + change["evidence_ids"]))
-        orders: dict[str, int] = {}
-        for event in sorted(semantic["events"], key=lambda e: (e["semantic_order"], e["event_id"])):
-            rid = event["responsibility_id"]
-            event["semantic_order"] = orders.get(rid, 0)
-            orders[rid] = event["semantic_order"] + 1
         identifier = f"analysis_{uuid.uuid4().hex}"
         semantic.update(
             analysis_id=identifier,
             parent_analysis_id=previous,
+            interpretation_update_version=result.get("investigation_prompt_version", "unknown"),
             analysis_depth="focused",
             created_at=datetime.now(UTC).isoformat(),
         )
