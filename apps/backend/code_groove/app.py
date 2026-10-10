@@ -312,6 +312,21 @@ def create_app(settings: Settings | None = None, verifier: Callable[[str], str] 
 
         return {"data": tsugiai_reference().model_dump()}
 
+    @app.get("/api/v1/samples/{sample_id}/session-inspection")
+    def sample_session_inspection(sample_id: str) -> dict:
+        if sample_id != "recorded-tsugiai-agents":
+            raise GrooveError("NOT_FOUND", "この検査はTSUGIAIの固定版が対象です。", 404)
+        from code_groove.session_inspection import recorded_session_inspection
+
+        result = recorded_session_inspection()
+        return {
+            "data": {
+                **result,
+                "initial_bundle": current_music(result["initial_bundle"]),
+                "draft_bundle": current_music(result["draft_bundle"]),
+            }
+        }
+
     @app.post("/api/v1/projects", status_code=202)
     def create_project(body: CreateProject, user: User, key: Key) -> dict:
         if body.source.kind == "github_public":

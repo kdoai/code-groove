@@ -58,3 +58,37 @@ describe('pre-verdict shared-rule comparison', () => {
     ).toBe(true);
   });
 });
+
+describe('TSUGIAI recorded investigation draft', () => {
+  it('compares the five grounded preconditions with identical sound and distinct evidence', () => {
+    const recording = JSON.parse(
+      readFileSync('fixtures/recorded-live/tsugiai-session-inspection.json', 'utf8'),
+    ) as { initial_bundle: Bundle; draft_bundle: Bundle };
+    expect(sharedRuleGroups(recording.initial_bundle.map)).toHaveLength(0);
+    const draft = recording.draft_bundle;
+    const draftPlan = playbackPlan(draft.score, 'repo', 0, true)!;
+    const group = sharedRuleGroups(draft.map).find(
+      (g) => new Set(g.events.map((e) => e.unit_id)).size === 5,
+    )!;
+    expect(group).toBeDefined();
+    const labels = group.events.map((e) => draft.map.units.find((u) => u.unit_id === e.unit_id)!.label);
+    expect(new Set(labels)).toEqual(
+      new Set([
+        'save_check_response',
+        'add_to_parking_lot',
+        'mark_item_complete',
+        'get_session_progress',
+        'complete_checkout',
+      ]),
+    );
+    expect(labels).not.toContain('request_photo');
+    const identifiers = group.events.map((e) => ruleIdentifier(draftPlan, draft.map, e.event_id)!);
+    for (const identifier of identifiers) {
+      expect(audible(identifier)).toEqual(audible(identifiers[0]));
+      expect(identifier.notes).toHaveLength(8);
+      expect(identifier.notes.every((n) => n.evidence_ids.length > 0)).toBe(true);
+    }
+    expect(new Set(identifiers.map((i) => i.notes[0].event_id)).size).toBe(group.events.length);
+    expect(draft.sources).toEqual(recording.initial_bundle.sources);
+  });
+});

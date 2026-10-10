@@ -1,0 +1,425 @@
+{
+  "protocol": "shared-rule-development-v1",
+  "case_id": "tsugiai-session-explicit-v1",
+  "reference_status": "source_checked_agent_draft_awaiting_human_ratification",
+  "reference_prepared_before_model_runs": true,
+  "question": "対象セッションを呼出ごとに明示できるようにする変更の影響を調べてください。写真依頼の戻り値と、Phase3の完了経路は維持します。一緒に確認する実装、共有する下位の契約、残す境界、反例、未確認事項を根拠付きで示してください。対象コードは実行・変更しません。並行動作の不具合を静的調査だけで断定しません。",
+  "revision": "35a951488d7b00518e7e73a329d46713cbeacbe8",
+  "development_only": true,
+  "source_sha256": [
+    {
+      "path": "agents/checkout_agent/__init__.py",
+      "sha256": "649dafb70288852a40cf24671c131994e9f776fd27c21e821236a83fa921d720"
+    },
+    {
+      "path": "agents/checkout_agent/agent.py",
+      "sha256": "e95a17ba2966704c8707c382b7c4785c9bfc71535dc84e990e4daae16fed50d5"
+    },
+    {
+      "path": "agents/checkout_agent/prompts.py",
+      "sha256": "7275e3f1b3b8f99e95705241e66c062217a30ccdbd90ec2d109b20c434aafd28"
+    },
+    {
+      "path": "agents/checkout_agent/tools.py",
+      "sha256": "2da538570ae9483811ca89f1ea24932620a592054bd6866ecab0df8e6a2cb0ed"
+    },
+    {
+      "path": "agents/handover_agent/__init__.py",
+      "sha256": "2a21d2136e797f569caf559bf0d262c095a59f00e778f70d10195c2a78ced8d1"
+    },
+    {
+      "path": "agents/handover_agent/agent.py",
+      "sha256": "fa2cbd342e0165e4580ad391ee6043396c87483ac0edc9c855db7f8a5224972d"
+    },
+    {
+      "path": "agents/main.py",
+      "sha256": "a4931f0fdfec0b32540b801526f701370b575ae863d356306192d8cdd059f2bc"
+    },
+    {
+      "path": "agents/middleware/__init__.py",
+      "sha256": "c7099db265bdb5e2413e6b98140e04454ea042a88d1683c5d8dca8a97f3acbaf"
+    },
+    {
+      "path": "agents/middleware/auth.py",
+      "sha256": "5cbb0f7f784b30d730d988b3d86eb74c3abaf141c7a8541543b5ddb733ed7be3"
+    },
+    {
+      "path": "agents/models/__init__.py",
+      "sha256": "66d4b6dfa5ade37d8b771e867ca7e6a6e3dbe665fd2a542cceced2a0718ebe31"
+    },
+    {
+      "path": "agents/models/checklist.py",
+      "sha256": "224e46013bb24fdb85db9d2ef7e0eec84f66eb550ef7b376426aee68bdac45d9"
+    },
+    {
+      "path": "agents/scripts/seed_templates.py",
+      "sha256": "f1930796b04d9660dfac65faf184e3b23f6c8cbb14c8d6a6a034cca3548d3f69"
+    },
+    {
+      "path": "agents/services/__init__.py",
+      "sha256": "d03dfee63a88724100314ad0f05f89d4ab997da8c8d5cf97b053027376573b5a"
+    },
+    {
+      "path": "agents/services/firestore.py",
+      "sha256": "f3c9b67fd7c3c8fefb4449e418f4b843c1baee8a4b5b1015dc915e9cacc8d767"
+    },
+    {
+      "path": "agents/services/speech.py",
+      "sha256": "292effd855c27af6963b94df0be2a102bf0cd6adf45971d0edc603432d995a07"
+    },
+    {
+      "path": "agents/services/storage.py",
+      "sha256": "62c2370053799d4d49f9c3eff4e482ea895794e7a4a465b11d318ed976932925"
+    },
+    {
+      "path": "agents/template_agent/__init__.py",
+      "sha256": "06c1f24bf653bab27b70da8c1ae470638382a3c6c5da50bf87c8df738c45a46e"
+    },
+    {
+      "path": "agents/template_agent/agent.py",
+      "sha256": "ad08c7705abe1add25081949344f655cee06f7a7404dfd3975dae383ecc3e8f3"
+    },
+    {
+      "path": "frontend/src/App.tsx",
+      "sha256": "f83d160be547568de1abc5a425681f340082daf2f24234339db763a9379446bb"
+    },
+    {
+      "path": "frontend/src/components/common/Layout.tsx",
+      "sha256": "c8ce590eb4d1e6fac63d756ec64865780cb354773e75907507ccf0ec30682269"
+    },
+    {
+      "path": "frontend/src/components/common/ProtectedRoute.tsx",
+      "sha256": "7b0799cfdbc9dd07c4207b87fc44e3c0a35d45fe2f1327a6782f287afe83042f"
+    },
+    {
+      "path": "frontend/src/contexts/AdminContext.tsx",
+      "sha256": "99ca6cbe83d3bb066a37199a4acb75f928ee72070758907a03db205e7932e120"
+    },
+    {
+      "path": "frontend/src/contexts/AuthContext.tsx",
+      "sha256": "efd144d87fb11676f51f38df0830063320e923127da7f5b57c3d3ec7ee3e12cb"
+    },
+    {
+      "path": "frontend/src/main.tsx",
+      "sha256": "33a71647e3e933e539df374d743021f8e972bd3560abaf6df796885ab8ac4242"
+    },
+    {
+      "path": "frontend/src/pages/AuthVerifyPage.tsx",
+      "sha256": "c1e1202230f952e402c69a13b2cf63e94abd772471a452def188cfe4e70191a4"
+    },
+    {
+      "path": "frontend/src/pages/CheckoutStartPage.tsx",
+      "sha256": "f9a0f1b5edd459f2950649f589b675a63ebee478c47c971d39a5ca3351cdda5e"
+    },
+    {
+      "path": "frontend/src/pages/HandoverHomePage.tsx",
+      "sha256": "8f24eec8703d0777b590e1938296166b048c048b9f074af3f72a0d7d938e1220"
+    },
+    {
+      "path": "frontend/src/pages/HandoverListPage.tsx",
+      "sha256": "b7e35ec83d03dcc19ec7977a53fe35527762262e8257a8422dbe47ee03367545"
+    },
+    {
+      "path": "frontend/src/pages/HandoverPage.tsx",
+      "sha256": "f28da9036574ee10126380a549405186e160be1d64d1884376c5be2dc162f1a8"
+    },
+    {
+      "path": "frontend/src/pages/InboxPage.tsx",
+      "sha256": "178be773c256f7fd0be06fc2f3a4d2d4df6d7ae438ccd8e1e2c06f63576d035b"
+    },
+    {
+      "path": "frontend/src/pages/LoginPage.tsx",
+      "sha256": "67fb96a1e4d3f80207d4df47a58edfd1e25ff2280256d5a12380a72de9d0d766"
+    },
+    {
+      "path": "frontend/src/pages/SettingsPage.tsx",
+      "sha256": "4553d1b8ac6b534db463a5e7c31b6bd47b86dcbcd8edd82173927a7f5e481201"
+    },
+    {
+      "path": "frontend/src/pages/TemplateBuilderPage.tsx",
+      "sha256": "8da67e86e9223f61a47ed331eef74a000c70b3d0a3fd7239eab24e5664816574"
+    },
+    {
+      "path": "frontend/src/pages/TemplatesPage.tsx",
+      "sha256": "262b942c9edb36d44bcc1a74c6eaca4d5fd7acc2a34e6c494596ca7285e4023e"
+    },
+    {
+      "path": "frontend/src/pages/TenantOnboardingPage.tsx",
+      "sha256": "fe64e6e78d592ea5fc7fa191dd10fa5a2eee8c46278239f5c81311b0872f2390"
+    },
+    {
+      "path": "frontend/src/pages/TenantSelectPage.tsx",
+      "sha256": "7b871bcd297edb7b40ea06a8105f78014c777ccc81d1e32ff821579487504881"
+    },
+    {
+      "path": "frontend/src/pages/TenantSettingsPage.tsx",
+      "sha256": "840d8567079c8cb12d50fa122f2eb4a0d126f047e395d0b38d47eafd61cd349c"
+    },
+    {
+      "path": "frontend/src/pages/VoiceCheckoutPage.tsx",
+      "sha256": "3f03b9c351265c624e8792922659d87bb52cde8d815516e16d517d75ffec7a1f"
+    },
+    {
+      "path": "frontend/src/pages/checkout/CheckoutFlowPage.tsx",
+      "sha256": "1c7078d4daccf3572b4ba037c960bf763134da526ca14f84df6e9f7a92e8bf97"
+    },
+    {
+      "path": "frontend/src/pages/checkout/Phase1FormPage.tsx",
+      "sha256": "f4db70e76c095bac77e0bcc68c56e1253bca5c03233f8e92ec68973d6b77097d"
+    },
+    {
+      "path": "frontend/src/pages/checkout/Phase2PhotoPage.tsx",
+      "sha256": "7b2560971eac3de339ea799b3b0a45006f4234c39f8ef78fd4625050f2fb4441"
+    },
+    {
+      "path": "frontend/src/pages/checkout/Phase3ConversationPage.tsx",
+      "sha256": "2bd99f475b705d4ab95364dc80368375ccbf1c185a38210e006e7eef01cc514b"
+    },
+    {
+      "path": "frontend/src/pages/checkout/Phase4ReviewPage.tsx",
+      "sha256": "607e925f508fb8c2fe036b6444b70ddee8b2ad727f248abaa4967d9852c11584"
+    },
+    {
+      "path": "frontend/src/pages/checkout/index.ts",
+      "sha256": "0a890616f333c7c10541935a074acc16c867fd8905a850b3be1a99387f1ff482"
+    },
+    {
+      "path": "frontend/src/services/audioUtils.ts",
+      "sha256": "3ebe188064d0e7b582aad9d0339cbedbafd8a7f3ac6ad68fb435e5741a6752fc"
+    },
+    {
+      "path": "frontend/src/services/handoverApi.ts",
+      "sha256": "9f764b14fa81eb2d62908608ee0ea0e5d0329da0fcbf5a8b872bd96d9a572fcf"
+    },
+    {
+      "path": "frontend/src/types/handover.ts",
+      "sha256": "56d12a0a7c966208245c0bdb8fd996f510933b1c83f43be001435fc57f938a5e"
+    },
+    {
+      "path": "frontend/vite.config.ts",
+      "sha256": "7ca70b0686c3585a5ee89e762cb14acc3a8a59070a85005d9b9a5f261204e02a"
+    },
+    {
+      "path": "functions/src/index.ts",
+      "sha256": "528d574aec021b8f631a223a199e69f045427a46f4220cf6f5220952bc196451"
+    },
+    {
+      "path": "migration/migrate-to-multitenant.ts",
+      "sha256": "05b51fc2a6935ee760b109a990ce869d62b4b53858c5dabbc3f8cb46302bcb7b"
+    },
+    {
+      "path": "migration/verify-migration.ts",
+      "sha256": "4ca123e43d8570ba8d8e78488c8aee0932cfb273dc72fdb8239b2f117de1dd90"
+    }
+  ],
+  "rules": [
+    {
+      "rule_id": "initialized_session_context",
+      "description": "同じ初期化済みサービスと対象セッションを使う前提契約。業務ルールの完全一致や欠陥の証明ではない。",
+      "occurrences": [
+        {
+          "unit_id": "unit_389a66141dc413e7",
+          "label": "save_check_response",
+          "path": "agents/checkout_agent/tools.py",
+          "start_line": 46,
+          "end_line": 47,
+          "full_span": {
+            "file_id": "file_a232501b52931428",
+            "path": "agents/checkout_agent/tools.py",
+            "start_line": 26,
+            "end_line": 66
+          }
+        },
+        {
+          "unit_id": "unit_852807f14a02b7fe",
+          "label": "add_to_parking_lot",
+          "path": "agents/checkout_agent/tools.py",
+          "start_line": 80,
+          "end_line": 81,
+          "full_span": {
+            "file_id": "file_a232501b52931428",
+            "path": "agents/checkout_agent/tools.py",
+            "start_line": 69,
+            "end_line": 91
+          }
+        },
+        {
+          "unit_id": "unit_4d1e9f2132a5df96",
+          "label": "mark_item_complete",
+          "path": "agents/checkout_agent/tools.py",
+          "start_line": 126,
+          "end_line": 127,
+          "full_span": {
+            "file_id": "file_a232501b52931428",
+            "path": "agents/checkout_agent/tools.py",
+            "start_line": 116,
+            "end_line": 144
+          }
+        },
+        {
+          "unit_id": "unit_c1267947e91d5d71",
+          "label": "get_session_progress",
+          "path": "agents/checkout_agent/tools.py",
+          "start_line": 154,
+          "end_line": 155,
+          "full_span": {
+            "file_id": "file_a232501b52931428",
+            "path": "agents/checkout_agent/tools.py",
+            "start_line": 147,
+            "end_line": 186
+          }
+        },
+        {
+          "unit_id": "unit_3f3016ef7d0fb08b",
+          "label": "complete_checkout",
+          "path": "agents/checkout_agent/tools.py",
+          "start_line": 196,
+          "end_line": 197,
+          "full_span": {
+            "file_id": "file_a232501b52931428",
+            "path": "agents/checkout_agent/tools.py",
+            "start_line": 189,
+            "end_line": 216
+          }
+        }
+      ]
+    }
+  ],
+  "required_checks": [
+    {
+      "id": "five_context_consumers",
+      "expected": [
+        "save_check_response",
+        "add_to_parking_lot",
+        "mark_item_complete",
+        "get_session_progress",
+        "complete_checkout"
+      ],
+      "reason": "対象セッション指定と未初期化時の応答を一緒に確認する"
+    },
+    {
+      "id": "binding_and_callers",
+      "path": "agents/checkout_agent/tools.py",
+      "lines": [
+        7,
+        23
+      ],
+      "related": [
+        {
+          "path": "agents/main.py",
+          "lines": [
+            466,
+            477
+          ]
+        },
+        {
+          "path": "agents/main.py",
+          "lines": [
+            557,
+            602
+          ]
+        },
+        {
+          "path": "agents/checkout_agent/agent.py",
+          "lines": [
+            122,
+            154
+          ]
+        }
+      ],
+      "expected": "セッションIDとテナント別サービスを同じ要求に結び、Agentのツール登録を確認する"
+    },
+    {
+      "id": "photo_counterexample",
+      "path": "agents/checkout_agent/tools.py",
+      "lines": [
+        94,
+        113
+      ],
+      "expected": "request_photoは共有参照を読まない。全ツールが直接依存するという仮説を棄却し、戻り値の契約を残す"
+    },
+    {
+      "id": "phase3_boundary",
+      "path": "agents/checkout_agent/tools.py",
+      "lines": [
+        189,
+        216
+      ],
+      "related": [
+        {
+          "path": "agents/main.py",
+          "lines": [
+            1263,
+            1318
+          ]
+        },
+        {
+          "path": "agents/models/checklist.py",
+          "lines": [
+            30,
+            38
+          ]
+        }
+      ],
+      "expected": "Phase3のツールはcomplete_sessionを呼ばず、専用APIがPhase4・pending_reviewへ移す"
+    },
+    {
+      "id": "service_contract",
+      "path": "agents/services/firestore.py",
+      "lines": [
+        130,
+        146
+      ],
+      "expected": "永続化サービスは既にsession_idを受け取る。対象指定と回答保存・進捗・完了という役割は別に保つ"
+    }
+  ],
+  "acceptable_alternatives": [
+    "要求ごとの明示的引数",
+    "要求ごとの束縛済みツールまたはセッションコンテキスト"
+  ],
+  "inconclusive_conditions": [
+    "呼出側・テナント境界を未読",
+    "実行時の同時処理・隔離は未検証",
+    "文書・テストの網羅範囲が未確定"
+  ],
+  "success_criteria": {
+    "representation": "5つの前提契約に根拠付きの同じ意味キーがあり、写真依頼を含めない",
+    "agent": "必要箇所・反例・Phase3境界・保留を具体的な読取根拠と結ぶ",
+    "human": "確認箇所と残す境界を人が根拠付きで判断。音の効果は別課題との比較試行まで未測定"
+  },
+  "comparison_protocol": {
+    "model": "gemini-3.8-flash",
+    "provider": "GCP",
+    "project": "artful-bonsai-491601-p3",
+    "location": "global",
+    "repetitions": 3,
+    "order": "current-1, baseline-1, current-2, baseline-2, current-3, baseline-3",
+    "same_source_access": true,
+    "same_read_tools": true,
+    "same_question": true,
+    "limits": {
+      "requests": 18,
+      "tool_calls": 48,
+      "input_tokens": 400000,
+      "output_tokens": 48000,
+      "seconds": 480
+    },
+    "difference": "現行Agentは構造化提出・根拠検証。通常AIは一般的なコードレビュー指示で自由記述。検索・読取・モデル・上限は同じ。"
+  },
+  "budget": {
+    "authorized_yen": 5000,
+    "runner_ceiling_yen": 4000,
+    "usd_to_yen_planning_rate": 250,
+    "tax_margin": 1.1,
+    "reserved_usd_per_million_input": 2,
+    "reserved_usd_per_million_output": 10,
+    "price_url": "https://cloud.google.com/gemini-enterprise-agent-platform/generative-ai/pricing?hl=en",
+    "note": "通常料金より高い単価と換算係数でrun全体の最大額を先に予約。請求額の実測ではない。"
+  },
+  "record_encoding": {
+    "version": "path_sha256_pairs_v2",
+    "original_document_sha256": "a2534d104d84f1e8330216e8f11e406db20a1d2014753a5567cc6de01e45e786",
+    "original_newline": "CRLF",
+    "change": "serialization only; pre-run reference facts unchanged"
+  }
+}

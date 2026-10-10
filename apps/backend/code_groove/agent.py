@@ -22,6 +22,9 @@ from code_groove.schemas import (
 )
 from code_groove.settings import ROOT
 
+RUNTIME_VERSION = "bounded-loop-v8-numbered-source"
+INVESTIGATION_PROMPT_VERSION = "investigation-v2-concise"
+
 
 def model_error_reason(message: str | None) -> str:
     text = (message or "").lower()
@@ -64,7 +67,8 @@ async def _run_bounded_loop(ctx: AgentContext) -> Any:
         "analysis_depth": ctx.analysis_depth,
         "goal": "意味と所有境界を復元し、必要な反証を調べる",
         "limits": {"responsibilities": 6, "events": 96},
-        "base": ctx.base,
+        # Coverage repeats the saved read inventory; validation still uses the complete base.
+        "base": {k: v for k, v in ctx.base.items() if k != "coverage"} if ctx.base else None,
         "selection": ctx.selection,
         "verified_unchanged_interpretation": ctx.cached_interpretation,
         "changes": ctx.changes,
@@ -80,12 +84,17 @@ async def _run_bounded_loop(ctx: AgentContext) -> Any:
     max_input, max_output = (160000, 20000) if ctx.investigating else (400000, 48000)
     config = types.GenerateContentConfig(
         system_instruction=prompt,
-        tools=[types.Tool(function_declarations=declarations(ctx.investigating, ctx.proposing, ctx.comparing))],
+        tools=[
+            types.Tool(function_declarations=declarations(ctx.investigating, ctx.proposing, ctx.comparing))
+        ],
         automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
-        thinking_config=types.ThinkingConfig(thinking_level=types.ThinkingLevel.MEDIUM),
+        thinking_config=types.ThinkingConfig(
+            thinking_level=types.ThinkingLevel.LOW if ctx.investigating else types.ThinkingLevel.MEDIUM
+        ),
         max_output_tokens=output_limit,
     )
     text_only = 0
+    previous_input_estimate = 0
     try:
         while True:
             ctx.check()
@@ -93,6 +102,7 @@ async def _run_bounded_loop(ctx: AgentContext) -> Any:
                 ctx.model_count >= (6 if ctx.investigating else 10)
                 or max_output - ctx.output_tokens < output_limit + 4096
                 or time.monotonic() - ctx.started > (110 if ctx.investigating else 300)
+                or ctx.input_tokens + 2 * previous_input_estimate >= max_input
             )
             if closing:
                 if config.tool_config is None:
@@ -118,7 +128,9 @@ async def _run_bounded_loop(ctx: AgentContext) -> Any:
                 config.tools = [
                     types.Tool(
                         function_declarations=[
-                            d for d in declarations(ctx.investigating, ctx.proposing, ctx.comparing) if d.name == final_name
+                            d
+                            for d in declarations(ctx.investigating, ctx.proposing, ctx.comparing)
+                            if d.name == final_name
                         ]
                     )
                 ]
@@ -127,6 +139,7 @@ async def _run_bounded_loop(ctx: AgentContext) -> Any:
                         mode=types.FunctionCallingConfigMode.AUTO,
                     )
                 )
+                config.thinking_config = types.ThinkingConfig(thinking_level=types.ThinkingLevel.LOW)
             try:
                 counted = await asyncio.wait_for(
                     client.aio.models.count_tokens(model=ctx.settings.gemini_model, contents=history),  # type: ignore[arg-type]
@@ -139,20 +152,37 @@ async def _run_bounded_loop(ctx: AgentContext) -> Any:
                 + len(prompt) // 2
                 + len(
                     json.dumps(
-                        [d.model_dump(mode="json") for d in declarations(ctx.investigating, ctx.proposing, ctx.comparing)]
+                        [
+                            d.model_dump(mode="json")
+                            for tool in config.tools or []
+                            if isinstance(tool, types.Tool)
+                            for d in tool.function_declarations or []
+                        ]
                     )
                 )
                 // 2
             )
             if (
-                input_count > (32000 if ctx.investigating else 48000)
+                input_count > 48000
                 or ctx.input_tokens + input_count > max_input
                 or max_output - ctx.output_tokens < 1024
             ):
+                ctx.emit(
+                    "budget_boundary",
+                    {
+                        "request_input_estimate": input_count,
+                        "input_used": ctx.input_tokens,
+                        "input_limit": max_input,
+                        "output_used": ctx.output_tokens,
+                    },
+                )
                 raise GrooveError("BUDGET_EXCEEDED", "トークン予算に達しました。", 429)
+            previous_input_estimate = input_count
             for retry in range(3):
                 ctx.check()
-                request_output_limit = min(output_limit, max_output - ctx.output_tokens)
+                request_output_limit = min(
+                    12288 if ctx.investigating and closing else output_limit, max_output - ctx.output_tokens
+                )
                 if ctx.input_tokens + input_count > max_input or request_output_limit < 1024:
                     raise GrooveError("BUDGET_EXCEEDED", "再試行のトークン予算に達しました。", 429)
                 if ctx.model_count >= (8 if ctx.investigating else 18):
@@ -248,7 +278,15 @@ async def _run_bounded_loop(ctx: AgentContext) -> Any:
                     if call.name.startswith("submit_") and len(calls) != 1:
                         raise GrooveError("FINALIZE_MUST_BE_ALONE", "提出は単独のbatchで行ってください。")
                     result = execute_tool(ctx, call.name, call.args or {}, event_id)
-                    if isinstance(result, (AnalysisCandidate, InvestigationCandidate, ImprovementCandidate, ComparisonAnswerCandidate)):
+                    if isinstance(
+                        result,
+                        (
+                            AnalysisCandidate,
+                            InvestigationCandidate,
+                            ImprovementCandidate,
+                            ComparisonAnswerCandidate,
+                        ),
+                    ):
                         ctx.check()
                         ctx.emit(
                             "tool_completed", {"tool": call.name, "purpose": "検証済み候補を提出", "ok": True}

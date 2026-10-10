@@ -251,7 +251,13 @@ def execute_tool(ctx: AgentContext, name: str, args: dict, event_id: str) -> Any
         if name == "list_repository_files":
             rows = source_index["files"]
             return {
-                "files": rows[parsed.cursor : parsed.cursor + parsed.limit],
+                "files": [
+                    {
+                        **{k: v for k, v in file.items() if k != "imports"},
+                        "import_count": len(file.get("imports", [])),
+                    }
+                    for file in rows[parsed.cursor : parsed.cursor + parsed.limit]
+                ],
                 "truncated": len(rows) > parsed.cursor + parsed.limit,
                 "next_cursor": parsed.cursor + parsed.limit
                 if len(rows) > parsed.cursor + parsed.limit
@@ -318,7 +324,13 @@ def execute_tool(ctx: AgentContext, name: str, args: dict, event_id: str) -> Any
         )
         ctx.evidence.append(evidence)
         return {
-            "source": source,
+            "source": "\n".join(
+                f"{line}: {content}"
+                for line, content in enumerate(
+                    lines[parsed.start_line - 1 : parsed.end_line], parsed.start_line
+                )
+            ),
+            "source_format": "line_numbered; projection_sha256 hashes original unnumbered source",
             "span": evidence.span.model_dump(),
             "evidence_ids": [evidence.evidence_id],
             "untrusted_repository_data": True,

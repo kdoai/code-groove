@@ -123,6 +123,7 @@ export function ReviewWorkspace({
           <div className="repository-scale" data-testid="repository-scale">
             実在コード {sourcePaths.length} ファイル · {reference.data.source_lines.toLocaleString()} 行
             <small>演奏は保存済みの9実装。全体の解析は未実施。</small>
+            <a href="/inspections/tsugiai-session">TSUGIAIの変更課題で検査する</a>
           </div>
         )}
         {reference.error && (

@@ -26,6 +26,7 @@ import { playbackPlan } from './audio/playback';
 import { engine } from './audio/engine';
 import { primarySample } from './samples';
 import { SpotlightTour } from './components/SpotlightTour';
+import { TsugiaiSessionInspection } from './components/TsugiaiSessionInspection';
 
 type Run = {
   run_id: string;
@@ -37,6 +38,14 @@ type Run = {
 };
 const active = ['enqueue_pending', 'queued', 'fetching', 'indexing', 'investigating', 'compiling'];
 export default function App() {
+  return location.pathname === '/inspections/tsugiai-session' ? (
+    <TsugiaiSessionInspection />
+  ) : (
+    <WorkspaceApp />
+  );
+}
+
+function WorkspaceApp() {
   const ws = useWorkspace(),
     cache = useQueryClient();
   const restorePrimarySample = location.pathname === '/' && !!ws.sampleId && ws.sampleId !== primarySample.id;
