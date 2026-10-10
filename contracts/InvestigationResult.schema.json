@@ -312,6 +312,93 @@
       "title": "Hypothesis",
       "type": "object"
     },
+    "MeaningEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "event_id": {
+          "pattern": "^[a-zA-Z0-9_-]{1,80}$",
+          "title": "Event Id",
+          "type": "string"
+        },
+        "concept_key": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Concept Key",
+          "type": "string"
+        },
+        "label": {
+          "maxLength": 48,
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "meaning": {
+          "maxLength": 160,
+          "minLength": 1,
+          "title": "Meaning",
+          "type": "string"
+        },
+        "responsibility_id": {
+          "pattern": "^[a-zA-Z0-9_-]{1,80}$",
+          "title": "Responsibility Id",
+          "type": "string"
+        },
+        "unit_id": {
+          "pattern": "^[a-zA-Z0-9_-]{1,80}$",
+          "title": "Unit Id",
+          "type": "string"
+        },
+        "semantic_order": {
+          "minimum": 0,
+          "title": "Semantic Order",
+          "type": "integer"
+        },
+        "kind": {
+          "enum": [
+            "decision",
+            "calculation",
+            "update"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "span": {
+          "$ref": "#/$defs/Span"
+        },
+        "evidence_ids": {
+          "items": {
+            "pattern": "^[a-zA-Z0-9_-]{1,80}$",
+            "type": "string"
+          },
+          "maxItems": 96,
+          "title": "Evidence Ids",
+          "type": "array"
+        },
+        "state": {
+          "enum": [
+            "grounded",
+            "unresolved"
+          ],
+          "title": "State",
+          "type": "string"
+        }
+      },
+      "required": [
+        "event_id",
+        "concept_key",
+        "label",
+        "meaning",
+        "responsibility_id",
+        "unit_id",
+        "semantic_order",
+        "kind",
+        "span",
+        "evidence_ids",
+        "state"
+      ],
+      "title": "MeaningEvent",
+      "type": "object"
+    },
     "PatternException": {
       "additionalProperties": false,
       "properties": {
@@ -643,6 +730,23 @@
   },
   "additionalProperties": false,
   "properties": {
+    "new_events": {
+      "items": {
+        "$ref": "#/$defs/MeaningEvent"
+      },
+      "maxItems": 24,
+      "title": "New Events",
+      "type": "array"
+    },
+    "replaced_event_ids": {
+      "items": {
+        "pattern": "^[a-zA-Z0-9_-]{1,80}$",
+        "type": "string"
+      },
+      "maxItems": 96,
+      "title": "Replaced Event Ids",
+      "type": "array"
+    },
     "replaced_signal_ids": {
       "items": {
         "pattern": "^[a-zA-Z0-9_-]{1,80}$",
@@ -700,6 +804,11 @@
       "maxItems": 4,
       "title": "Design Patterns",
       "type": "array"
+    },
+    "investigation_prompt_version": {
+      "default": "unknown",
+      "title": "Investigation Prompt Version",
+      "type": "string"
     },
     "investigation_id": {
       "pattern": "^[a-zA-Z0-9_-]{1,80}$",

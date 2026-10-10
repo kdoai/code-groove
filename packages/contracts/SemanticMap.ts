@@ -419,6 +419,7 @@ export type AnalysisId = string;
 export type ProjectId = string;
 export type SnapshotId = string;
 export type ParentAnalysisId = string | null;
+export type InterpretationUpdateVersion = string | null;
 /**
  * @maxItems 4
  */
@@ -462,6 +463,7 @@ export interface SemanticMap {
   project_id: ProjectId;
   snapshot_id: SnapshotId;
   parent_analysis_id?: ParentAnalysisId;
+  interpretation_update_version?: InterpretationUpdateVersion;
   integration_chunk_ids?: IntegrationChunkIds;
   analysis_depth?: AnalysisDepth;
   origin: Origin;

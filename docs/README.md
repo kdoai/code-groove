@@ -6,6 +6,7 @@
 | ローカル起動とテスト | [開発手順](DEVELOPMENT.md) |
 | システム構成 | [技術構成](TECHNICAL_GUIDE.md) |
 | 入出力と動作の仕様 | [仕様](SPEC.md) |
+| 共有ルールの比較・解釈更新・評価課題 | [共有ルールの検査](SHARED_RULE_INSPECTION.md) |
 | 音とコードの対応 | [音の規則](SONIFICATION.md) |
 | デモの解析範囲 | [Tsugiaiデモ](TSUGIAI_DEMO.md) |
 | 分割解析と保存結果の再利用 | [増分解析](INCREMENTAL.md) |

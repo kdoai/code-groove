@@ -124,6 +124,16 @@ test('human approval gates source changes and after comparison (mock API, no pai
         evidence: [],
         review_signals: before.map.review_signals,
         suggested_reclassification: [],
+        new_events: [
+          {
+            ...before.map.events[0],
+            event_id: 'event_mock_added',
+            concept_key: 'mock_additional_rule',
+            label: '模擬の追加ルール',
+            meaning: '追加候補を人が根拠で確認するUI検証',
+          },
+        ],
+        replaced_event_ids: [],
       };
     else if (path === '/investigations/inv_e2e/publish-interpretation') {
       reflected = true;
@@ -177,6 +187,11 @@ test('human approval gates source changes and after comparison (mock API, no pai
   await page.getByRole('button', { name: '質問を送信' }).click();
   await expect(page.getByText('模擬の精密検査：将来の協調変更を検討')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Geminiに改善案を依頼', exact: true })).toHaveCount(0);
+  expect(reflected).toBe(false);
+  const delta = page.getByTestId('interpretation-changes');
+  await expect(delta).toContainText('追加: 模擬の追加ルール');
+  await delta.getByRole('button', { name: /^追加候補の根拠/ }).click();
+  await expect(page.getByTestId('code-location')).toBeVisible();
   expect(reflected).toBe(false);
   await page.getByRole('button', { name: '調査結果を演奏に反映', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Geminiに改善案を依頼', exact: true })).toBeVisible();

@@ -1,0 +1,37 @@
+{
+  "case_id": "checkout-quantity-v1",
+  "reference_status": "ai_draft_awaiting_human_ratification",
+  "input_bundle_sha256": "9437b39f03ed8ab951afb18712ba448d597becf56b9eec67a88c94e4ca06ecdd",
+  "input_origin": "recorded_live",
+  "input_prompt_version": "conductor-system-v6",
+  "input_model_id": "gemini-3.8-flash",
+  "checks": [
+    {
+      "rule_id": "eligible_merchandise",
+      "expected_occurrences": 3,
+      "occurrences_with_overlapping_events": 1,
+      "common_saved_keys": [],
+      "comparable_by_saved_key": false,
+      "semantic_equivalence": "requires_human_review"
+    },
+    {
+      "rule_id": "campaign_qualification",
+      "expected_occurrences": 3,
+      "occurrences_with_overlapping_events": 3,
+      "common_saved_keys": [],
+      "comparable_by_saved_key": false,
+      "semantic_equivalence": "requires_human_review"
+    },
+    {
+      "rule_id": "capped_percentage_saving",
+      "expected_occurrences": 3,
+      "occurrences_with_overlapping_events": 3,
+      "common_saved_keys": [],
+      "comparable_by_saved_key": false,
+      "semantic_equivalence": "requires_human_review"
+    }
+  ],
+  "metric_scope": "saved key and evidence coverage, not semantic accuracy or listening utility",
+  "current_agent_evaluation": "not_run",
+  "human_sound_effect": "not_measured"
+}

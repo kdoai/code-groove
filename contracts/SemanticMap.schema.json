@@ -882,6 +882,18 @@
       "default": null,
       "title": "Parent Analysis Id"
     },
+    "interpretation_update_version": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Interpretation Update Version"
+    },
     "integration_chunk_ids": {
       "items": {
         "pattern": "^[a-zA-Z0-9_-]{1,80}$",

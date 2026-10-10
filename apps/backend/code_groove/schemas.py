@@ -350,6 +350,7 @@ class SemanticMap(AnalysisCandidate):
     project_id: Id
     snapshot_id: Id
     parent_analysis_id: Id | None = None
+    interpretation_update_version: str | None = None
     integration_chunk_ids: list[Id] = Field(default_factory=list, max_length=4)
     analysis_depth: Literal["overview", "focused"] = "focused"
     origin: Literal["live", "recorded_live", "fixture"]
@@ -445,6 +446,8 @@ class Reclassification(Contract):
 
 
 class InvestigationCandidate(Contract):
+    new_events: list[MeaningEvent] = Field(default_factory=list, max_length=24)
+    replaced_event_ids: Ids = Field(default_factory=list, max_length=24)
     replaced_signal_ids: Ids = Field(default_factory=list, max_length=12)
     review_signals: list[ReviewSignal] = Field(default_factory=list, max_length=6)
     findings: list[Finding] = Field(min_length=1, max_length=3)
@@ -455,6 +458,7 @@ class InvestigationCandidate(Contract):
 
 
 class InvestigationResult(InvestigationCandidate):
+    investigation_prompt_version: str = "unknown"
     investigation_id: Id
     base_analysis_id: Id
     selected_unit_ids: Ids
