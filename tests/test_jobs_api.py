@@ -188,6 +188,23 @@ def test_replacement_worker_cannot_restart_run_deadline(setup):
         state.jobs.guard(run_id, "replacement")
 
 
+def test_new_reservations_and_worker_deadline_use_the_frozen_agent_limits(setup):
+    from code_groove.agent_limits import ANALYSIS_LIMITS, FOCUSED_LIMITS
+
+    client, state = setup
+    run_id = create(client).json()["data"]["run_id"]
+    run = state.store.get("runs", run_id)
+    assert run["reserved_input"] == run["agent_limits"]["input_tokens"] == ANALYSIS_LIMITS.input_tokens
+    assert run["reserved_output"] == run["agent_limits"]["output_tokens"] == ANALYSIS_LIMITS.output_tokens
+    state.jobs.claim(run_id, "first")
+    state.jobs.mutate(run_id, "first", {"kind": "investigation", "started_at": time.time() - 200})
+    # A kind/configuration change cannot shorten or enlarge an already-reserved job.
+    assert state.jobs.guard(run_id, "first")["agent_limits"]["seconds"] == ANALYSIS_LIMITS.seconds
+    focused = {"kind": "investigation", "agent_limits": FOCUSED_LIMITS.__dict__}
+    state.jobs.mutate(run_id, "first", {**focused, "started_at": time.time() - 200})
+    assert state.jobs.guard(run_id, "first")["agent_limits"]["seconds"] == 360
+
+
 def test_delete_hides_immediately_and_removes_artifacts(setup):
     client, state = setup
     created = create(client).json()["data"]

@@ -8,6 +8,7 @@ from typing import Any, Callable, Literal
 from google.genai import types
 from pydantic import Field, ValidationError
 
+from code_groove.agent_limits import AgentLimits, limits_for_kind
 from code_groove.errors import GrooveError
 from code_groove.improvements import apply_edits
 from code_groove.schemas import (
@@ -99,6 +100,11 @@ class AgentContext:
     output_tokens: int = 0
     final_errors: int = 0
     started: float = field(default_factory=time.monotonic)
+    limits_override: AgentLimits | None = None
+
+    @property
+    def limits(self) -> AgentLimits:
+        return self.limits_override or limits_for_kind("investigation" if self.investigating else "analysis")
 
     @property
     def investigating(self):
@@ -110,7 +116,7 @@ class AgentContext:
 
     def check(self):
         self.guard()
-        if time.monotonic() - self.started > (180 if self.investigating else 480):
+        if time.monotonic() - self.started > self.limits.seconds:
             raise GrooveError("MODEL_TIMEOUT", "調査の制限時間を超えました。", 408)
 
 
@@ -181,7 +187,7 @@ def declarations(
 
 def execute_tool(ctx: AgentContext, name: str, args: dict, event_id: str) -> Any:
     ctx.check()
-    if ctx.tool_count >= (20 if ctx.investigating else 48):
+    if ctx.tool_count >= ctx.limits.tool_calls:
         raise GrooveError("BUDGET_EXCEEDED", "ツール呼び出し上限に達しました。", 429)
     ctx.tool_count += 1
     ctx.save_usage(

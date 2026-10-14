@@ -3,12 +3,15 @@ from typing import Any
 from google import genai
 from google.genai import types
 
+from code_groove.agent_limits import MODEL_HTTP_TIMEOUT_SECONDS
 from code_groove.settings import Settings
 
 
 def create_model_client(settings: Settings, credentials: Any = None) -> genai.Client:
     http = types.HttpOptions(
-        api_version="v1", timeout=90_000, retry_options=types.HttpRetryOptions(attempts=1)
+        api_version="v1",
+        timeout=MODEL_HTTP_TIMEOUT_SECONDS * 1000,
+        retry_options=types.HttpRetryOptions(attempts=1),
     )
     if settings.model_auth_mode == "adc":
         return genai.Client(

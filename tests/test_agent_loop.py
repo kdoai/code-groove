@@ -157,7 +157,7 @@ async def test_text_only_and_bad_final_stop_explicitly(monkeypatch):
 @pytest.mark.asyncio
 async def test_reserved_budget_stops_before_paid_generation(monkeypatch):
     ctx, _value, _saved = context()
-    ctx.output_tokens = 48000
+    ctx.output_tokens = ctx.limits.output_tokens
     client = Client(lambda _number: None)
     monkeypatch.setattr("code_groove.agent.create_model_client", lambda _settings: client)
     with pytest.raises(GrooveError, match="BUDGET_EXCEEDED"):
@@ -208,7 +208,8 @@ def test_read_numbers_match_original_lines_without_changing_projection_hash():
 @pytest.mark.asyncio
 async def test_unknown_retry_usage_is_kept_and_retry_fits_remaining_budget(monkeypatch):
     ctx, _value, saved = context()
-    ctx.output_tokens = 24000
+    ctx.output_tokens = ctx.limits.output_tokens - 24000
+    initial_output = ctx.output_tokens
 
     class RetryingClient(Client):
         async def generate_content(self, **kwargs):
@@ -230,8 +231,8 @@ async def test_unknown_retry_usage_is_kept_and_retry_fits_remaining_budget(monke
         await run_agent(ctx)
     assert client.calls[0]["config"].max_output_tokens == 16384
     assert client.calls[1]["config"].max_output_tokens == 7616
-    assert ctx.output_tokens == 24000 + 16384 + 2 * 75
-    assert all(entry["output_tokens"] <= 48000 for entry in saved)
+    assert ctx.output_tokens == initial_output + 16384 + 2 * 75
+    assert all(entry["output_tokens"] <= ctx.limits.output_tokens for entry in saved)
     assert client.closed
 
 
@@ -257,11 +258,11 @@ async def test_investigation_reserves_only_the_active_submission_schema(monkeypa
     ctx, value, _saved = context()
     ctx.base = value
     ctx.model_count = 6
-    ctx.input_tokens = 117000
+    ctx.input_tokens = ctx.limits.input_tokens - 61000
 
     class NearBoundaryClient(Client):
         async def count_tokens(self, **_kwargs):
-            # Full read-tool declarations would falsely exhaust the 160,000 total.
+            # The active system instruction and tool schema are counted by the provider.
             return types.CountTokensResponse(total_tokens=30000)
 
     client = NearBoundaryClient(
@@ -273,7 +274,7 @@ async def test_investigation_reserves_only_the_active_submission_schema(monkeypa
     payload = json.loads(client.calls[0]["contents"][0].parts[0].text)
     assert "coverage" not in payload["base"]
     assert ctx.base == value
-    assert len(client.calls) == 2 and ctx.input_tokens <= 160000
+    assert len(client.calls) == 2 and ctx.input_tokens <= ctx.limits.input_tokens
     assert client.calls[0]["config"].max_output_tokens == 12288
     assert all(
         d.name == "submit_investigation"
@@ -287,6 +288,114 @@ def test_provider_error_diagnostics_never_include_raw_source_or_credentials():
     assert model_error_reason("Invalid thought_signature: secret bytes") == "signature_validation"
     assert model_error_reason("Request ending with a model turn") == "conversation_validation"
     assert model_error_reason("password=private provider detail") == "provider_rejected"
+
+
+def partial_candidate(ctx, value):
+    candidate = json.loads(json.dumps({k: value[k] for k in AnalysisCandidate.model_fields if k in value}))
+    proof = ctx.evidence[0].evidence_id
+    for position, unit in enumerate(candidate["units"]):
+        unit["review_state"] = "inspected" if position == 0 else "unresolved"
+        unit["evidence_ids"] = [proof] if position == 0 else []
+        if position:
+            unit["boundary_reason"] = "調査予算の境界で未調査。"
+    candidate["responsibilities"] = [candidate["responsibilities"][0]]
+    candidate["responsibilities"][0]["evidence_ids"] = [proof]
+    for collection in ("events", "hypotheses", "review_signals", "design_patterns"):
+        candidate[collection] = []
+    return types.Content(
+        role="model",
+        parts=[
+            types.Part(
+                function_call=types.FunctionCall(
+                    id="partial-final", name="submit_analysis", args={"candidate": candidate}
+                )
+            )
+        ],
+    )
+
+
+def read_first_file(ctx, call_id):
+    file = ctx.index["files"][0]
+    return types.Part(
+        function_call=types.FunctionCall(
+            id=call_id,
+            name="read_code",
+            args={
+                "file_id": file["file_id"],
+                "start_line": 1,
+                "end_line": len(ctx.sources[file["path"]].splitlines()),
+                "purpose": "Verify one implementation",
+            },
+        )
+    )
+
+
+@pytest.mark.asyncio
+async def test_read_batch_leaves_submission_slots_and_returns_explicit_partial_result(monkeypatch):
+    ctx, value, _saved = context()
+    ctx.tool_count = ctx.limits.tool_calls - 4
+    client = Client(
+        lambda number: (
+            types.Content(role="model", parts=[read_first_file(ctx, f"read-{i}") for i in range(3)])
+            if number == 1
+            else partial_candidate(ctx, value)
+        )
+    )
+    monkeypatch.setattr("code_groove.agent.create_model_client", lambda _settings: client)
+    result = await run_agent(ctx)
+    responses = client.calls[1]["contents"][2].parts
+    assert responses[0].function_response.response["ok"]
+    assert all(
+        p.function_response.response["error"]["code"] == "FINALIZATION_REQUIRED" for p in responses[1:]
+    )
+    assert [u.review_state for u in result.units] == ["inspected", "unresolved"]
+    assert ctx.tool_count == ctx.limits.tool_calls - 2
+    assert [d.name for t in client.calls[1]["config"].tools for d in t.function_declarations] == [
+        "submit_analysis"
+    ]
+
+
+@pytest.mark.asyncio
+async def test_exact_full_request_count_switches_to_submission_before_input_overflow(monkeypatch):
+    ctx, value, _saved = context()
+
+    class FullRequestClient(Client):
+        counts = []
+
+        async def count_tokens(self, **kwargs):
+            self.counts.append(kwargs)
+            assert kwargs["config"].system_instruction
+            assert kwargs["config"].tools
+            return types.CountTokensResponse(total_tokens=[100, 150000, 120000][len(self.counts) - 1])
+
+    client = FullRequestClient(
+        lambda number: (
+            types.Content(role="model", parts=[read_first_file(ctx, "read")])
+            if number == 1
+            else partial_candidate(ctx, value)
+        )
+    )
+    monkeypatch.setattr("code_groove.agent.create_model_client", lambda _settings: client)
+    result = await run_agent(ctx)
+    assert len(client.calls) == 2 and len(client.counts) == 3
+    assert len(client.counts[1]["config"].tools[0].function_declarations) > 1
+    assert len(client.counts[2]["config"].tools[0].function_declarations) == 1
+    assert result.units[1].review_state == "unresolved"
+
+
+@pytest.mark.asyncio
+async def test_time_reserve_closes_exploration_before_the_worker_deadline(monkeypatch):
+    ctx, value, _saved = context()
+    part = read_first_file(ctx, "pre-read")
+    execute_tool(ctx, "read_code", part.function_call.args, "pre-read")
+    ctx.started -= ctx.limits.seconds - ctx.limits.finalization_seconds + 1
+    client = Client(lambda _number: partial_candidate(ctx, value))
+    monkeypatch.setattr("code_groove.agent.create_model_client", lambda _settings: client)
+    result = await run_agent(ctx)
+    assert result.units[1].review_state == "unresolved"
+    assert [d.name for t in client.calls[0]["config"].tools for d in t.function_declarations] == [
+        "submit_analysis"
+    ]
 
 
 @pytest.mark.asyncio

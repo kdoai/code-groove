@@ -3,12 +3,13 @@ import json
 import random
 import time
 import uuid
-from typing import Any
+from typing import Any, cast
 
 from google.genai import errors, types
 from pydantic import ValidationError
 
 from code_groove.adk_adapter import generate_response
+from code_groove.agent_limits import FINALIZATION_ATTEMPTS, MODEL_HTTP_TIMEOUT_SECONDS
 from code_groove.agent_tools import AgentContext as AgentContext
 from code_groove.agent_tools import declarations
 from code_groove.agent_tools import execute_tool as execute_tool
@@ -22,7 +23,7 @@ from code_groove.schemas import (
 )
 from code_groove.settings import ROOT
 
-RUNTIME_VERSION = "bounded-loop-v8-numbered-source"
+RUNTIME_VERSION = "bounded-loop-v9-reserved-finalization"
 INVESTIGATION_PROMPT_VERSION = "investigation-v2-concise"
 
 
@@ -49,6 +50,7 @@ async def run_agent(ctx: AgentContext) -> Any:
 
 async def _run_bounded_loop(ctx: AgentContext) -> Any:
     client = create_model_client(ctx.settings)
+    limits = ctx.limits
     prompt = (ROOT / "prompts/conductor-system-v1.txt").read_text(encoding="utf-8")
     if ctx.proposing:
         prompt = (ROOT / "prompts/improvement-system-v1.txt").read_text(encoding="utf-8")
@@ -56,7 +58,7 @@ async def _run_bounded_loop(ctx: AgentContext) -> Any:
         prompt = (ROOT / "prompts/comparison-system-v1.txt").read_text(encoding="utf-8")
     elif ctx.investigating:
         prompt += "\n" + (ROOT / "prompts/investigation-system-v1.txt").read_text(encoding="utf-8")
-    payload = {
+    payload: dict[str, Any] = {
         "index": {
             **ctx.index,
             "relations": {"count": len(ctx.index["relations"]), "retrieve": "inspect_relations"},
@@ -75,13 +77,31 @@ async def _run_bounded_loop(ctx: AgentContext) -> Any:
         "prior_motif_assignments": ctx.prior_motifs,
         "saved_partition_interpretations_unverified": ctx.integration_context,
     }
+    payload["index"] = {
+        **payload["index"],
+        "files": [
+            {
+                **{k: v for k, v in file.items() if k != "imports"},
+                "import_count": len(file.get("imports", [])),
+            }
+            for file in ctx.index["files"]
+        ],
+    }
     if ctx.repository_index:
         prompt += "\nClassify only the supplied scoped units. Nested callbacks belong to their indexed lexical owner; use member_symbol_ids=[unit_id]. Repository context is static inventory, not a semantic verdict. Use list_units(scope=repository), list_repository_files/search_code/read_code and inspect_relations to follow dependencies and comparison peers outside the selected scope. Outside reads do not mean those partitions are fully classified. Do not claim consistency outside the selected scope or whole-repository completion. For long units read adjacent bounded ranges and cite all ranges covering the unit. Unit calls are paginated through inspect_relations."
     if ctx.integration_context:
         prompt += "\nThis is a bounded cross-partition reconciliation, not whole-repository analysis. Re-read all selected implementations. Saved interpretations are hypotheses, never fresh evidence. Compare change_reason, contracts and counter-explanations across partitions. Assign a shared responsibility/motif only if the same reason to change is supported by fresh reads from each partition. Otherwise keep roles distinct or mark unknown. Report the precise unreviewed scope."
     history = [types.Content(role="user", parts=[types.Part(text=json.dumps(payload, ensure_ascii=False))])]
-    output_limit = 8192 if ctx.investigating else 16384
-    max_input, max_output = (160000, 20000) if ctx.investigating else (400000, 48000)
+    output_limit = limits.response_tokens
+    max_input, max_output = limits.input_tokens, limits.output_tokens
+    final_output_reserve = min(FINALIZATION_ATTEMPTS * limits.final_response_tokens, max_output // 2)
+    final_name = (
+        "submit_proposal"
+        if ctx.proposing
+        else "submit_investigation"
+        if ctx.investigating
+        else "submit_analysis"
+    )
     config = types.GenerateContentConfig(
         system_instruction=prompt,
         tools=[
@@ -95,14 +115,18 @@ async def _run_bounded_loop(ctx: AgentContext) -> Any:
     )
     text_only = 0
     previous_input_estimate = 0
+    force_closing = False
     try:
         while True:
             ctx.check()
             closing = (
-                ctx.model_count >= (6 if ctx.investigating else 10)
-                or max_output - ctx.output_tokens < output_limit + 4096
-                or time.monotonic() - ctx.started > (110 if ctx.investigating else 300)
-                or ctx.input_tokens + 2 * previous_input_estimate >= max_input
+                force_closing
+                or ctx.model_count >= limits.exploration_requests
+                or ctx.model_count >= limits.model_requests - FINALIZATION_ATTEMPTS
+                or ctx.tool_count >= limits.tool_calls - FINALIZATION_ATTEMPTS
+                or max_output - ctx.output_tokens < output_limit + final_output_reserve
+                or time.monotonic() - ctx.started >= limits.seconds - limits.finalization_seconds
+                or ctx.input_tokens + (FINALIZATION_ATTEMPTS + 1) * previous_input_estimate >= max_input
             )
             if closing:
                 if config.tool_config is None:
@@ -113,18 +137,13 @@ async def _run_bounded_loop(ctx: AgentContext) -> Any:
                                 types.Part(
                                     text="The exploration boundary is reached. Submit concise grounded "
                                     "results using existing evidence. Mark unsupported units and claims "
-                                    "as unknown; do not perform further reads."
+                                    "as unknown; do not perform further reads. Respect every schema "
+                                    "maxLength and enum. Omit optional comparisons and patterns when "
+                                    "they add no verified information."
                                 )
                             ],
                         )
                     )
-                final_name = (
-                    "submit_proposal"
-                    if ctx.proposing
-                    else "submit_investigation"
-                    if ctx.investigating
-                    else "submit_analysis"
-                )
                 config.tools = [
                     types.Tool(
                         function_declarations=[
@@ -142,28 +161,28 @@ async def _run_bounded_loop(ctx: AgentContext) -> Any:
                 config.thinking_config = types.ThinkingConfig(thinking_level=types.ThinkingLevel.LOW)
             try:
                 counted = await asyncio.wait_for(
-                    client.aio.models.count_tokens(model=ctx.settings.gemini_model, contents=history),  # type: ignore[arg-type]
-                    min(30, (180 if ctx.investigating else 480) - (time.monotonic() - ctx.started)),
+                    client.aio.models.count_tokens(
+                        model=ctx.settings.gemini_model,
+                        contents=history,  # type: ignore[arg-type]
+                        config=types.CountTokensConfig(
+                            system_instruction=prompt, tools=cast(list[types.Tool], config.tools)
+                        ),
+                    ),
+                    max(0.001, min(30, limits.seconds - (time.monotonic() - ctx.started))),
                 )
             except TimeoutError as exc:
                 raise GrooveError("MODEL_TIMEOUT", "トークン計数がタイムアウトしました。", 504) from exc
-            input_count = (
-                int(counted.total_tokens or 0)
-                + len(prompt) // 2
-                + len(
-                    json.dumps(
-                        [
-                            d.model_dump(mode="json")
-                            for tool in config.tools or []
-                            if isinstance(tool, types.Tool)
-                            for d in tool.function_declarations or []
-                        ]
-                    )
-                )
-                // 2
-            )
+            if counted.total_tokens is None or counted.total_tokens < 0:
+                raise GrooveError("MODEL_ERROR", "入力トークン数を確認できません。", 503)
+            input_count = int(counted.total_tokens)
+            if not closing and (
+                input_count > limits.request_input_tokens
+                or ctx.input_tokens + (FINALIZATION_ATTEMPTS + 1) * input_count > max_input
+            ):
+                force_closing = True
+                continue
             if (
-                input_count > 48000
+                input_count > limits.request_input_tokens
                 or ctx.input_tokens + input_count > max_input
                 or max_output - ctx.output_tokens < 1024
             ):
@@ -176,16 +195,21 @@ async def _run_bounded_loop(ctx: AgentContext) -> Any:
                         "output_used": ctx.output_tokens,
                     },
                 )
-                raise GrooveError("BUDGET_EXCEEDED", "トークン予算に達しました。", 429)
+                raise GrooveError(
+                    "BUDGET_EXCEEDED",
+                    "入力または出力の予算に達しました。解析範囲を小さくして再実行してください。",
+                    429,
+                )
             previous_input_estimate = input_count
+            response = None
             for retry in range(3):
                 ctx.check()
                 request_output_limit = min(
-                    12288 if ctx.investigating and closing else output_limit, max_output - ctx.output_tokens
+                    limits.final_response_tokens if closing else output_limit, max_output - ctx.output_tokens
                 )
                 if ctx.input_tokens + input_count > max_input or request_output_limit < 1024:
                     raise GrooveError("BUDGET_EXCEEDED", "再試行のトークン予算に達しました。", 429)
-                if ctx.model_count >= (8 if ctx.investigating else 18):
+                if ctx.model_count >= limits.model_requests:
                     raise GrooveError("BUDGET_EXCEEDED", "モデル呼び出し上限に達しました。", 429)
                 ctx.model_count += 1
                 ctx.input_tokens += input_count
@@ -203,7 +227,13 @@ async def _run_bounded_loop(ctx: AgentContext) -> Any:
                     request_config.max_output_tokens = request_output_limit
                     response = await asyncio.wait_for(
                         generate_response(client, ctx.settings.gemini_model, history, request_config),
-                        min(95, (180 if ctx.investigating else 480) - (time.monotonic() - ctx.started)),
+                        max(
+                            0.001,
+                            min(
+                                MODEL_HTTP_TIMEOUT_SECONDS + 5,
+                                limits.seconds - (time.monotonic() - ctx.started),
+                            ),
+                        ),
                     )
                     break
                 except errors.APIError as exc:
@@ -223,8 +253,17 @@ async def _run_bounded_loop(ctx: AgentContext) -> Any:
                         ) from exc
                     ctx.emit("model_retry", {"code": exc.code, "attempt": retry + 1})
                     await asyncio.sleep(min(2**retry + random.random(), 4))
+                    if not closing and (
+                        max_output - ctx.output_tokens < output_limit + final_output_reserve
+                        or ctx.input_tokens + (FINALIZATION_ATTEMPTS + 1) * input_count >= max_input
+                        or time.monotonic() - ctx.started >= limits.seconds - limits.finalization_seconds
+                    ):
+                        force_closing = True
+                        break
                 except TimeoutError as exc:
                     raise GrooveError("MODEL_TIMEOUT", "モデル応答がタイムアウトしました。", 504) from exc
+            if response is None:
+                continue
             usage = response.usage_metadata
             if usage:
                 ctx.input_tokens += int(usage.prompt_token_count or 0) - input_count
@@ -267,13 +306,13 @@ async def _run_bounded_loop(ctx: AgentContext) -> Any:
                 ctx.emit("tool_started", {"tool": call.name, "purpose": purpose, "tool_event_id": event_id})
                 started = time.monotonic()
                 try:
-                    if closing and call.name != (
-                        "submit_proposal"
-                        if ctx.proposing
-                        else "submit_investigation"
-                        if ctx.investigating
-                        else "submit_analysis"
+                    if call.name != final_name and (
+                        closing
+                        or force_closing
+                        or ctx.tool_count >= limits.tool_calls - FINALIZATION_ATTEMPTS
+                        or time.monotonic() - ctx.started >= limits.seconds - limits.finalization_seconds
                     ):
+                        force_closing = True
                         raise GrooveError("FINALIZATION_REQUIRED", "取得済みの根拠で提出してください。")
                     if call.name.startswith("submit_") and len(calls) != 1:
                         raise GrooveError("FINALIZE_MUST_BE_ALONE", "提出は単独のbatchで行ってください。")
@@ -297,12 +336,12 @@ async def _run_bounded_loop(ctx: AgentContext) -> Any:
                         "data": result,
                         "evidence_ids": result.get("evidence_ids", []),
                         "budget_remaining": {
-                            "tool_calls": (20 if ctx.investigating else 48) - ctx.tool_count,
-                            "model_requests": (8 if ctx.investigating else 18) - ctx.model_count,
+                            "tool_calls": limits.tool_calls - ctx.tool_count,
+                            "model_requests": limits.model_requests - ctx.model_count,
                             "output_tokens": max_output - ctx.output_tokens,
                             "seconds": max(
                                 0,
-                                round((180 if ctx.investigating else 480) - (time.monotonic() - ctx.started)),
+                                round(limits.seconds - (time.monotonic() - ctx.started)),
                             ),
                             "finalize_next": closing,
                         },

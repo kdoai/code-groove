@@ -121,9 +121,9 @@ def test_selection_ownership_snapshot_hash_range_and_no_scene_requirement(setup)
     admitted = client.post(path, json=request, headers=headers)
     assert admitted.status_code == 202, admitted.text
     run = state.store.get("runs", admitted.json()["data"]["run_id"])
-    assert (
-        run["kind"] == "investigation" and run["reserved_input"] == 160000 and run["reserved_output"] == 20000
-    )
+    assert run["kind"] == "investigation"
+    assert run["reserved_input"] == run["agent_limits"]["input_tokens"] == 480000
+    assert run["reserved_output"] == run["agent_limits"]["output_tokens"] == 64000
     assert "scene_id" not in run["body"] and run["body"]["event_ids"] == []
     assert state.store.get("projects", ids["project_id"])["comparison_run_id"] == run["run_id"]
     assert client.post(path, json=request, headers=headers).json()["data"]["run_id"] == run["run_id"]
