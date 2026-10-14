@@ -3,6 +3,7 @@ import hashlib
 import json
 import time
 import uuid
+from dataclasses import asdict
 from datetime import UTC, datetime
 from typing import Any
 
@@ -10,6 +11,7 @@ from google.api_core.exceptions import AlreadyExists
 from google.cloud import tasks_v2
 
 from code_groove.agent import AgentContext, run_agent
+from code_groove.agent_limits import limits_for_kind, limits_for_run
 from code_groove.errors import GrooveError
 from code_groove.improvements import apply_edits, proposal_diff, source_hash
 from code_groove.incremental import INDEX_VERSION, PROMPT_VERSION, compatible, reuse_unchanged
@@ -66,9 +68,8 @@ class JobService:
             project_id = f"p_{idem[:32]}"
             sha = source_hash(local_sources)
             prepared_key = f"projects/{project_id}/inputs/{sha}/source.json.gz"
-        reserved_input, reserved_output = (
-            (160000, 20000) if kind in ("investigation", "proposal") else (400000, 48000)
-        )
+        agent_limits = limits_for_kind(kind)
+        reserved_input, reserved_output = agent_limits.input_tokens, agent_limits.output_tokens
 
         def operation(tx: Transaction) -> dict:
             previous = tx.get("idempotency", idem)
@@ -150,6 +151,7 @@ class JobService:
                 "tool_calls": 0,
                 "reserved_input": reserved_input,
                 "reserved_output": reserved_output,
+                "agent_limits": asdict(agent_limits),
                 "quota_id": quota_id,
                 "quota_date": date,
                 "quota_released": False,
@@ -331,7 +333,7 @@ class JobService:
             raise GrooveError("CANCELLED", "新規モデル呼び出しを停止しました。")
         if not (self.store.get("accounts", run["owner_uid"]) or {}).get("enabled"):
             raise GrooveError("CANCELLED", "アカウントの利用を停止しました。")
-        limit = 180 if run["kind"] in ("investigation", "proposal") else 480
+        limit = limits_for_run(run).seconds
         if time.time() - run["started_at"] > limit:
             raise GrooveError("MODEL_TIMEOUT", "調査の制限時間を超えました。", 408)
         return run
@@ -766,6 +768,7 @@ class JobService:
                 output_tokens=run["output_tokens"],
                 model_count=run["model_requests"],
                 tool_count=run["tool_calls"],
+                limits_override=limits_for_run(run),
                 started=time.monotonic() - max(0, time.time() - run["started_at"]),
                 repository_index=snapshot["index"] if partition or run["body"].get("comparison") else None,
                 integration_context=integration_context,
