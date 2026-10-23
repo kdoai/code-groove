@@ -1,7 +1,8 @@
-FROM node:24-bookworm-slim AS webbuild
+FROM node:24.22.1-bookworm-slim AS webbuild
 WORKDIR /app
 RUN npm install -g pnpm@10.27.0
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY patches patches
 RUN pnpm install --frozen-lockfile
 COPY apps/web apps/web
 COPY packages packages
@@ -13,6 +14,7 @@ FROM ghcr.io/astral-sh/uv:0.6.11 AS uvbin
 FROM python:3.13-slim-bookworm AS runtime
 COPY --from=uvbin /uv /usr/local/bin/uv
 COPY --from=webbuild /usr/local/bin/node /usr/local/bin/node
+RUN node --version && test "$(node --version)" = "v24.22.1"
 WORKDIR /app
 COPY pyproject.toml uv.lock ./
 COPY LICENSE ./
