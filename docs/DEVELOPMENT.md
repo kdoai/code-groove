@@ -1,6 +1,8 @@
 # 開発手順
 
-Node.js 24、pnpm 10.27.0、Python 3.13、uvを使います。Web依存は`pnpm-lock.yaml`、Python依存は`uv.lock`に固定しています。
+Node.js 24.22.1以降の24系、pnpm 10.27.0、Python 3.13、uvを使います。検証用のNode.jsは`.node-version`、本番イメージは`Dockerfile`に固定しています。Web依存は`pnpm-lock.yaml`、Python依存は`uv.lock`に固定しています。
+
+Monaco Editor 0.57.0に内蔵されたDOMPurifyは、`patches/`のpnpmパッチで修正版の`dompurify`パッケージへ参照を切り替えています。Monacoを更新する際は、内蔵版の修正状況とパッチの要否を確認してください。`pnpm audit --audit-level=low`で開発用を含むJavaScript依存を検査します。
 
 ## 準備
 

@@ -4,7 +4,7 @@ GitHub ActionsからCloud BuildとCloud Runへ配備します。
 
 ## PR
 
-PRを作成・更新すると、変更箇所に応じたテスト、型検査、lint、ビルド、ブラウザE2Eと秘密情報検査を実行します。解析対象のコードを実行したり、有料モデルを呼び出したりしません。
+PRを作成・更新すると、JavaScript依存の脆弱性検査、変更箇所に応じたテスト、型検査、lint、ビルド、ブラウザE2Eと秘密情報検査を実行します。Node.jsは`.node-version`の版を使います。解析対象のコードを実行したり、有料モデルを呼び出したりしません。
 
 ## mainへのマージ
 
@@ -21,5 +21,7 @@ GCP側の認証条件は、このリポジトリのmainとproduction環境に限
 ## 再実行
 
 GitHub Actionsの「CI and deploy」をmainで手動実行できます。その場合も検査を通してから配備します。同じcommitのイメージがすでにある場合は再利用します。
+
+Node.jsのセキュリティ更新時は`.node-version`と`Dockerfile`を更新し、新しいcommitからイメージを作ります。Cloud Buildはベースイメージを取得し直し、最終イメージ内のNode.jsが指定版であることをビルド中に検証します。古いイメージの再配備だけでは修正は反映されません。
 
 配備後の検証が失敗した場合は、ActionsとCloud Runの状態を確認し、[運用手順](runbook.md)に従って復旧します。

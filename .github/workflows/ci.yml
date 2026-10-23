@@ -23,13 +23,15 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
-          node-version: '24'
+          node-version-file: '.node-version'
       - uses: astral-sh/setup-uv@d0d8abe699bfb85fec6de9f7adb5ae17292296ff
         with:
           version: '0.6.11'
           python-version: '3.13'
       - run: npm install -g pnpm@10.27.0
       - run: pnpm install --frozen-lockfile && uv sync --frozen
+      - name: Audit JavaScript dependencies
+        run: pnpm audit --audit-level=low
       - run: pnpm exec playwright install --with-deps chromium
       - name: Select tests from changed paths
         env:
